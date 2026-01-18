@@ -3,6 +3,38 @@
 
 #include <crtdbg.h> // To check for memory leaks
 #include "AEEngine.h"
+#include "Util.h"
+
+AEGfxVertexList* pSquareMesh{ 0 };   // Standard Square Mesh for UI
+
+Square button{
+	0.0f,
+	0.0f,
+	1200.0f,
+	50.0f,
+	0.0f,
+	1.0f, 0.0f, 0.0f, 1.0f
+
+};
+
+// Standard Square Mesh for UI
+void static CreateSquareMesh()
+{
+	AEGfxMeshStart();
+
+	AEGfxTriAdd(
+		-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,
+		0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f
+	);
+	AEGfxTriAdd(
+		0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+		0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f
+	);
+
+	pSquareMesh = AEGfxMeshEnd();
+}
 
 
 
@@ -30,8 +62,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	// Changing the window title
 	AESysSetWindowTitle("My New Demo!");
 
+	CreateSquareMesh();
+
 	// reset the system modules
 	AESysReset();
+
+	// Variables for Matrix 
+	AEMtx33 rot{ 0 }, scale{ 0 }, trans{ 0 }, transform{ 0 };
 
 	printf("Hello World\n");
 
@@ -50,7 +87,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
 		// Your own rendering logic goes here
+		AEGfxSetBackgroundColor(0.5f, 0.5f, 0.5f);
+		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
+		CreateSquare(pSquareMesh, &transform, &scale, &rot, &trans,
+			button.xpos, button.ypos, button.scaleX, button.scaleY, button.rot,
+			button.r, button.g, button.b, button.a);
 
 		// Informing the system about the loop's end
 		AESysFrameEnd();
