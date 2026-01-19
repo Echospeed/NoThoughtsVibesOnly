@@ -12,9 +12,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\Main.cpp" />
+    <ClCompile Include="Src\Particles.cpp" />
+    <ClCompile Include="Src\StateManager.cpp" />
     <ClCompile Include="Src\Util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Src\Particles.h" />
+    <ClInclude Include="Src\StateManager.h" />
     <ClInclude Include="Src\Util.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -68,6 +72,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)Src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
