@@ -1,32 +1,55 @@
 // ---------------------------------------------------------------------------
-// includes
-
-#include <crtdbg.h> // To check for memory leaks
+// Includes
+// ---------------------------------------------------------------------------
+#include <crtdbg.h> // Memory leak detection
+#include <vector>   // For managing the list of buttons
+#include <iostream> // For console output
 #include "AEEngine.h"
-#include "Util.h"
 
-AEGfxVertexList* pSquareMesh{ 0 };   // Standard Square Mesh for UI
+// ---------------------------------------------------------------------------
+// Structs and Enums
+// ---------------------------------------------------------------------------
 
-Square button{
-	0.0f,
-	0.0f,
-	1200.0f,
-	50.0f,
-	0.0f,
-	1.0f, 0.0f, 0.0f, 1.0f
-
+enum GameState {
+	STATE_MENU,
+	STATE_GAME,
+	STATE_CONTROLS,
+	STATE_CREDITS,
+	STATE_QUIT
 };
 
-// Standard Square Mesh for UI
-void static CreateSquareMesh()
+struct MenuButton {
+	float x, y;             // World Position
+	float width, height;    // Dimensions
+	float r, g, b;          // Base Color
+	GameState actionState;  // State to switch to when clicked
+	bool isHovered;         // Is mouse over this button?
+	const char* text;       // Text label
+};
+
+// ---------------------------------------------------------------------------
+// Globals
+// ---------------------------------------------------------------------------
+
+AEGfxVertexList* pSquareMesh = nullptr;
+s8 fontId = 0; // Handle for the text font
+
+// ---------------------------------------------------------------------------
+// Helper Functions
+// ---------------------------------------------------------------------------
+
+// Creates the standard 1x1 normalized square mesh
+void CreateSquareMesh()
 {
 	AEGfxMeshStart();
 
+	// Triangle 1
 	AEGfxTriAdd(
 		-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,
 		0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
 		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f
 	);
+	// Triangle 2
 	AEGfxTriAdd(
 		0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
 		0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,
@@ -36,71 +59,198 @@ void static CreateSquareMesh()
 	pSquareMesh = AEGfxMeshEnd();
 }
 
+// Checks if a point (mouse) is inside a rectangle (button)
+bool IsPointInRect(float pX, float pY, float rectX, float rectY, float rectW, float rectH)
+{
+	float halfW = rectW / 2.0f;
+	float halfH = rectH / 2.0f;
 
+	return (pX >= rectX - halfW && pX <= rectX + halfW &&
+		pY >= rectY - halfH && pY <= rectY + halfH);
+}
+
+// Draws a button with color and transformation
+void DrawButton(float x, float y, float w, float h, float r, float g, float b)
+{
+	// Set Color
+	AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+	AEGfxSetColorToMultiply(r, g, b, 1.0f);
+	AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+
+	// Create Transformation Matrix
+	AEMtx33 scale, trans, transform;
+	AEMtx33Scale(&scale, w, h);
+	AEMtx33Trans(&trans, x, y);
+	AEMtx33Concat(&transform, &trans, &scale);
+
+	// Send to GPU
+	AEGfxSetTransform(transform.m);
+	AEGfxMeshDraw(pSquareMesh, AE_GFX_MDM_TRIANGLES);
+}
 
 // ---------------------------------------------------------------------------
-// main
+// Main
+// ---------------------------------------------------------------------------
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
 	_In_ LPWSTR    lpCmdLine,
 	_In_ int       nCmdShow)
 {
+	// Enable memory leak check
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
+	// 1. Initialize System
+	const int SCREEN_WIDTH = 1600;
+	const int SCREEN_HEIGHT = 900;
+	AESysInit(hInstance, nCmdShow, SCREEN_WIDTH, SCREEN_HEIGHT, 1, 60, false, NULL);
+	AESysSetWindowTitle("No Thoughts Vibes Only - Main Menu");
 
-
-	int gGameRunning = 1;
-
-	// Initialization of your own variables go here
-
-	// Using custom window procedure
-	AESysInit(hInstance, nCmdShow, 1600, 900, 1, 60, false, NULL);
-
-	// Changing the window title
-	AESysSetWindowTitle("No Thoughts Vibes Only");
-
+	// 2. Initialize Resources
 	CreateSquareMesh();
-
-	// reset the system modules
 	AESysReset();
 
-	// Variables for Matrix 
-	AEMtx33 rot{ 0 }, scale{ 0 }, trans{ 0 }, transform{ 0 };
+	// Load Font - Try to load Arial. Size 30.
+	// NOTE: If this fails to load text, ensure you have "Arial.ttf" in your folder 
+	// or try integer 0 if your engine setup uses default fonts differently.
+	fontId = AEGfxCreateFont("../Assets/buggy-font.ttf", 30);
 
-	printf("Start project\n");
+	// 3. Setup Buttons
+	std::vector<MenuButton> buttons;
+	// Start (Green)
+	buttons.push_back({ 0.0f, 150.0f, 300.0f, 80.0f, 0.0f, 0.7f, 0.0f, STATE_GAME, false, "START" });
+	// Controls (Blue)
+	buttons.push_back({ 0.0f, 50.0f, 300.0f, 80.0f, 0.0f, 0.4f, 0.8f, STATE_CONTROLS, false, "CONTROLS" });
+	// Credits (Purple)
+	buttons.push_back({ 0.0f, -50.0f, 300.0f, 80.0f, 0.6f, 0.0f, 0.6f, STATE_CREDITS, false, "CREDITS" });
+	// Quit (Red)
+	buttons.push_back({ 0.0f, -150.0f, 300.0f, 80.0f, 0.8f, 0.0f, 0.0f, STATE_QUIT, false, "QUIT" });
 
+	int gGameRunning = 1;
+	GameState currentState = STATE_MENU;
+
+	// -----------------------------------------------------------------------
 	// Game Loop
+	// -----------------------------------------------------------------------
+
 	while (gGameRunning)
 	{
-		// Informing the system about the loop's start
 		AESysFrameStart();
 
-		// Basic way to trigger exiting the application
-		// when ESCAPE is hit or when the window is closed
-		if (AEInputCheckTriggered(AEVK_ESCAPE) || 0 == AESysDoesWindowExist())
+		// Update Input
+		AEInputUpdate();
+
+		// Quit Logic (Escape or Close Window)
+		if (AEInputCheckTriggered(AEVK_ESCAPE) || !AESysDoesWindowExist())
 			gGameRunning = 0;
 
-		// Your own update logic goes here
+		// -------------------------------------------------------------------
+		// Input & Logic
+		// -------------------------------------------------------------------
 
+		// Get Mouse Position
+		s32 mouseX, mouseY;
+		AEInputGetCursorPosition(&mouseX, &mouseY);
 
-		// Your own rendering logic goes here
-		AEGfxSetBackgroundColor(0.5f, 0.5f, 0.5f);
+		// Convert Screen Coordinates (Top-Left 0,0) to World Coordinates (Center 0,0)
+		float worldMouseX = (float)mouseX - (SCREEN_WIDTH / 2.0f);
+		float worldMouseY = -((float)mouseY - (SCREEN_HEIGHT / 2.0f));
+
+		if (currentState == STATE_MENU)
+		{
+			for (auto& btn : buttons)
+			{
+				// Check Collision
+				if (IsPointInRect(worldMouseX, worldMouseY, btn.x, btn.y, btn.width, btn.height))
+				{
+					btn.isHovered = true;
+					if (AEInputCheckTriggered(AEVK_LBUTTON))
+					{
+						currentState = btn.actionState;
+					}
+				}
+				else
+				{
+					btn.isHovered = false;
+				}
+			}
+		}
+		else if (currentState == STATE_QUIT)
+		{
+			gGameRunning = 0;
+		}
+		else
+		{
+			// In Game/Credits/Controls: Click or Space to return to Menu
+			if (AEInputCheckTriggered(AEVK_LBUTTON) || AEInputCheckTriggered(AEVK_SPACE))
+			{
+				currentState = STATE_MENU;
+			}
+		}
+
+		// -------------------------------------------------------------------
+		// Rendering
+		// -------------------------------------------------------------------
+
+		AEGfxSetBackgroundColor(0.2f, 0.2f, 0.2f); // Dark Grey Background
 		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
-		CreateSquare(pSquareMesh, &transform, &scale, &rot, &trans,
-			button.xpos, button.ypos, button.scaleX, button.scaleY, button.rot,
-			button.r, button.g, button.b, button.a);
+		// Reset color to white before text drawing to avoid tinting
+		AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
-		// Informing the system about the loop's end
+		if (currentState == STATE_MENU)
+		{
+			for (const auto& btn : buttons)
+			{
+				// 1. Draw Button Mesh
+				// Lighten color if hovered
+				float r = btn.isHovered ? btn.r + 0.3f : btn.r;
+				float g = btn.isHovered ? btn.g + 0.3f : btn.g;
+				float b = btn.isHovered ? btn.b + 0.3f : btn.b;
+
+				DrawButton(btn.x, btn.y, btn.width, btn.height, r, g, b);
+
+				// 2. Draw Text
+				// Map World Position to Screen Coords (-1.0 to 1.0) for Text
+				float textX = btn.x / (SCREEN_WIDTH / 2.0f);
+				float textY = btn.y / (SCREEN_HEIGHT / 2.0f);
+
+				// Center the text roughly based on length
+				float textOffset = (float)strlen(btn.text) * 0.015f;
+				textX -= textOffset;
+				textY -= 0.025f; // Slight Y adjustment for vertical centering
+
+				// Draw Text: FontID, Text, X, Y, Scale, R, G, B, A
+				// REMOVED (s8*) cast here to fix the error
+				AEGfxPrint(fontId, btn.text, textX, textY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+			}
+		}
+		else if (currentState == STATE_GAME)
+		{
+			AEGfxSetBackgroundColor(0.0f, 0.5f, 0.0f); // Green
+			AEGfxPrint(fontId, "GAME STATE - Click to Return", -0.4f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+		}
+		else if (currentState == STATE_CONTROLS)
+		{
+			AEGfxSetBackgroundColor(0.0f, 0.2f, 0.5f); // Blue
+			AEGfxPrint(fontId, "CONTROLS SCREEN - Click to Return", -0.45f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+		}
+		else if (currentState == STATE_CREDITS)
+		{
+			AEGfxSetBackgroundColor(0.5f, 0.0f, 0.5f); // Purple
+			AEGfxPrint(fontId, "CREDITS SCREEN - Click to Return", -0.4f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+		}
+
 		AESysFrameEnd();
-
 	}
 
+	// -----------------------------------------------------------------------
+	// Cleanup
+	// -----------------------------------------------------------------------
 
-	// free the system
+	AEGfxDestroyFont(fontId);
+	AEGfxMeshFree(pSquareMesh);
 	AESysExit();
+
+	return 0;
 }
