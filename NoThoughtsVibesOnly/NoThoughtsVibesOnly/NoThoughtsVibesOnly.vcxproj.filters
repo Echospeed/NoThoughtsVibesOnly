@@ -15,27 +15,27 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Src\Main.cpp">
+    <ClCompile Include="Source Files\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Util.cpp">
+    <ClCompile Include="Source Files\Util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Particles.cpp">
+    <ClCompile Include="Source Files\Particles.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\StateManager.cpp">
+    <ClCompile Include="Source Files\StateManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Src\Util.h">
+    <ClInclude Include="Source Files\Util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Particles.h">
+    <ClInclude Include="Source Files\Particles.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Src\StateManager.h">
+    <ClInclude Include="Source Files\StateManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

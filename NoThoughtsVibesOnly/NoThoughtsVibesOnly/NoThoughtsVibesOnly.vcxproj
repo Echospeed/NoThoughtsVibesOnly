@@ -11,15 +11,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Src\Main.cpp" />
-    <ClCompile Include="Src\Particles.cpp" />
-    <ClCompile Include="Src\StateManager.cpp" />
-    <ClCompile Include="Src\Util.cpp" />
+    <ClCompile Include="Source Files\Main.cpp" />
+    <ClCompile Include="Source Files\Particles.cpp" />
+    <ClCompile Include="Source Files\StateManager.cpp" />
+    <ClCompile Include="Source Files\Util.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Src\Particles.h" />
-    <ClInclude Include="Src\StateManager.h" />
-    <ClInclude Include="Src\Util.h" />
+    <ClInclude Include="Header Files\Particles.h" />
+    <ClInclude Include="Header Files\StateManager.h" />
+    <ClInclude Include="Header Files\Util.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
