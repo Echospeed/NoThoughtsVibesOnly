@@ -60,7 +60,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	AESysInit(hInstance, nCmdShow, 1600, 900, 1, 60, false, NULL);
 
 	// Changing the window title
-	AESysSetWindowTitle("My New Demo!");
+	AESysSetWindowTitle("No Thoughts Vibes Only");
 
 	CreateSquareMesh();
 
@@ -70,7 +70,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	// Variables for Matrix 
 	AEMtx33 rot{ 0 }, scale{ 0 }, trans{ 0 }, transform{ 0 };
 
-	printf("Hello World\n");
+	printf("Start project\n");
 
 	// Game Loop
 	while (gGameRunning)
