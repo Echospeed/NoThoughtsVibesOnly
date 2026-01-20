@@ -16,6 +16,7 @@ class ParticleSystem
 public:
 	ParticleSystem();
 	~ParticleSystem();
+	void Load();
 	void Init(u8 maxParticles, f32 minVelX, f32 maxVelX, f32 minVelY, f32 maxVelY, f32 maxLifetime, f32 size);
 	void Update(f32 dt);
 	void Render(Particles* particle);

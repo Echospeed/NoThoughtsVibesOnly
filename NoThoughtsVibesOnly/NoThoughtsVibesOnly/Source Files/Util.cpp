@@ -21,3 +21,10 @@ void CreateSquare(AEGfxVertexList* Mesh, AEMtx33* transform, AEMtx33* scale, AEM
 	AEGfxMeshDraw(Mesh, AE_GFX_MDM_TRIANGLES);
 
 }
+
+void CreateCircle(AEGfxVertexList* Mesh, AEMtx33* transform, AEMtx33* scale, AEMtx33* rotate, AEMtx33* translate,
+	f32 xpos, f32 ypos, f32 radius, f32 rot,
+	f32 r, f32 g, f32 b, f32 a)
+{
+
+}

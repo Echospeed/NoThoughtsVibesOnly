@@ -14,9 +14,9 @@ ParticleSystem::~ParticleSystem()
     printf("Particle System Destroyed\n");
 }
 
-void ParticleSystem::Init(u8 _maxParticles, f32 _minVelX, f32 _maxVelX, f32 _minVelY, f32 _maxVelY, f32 _maxLifetime, f32 _size)
+void ParticleSystem::Load()
 {
-    /* --- Initialise Particle Mesh --- */
+    /* --- Load Particle Mesh --- */
     const u8 segments = 20;
     const f32 steps = (PI * 2.0f) / segments;
 
@@ -33,7 +33,10 @@ void ParticleSystem::Init(u8 _maxParticles, f32 _minVelX, f32 _maxVelX, f32 _min
     }
 
     particleMesh = AEGfxMeshEnd();
+}
 
+void ParticleSystem::Init(u8 _maxParticles, f32 _minVelX, f32 _maxVelX, f32 _minVelY, f32 _maxVelY, f32 _maxLifetime, f32 _size)
+{
     /* --- Initialize Particle System Parameters --- */
     this->maxParticles = _maxParticles;
     this->maxLifetime = _maxLifetime;
@@ -59,7 +62,7 @@ void ParticleSystem::Init(u8 _maxParticles, f32 _minVelX, f32 _maxVelX, f32 _min
         printf("Particle texture loaded successfully\n");
     }
 
-    for (u8 i = 0; i < maxParticles - 1; i++)
+    for (u8 i = 0; i < maxParticles; i++)
     {
         particles[i].velocity = {this->minVelX, this->minVelY};
         particles[i].lifetime = this->maxLifetime;

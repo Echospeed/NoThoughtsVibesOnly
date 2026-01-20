@@ -1,11 +1,6 @@
-// ---------------------------------------------------------------------------
-// includes
-
 #include <crtdbg.h> // To check for memory leaks
-#include "AEEngine.h"
-
-
-// ---------------------------------------------------------------------------
+#include "pch.h"
+/* --------------------------------------------------------------------------- */
 // main
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -17,6 +12,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
+
 
 	int gGameRunning = 1;
 
@@ -33,28 +29,61 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	printf("Hello World\n");
 
+	// System Initializer (Audio, Input, Graphics, etc.)
+	
+	// State Manager Initialization
+	StateManager_Init(STATE_MENU);
+
+	f64 deltaTime = AEFrameRateControllerGetFrameTime();
 	// Game Loop
-	while (gGameRunning)
+	while (gGameRunning && current != STATE_QUIT)
 	{
 		// Informing the system about the loop's start
-		AESysFrameStart();
+		if (current != STATE_RESTART)
+		{
+			StateManager_Update();
+			fpLoad();
+		}
+		else
+		{
+			next = previous;
+			current = next;
+		}
 
-		// Basic way to trigger exiting the application
-		// when ESCAPE is hit or when the window is closed
-		if (AEInputCheckTriggered(AEVK_ESCAPE) || 0 == AESysDoesWindowExist())
-			gGameRunning = 0;
+		fpInitialize();
 
-		// Your own update logic goes here
+		//Game Loop
+		while (next == current)
+		{
+			AESysFrameStart();
+			// Movement Input
+			// Basic way to trigger exiting the application
+			// when ESCAPE is hit or when the window is closed
+			if (AEInputCheckTriggered(AEVK_ESCAPE) || 0 == AESysDoesWindowExist())
+				gGameRunning = 0;
+
+			// Your own update logic goes here
 
 
-		// Your own rendering logic goes here
+			// Your own rendering logic goes here
+			AEGfxSetBackgroundColor(0.5f, 0.5f, 0.5f);
+			AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
+			// Informing the system about the loop's end
+			fpUpdate();
+			fpDraw();
+			AESysFrameEnd();
+		}
 
-		// Informing the system about the loop's end
-		AESysFrameEnd();
-
+		fpFree();
+		if (next != STATE_RESTART)
+		{
+			fpUnload();
+		}
+		previous = current;
+		current = next;
 	}
-
 
 	// free the system
 	AESysExit();
