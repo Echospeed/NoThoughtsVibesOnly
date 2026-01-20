@@ -9,5 +9,6 @@
 #include "StateManager.h"
 #include "Particles.h"
 #include "Util.h"
+#include "GameObject.h"
 
 #endif //PCH_H
