@@ -1,6 +1,20 @@
 #pragma once
 #include "pch.h"
 
+namespace Meshes{
+	extern AEGfxVertexList* pSquareCOriMesh;
+	extern AEGfxVertexList* pSquareLOriMesh;
+	extern AEGfxVertexList* pCircleMesh;
+	// Standard Square Mesh for UI
+	void CreateSquareCenterOriginMesh();
+	// Standard Square Mesh for UI
+	void CreateSquareLeftOriginMesh();
+	// Standard Circle Mesh for UI
+	void CreateCircleMesh();
+
+	void FreeMeshes();
+}
+
 struct Square {
 	f32 xpos;
 	f32 ypos;
