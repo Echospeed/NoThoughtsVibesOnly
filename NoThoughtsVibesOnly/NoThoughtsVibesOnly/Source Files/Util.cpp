@@ -1,19 +1,6 @@
 #include "Util.h"
 
-//Square()
-//Square()
-
 namespace Meshes{
-
-	extern AEGfxVertexList* pSquareCOriMesh;
-	extern AEGfxVertexList* pSquareLOriMesh;
-	extern AEGfxVertexList* pCircleMesh;
-
-	void CreateSquareCenterOriginMesh();
-	void CreateSquareLeftOriginMesh();
-	void CreateCircleMesh();
-	void FreeMeshes();
-
 	AEGfxVertexList* pSquareCOriMesh = nullptr;
 	AEGfxVertexList* pSquareLOriMesh = nullptr;
 	AEGfxVertexList* pCircleMesh = nullptr;
@@ -97,10 +84,6 @@ namespace Meshes{
 		}
 	}
 }
-
-
-
-
 
 void CreateSquare(AEGfxVertexList* Mesh, AEMtx33* transform, AEMtx33* scale, AEMtx33* rotate, AEMtx33* translate,
 	f32 xpos, f32 ypos, f32 scaleX, f32 scaleY, f32 rot,
