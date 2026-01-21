@@ -1,4 +1,5 @@
 #include "StateManager.h"
+#include "MenuPage.h"
 
 int current = 0, previous = 0, next = 0;
 

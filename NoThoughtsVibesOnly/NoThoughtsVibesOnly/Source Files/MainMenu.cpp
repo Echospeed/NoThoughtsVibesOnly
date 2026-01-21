@@ -27,7 +27,7 @@ void MainMenu_Load() {
     AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
     pSquareMesh = AEGfxMeshEnd();
 
-    fontId = AEGfxCreateFont("../Assets/buggy-font.ttf", 30);
+    fontId = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
 
     buttons.push_back({ 0.0f, 0.0f, 300.0f, 80.0f, 0.0f, 0.7f, 0.0f, STATE_GAME, false, "START" });
     buttons.push_back({ 0.0f, -100.0f, 300.0f, 80.0f, 0.8f, 0.0f, 0.0f, STATE_QUIT, false, "QUIT" });
@@ -76,6 +76,7 @@ void MainMenu_Unload() {
     AEGfxDestroyFont(fontId);
 }
 
+// Old Code
 //// ---------------------------------------------------------------------------
 //// Includes
 //// ---------------------------------------------------------------------------

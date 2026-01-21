@@ -5,6 +5,15 @@
 
 namespace Meshes{
 
+	extern AEGfxVertexList* pSquareCOriMesh;
+	extern AEGfxVertexList* pSquareLOriMesh;
+	extern AEGfxVertexList* pCircleMesh;
+
+	void CreateSquareCenterOriginMesh();
+	void CreateSquareLeftOriginMesh();
+	void CreateCircleMesh();
+	void FreeMeshes();
+
 	AEGfxVertexList* pSquareCOriMesh = nullptr;
 	AEGfxVertexList* pSquareLOriMesh = nullptr;
 	AEGfxVertexList* pCircleMesh = nullptr;

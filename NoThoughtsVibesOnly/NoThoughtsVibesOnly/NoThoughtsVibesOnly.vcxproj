@@ -14,7 +14,6 @@
     <ClCompile Include="Source Files\GameObject.cpp" />
     <ClCompile Include="Source Files\GamePage.cpp" />
     <ClCompile Include="Source Files\Main.cpp" />
-    <ClCompile Include="Source Files\MainMenu.cpp" />
     <ClCompile Include="Source Files\MenuPage.cpp" />
     <ClCompile Include="Source Files\Particles.cpp" />
     <ClCompile Include="Source Files\pch.cpp" />
@@ -24,7 +23,6 @@
   <ItemGroup>
     <ClInclude Include="Header Files\GameObject.h" />
     <ClInclude Include="Header Files\GamePage.h" />
-    <ClInclude Include="Header Files\MainMenu.h" />
     <ClInclude Include="Header Files\MenuPage.h" />
     <ClInclude Include="Header Files\Particles.h" />
     <ClInclude Include="Header Files\pch.h" />

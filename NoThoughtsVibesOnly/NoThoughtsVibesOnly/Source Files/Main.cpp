@@ -22,12 +22,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	AESysInit(hInstance, nCmdShow, 1600, 900, 1, 60, false, NULL);
 
 	// Changing the window title
-	AESysSetWindowTitle("My New Demo!");
+	AESysSetWindowTitle("NoThoughtsVibesOnly");
 
 	// reset the system modules
 	AESysReset();
 
-	printf("Hello World\n");
+	printf("Start\n");
 
 	// System Initializer (Audio, Input, Graphics, etc.)
 	
