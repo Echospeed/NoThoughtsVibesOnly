@@ -52,7 +52,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		fpInitialize();
 
-		//Game Loop
+		// Game Loop
 		while (next == current)
 		{
 			AESysFrameStart();
@@ -85,6 +85,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		current = next;
 	}
 
-	// free the system
+	// Free the system
 	AESysExit();
 }

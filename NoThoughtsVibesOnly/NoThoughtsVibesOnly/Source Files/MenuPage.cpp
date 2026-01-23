@@ -137,6 +137,7 @@ void Main_Update()
 
 			if (AEInputCheckTriggered(AEVK_LBUTTON))
 			{
+				// Button functions
 				switch (btn.actionID)
 				{
 				case 1: next = STATE_PLAYING; break;
@@ -157,10 +158,13 @@ void Main_Update()
 
 void Main_Draw()
 {
+	// Reset Camera to (0,0) so the menu is always centered
+	AEGfxSetCamPosition(0.0f, 0.0f);
+
 	AEGfxSetRenderMode(AE_GFX_RM_COLOR);
 	AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
-	// 1. Draw Headers
+	// Draw Headers
 	if (subState == SUB_CONTROLS) {
 		DrawTextCentered("CONTROLS", 0.0f, 300.0f);
 		DrawTextCentered("WASD to Move", 0.0f, 200.0f);
@@ -175,7 +179,7 @@ void Main_Draw()
 		DrawTextCentered("<Insert game name here>", 0.0f, 300.0f);
 	}
 
-	// 2. Draw Buttons
+	// Draw Buttons
 	for (const auto& btn : buttons)
 	{
 		// Draw Mesh

@@ -1,5 +1,7 @@
+// Implements the rendering logic using the Global Functions (AEGfxSetTransform, AEGfxMeshDraw) listed in the documentation
 #include "pch.h"
-//Implements the rendering logic using the Global Functions (AEGfxSetTransform, AEGfxMeshDraw) listed in the documentation.
+#include "GameObject.h"
+
 GameObject::GameObject() :
     pos{ 0.0f, 0.0f }, velocity{ 0.0f, 0.0f },
     rotation(0.0f), scale(1.0f),
@@ -28,10 +30,12 @@ void GameObject::Draw() {
     AEGfxSetTransform(transform.m);
 
     // Set Tint for the mesh using bitwise extraction
-    AEGfxSetColorToAdd(
+    AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+
+    AEGfxSetColorToMultiply(
         ((color >> 16) & 0xFF) / 255.0f, // Red
-        ((color >> 8) & 0xFF) / 255.0f, // Green
-        ((color) & 0xFF) / 255.0f, // Blue
+        ((color >> 8) & 0xFF) / 255.0f,  // Green
+        ((color) & 0xFF) / 255.0f,       // Blue
         ((color >> 24) & 0xFF) / 255.0f  // Alpha
     );
 

@@ -14,3 +14,7 @@ struct Experience
 		ExpPercentage = CurrentExp / MaxExp;
 	}
 };
+
+void DrawExpBar(const Experience& exp, f32 xpos, f32 ypos, f32 width, f32 height);
+
+void AddExp(Experience& exp, f32 amount);

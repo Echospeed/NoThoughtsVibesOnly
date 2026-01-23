@@ -4,21 +4,20 @@
 // Enumeration for Game States to handle transitions
 //add new levels here
 
-enum GameState 
-{
+enum GameState {
 	STATE_MENU,
 	STATE_PLAYING,
 	STATE_RESTART,
 	STATE_QUIT
 };
 
-typedef void(*FP)(void);
+// Function Pointer Type
+typedef void (*FP)(void);
 
+// Declare variables as extern here
 extern int current, previous, next;
-
 extern FP fpLoad, fpInitialize, fpUpdate, fpDraw, fpFree, fpUnload;
 
+// Function Prototypes
 void StateManager_Init(GameState state);
-
 void StateManager_Update();
-
