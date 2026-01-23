@@ -4,7 +4,9 @@ namespace Meshes{
 	AEGfxVertexList* pSquareCOriMesh = nullptr;
 	AEGfxVertexList* pSquareLOriMesh = nullptr;
 	AEGfxVertexList* pCircleMesh = nullptr;
+	AEGfxVertexList* pTriangleMesh = nullptr;
 
+	//to be called in load/initialization
 	// Standard Square Mesh with center origin for center scaling/rotation transformations
 	void CreateSquareCenterOriginMesh()
 	{
@@ -24,6 +26,7 @@ namespace Meshes{
 		pSquareCOriMesh = AEGfxMeshEnd();
 	}
 
+	//to be called in load/initialization
 	// Standard Square Mesh with left origin for left-aligned scaling/rotation transformations
 	void CreateSquareLeftOriginMesh()
 	{
@@ -42,7 +45,8 @@ namespace Meshes{
 		pSquareLOriMesh = AEGfxMeshEnd();
 	}
 
-	// Standard Circle Mesh for UI
+	//to be called in load/initialization
+	// Standard Circle Mesh for UI 
 	void CreateCircleMesh()
 	{
 		AEGfxMeshStart();
@@ -66,6 +70,18 @@ namespace Meshes{
 		pCircleMesh = AEGfxMeshEnd();
 	}
 
+	//to be called in load/initialization
+	// Standard Triangle Mesh
+	void CreateTriangleMesh()
+	{
+		AEGfxMeshStart();
+		AEGfxTriAdd(-15.0f, -15.0f, 0xFFFFFFFF, 0.0f, 0.0f,
+			15.0f, -15.0f, 0xFFFFFFFF, 0.0f, 0.0f,
+			0.0f, 20.0f, 0xFFFFFFFF, 0.0f, 0.0f);
+		pTriangleMesh = AEGfxMeshEnd();
+	}
+
+	//to be called in unload/cleanup
 	void FreeMeshes()
 	{
 		if (pSquareCOriMesh){
@@ -82,9 +98,15 @@ namespace Meshes{
 			AEGfxMeshFree(pCircleMesh);
 			pCircleMesh = nullptr;
 		}
+		if(pTriangleMesh)
+		{
+			AEGfxMeshFree(pTriangleMesh);
+			pTriangleMesh = nullptr;
+		}
 	}
 }
 
+// -----------------------------------------------------------------------------
 void CreateSquare(AEGfxVertexList* Mesh, AEMtx33* transform, AEMtx33* scale, AEMtx33* rotate, AEMtx33* translate,
 	f32 xpos, f32 ypos, f32 scaleX, f32 scaleY, f32 rot,
 	f32 r, f32 g, f32 b, f32 a) {
@@ -108,5 +130,15 @@ void CreateCircle(AEGfxVertexList* Mesh, AEMtx33* transform, AEMtx33* scale, AEM
 	f32 xpos, f32 ypos, f32 radius, f32 rot,
 	f32 r, f32 g, f32 b, f32 a)
 {
+	AEGfxSetColorToMultiply(r, g, b, a);
 
+	AEMtx33Scale(scale, radius, radius);
+	AEMtx33Rot(rotate, rot);
+	AEMtx33Trans(translate, xpos, ypos);
+
+	AEMtx33Concat(transform, rotate, scale);
+	AEMtx33Concat(transform, translate, transform);
+
+	AEGfxSetTransform(transform->m);
+	AEGfxMeshDraw(Mesh, AE_GFX_MDM_TRIANGLES);
 }

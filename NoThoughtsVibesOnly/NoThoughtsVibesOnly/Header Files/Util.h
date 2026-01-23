@@ -5,12 +5,15 @@ namespace Meshes{
 	extern AEGfxVertexList* pSquareCOriMesh;
 	extern AEGfxVertexList* pSquareLOriMesh;
 	extern AEGfxVertexList* pCircleMesh;
+	extern AEGfxVertexList* pTriangleMesh;
 	// Standard Square Mesh for UI
 	void CreateSquareCenterOriginMesh();
 	// Standard Square Mesh for UI
 	void CreateSquareLeftOriginMesh();
 	// Standard Circle Mesh for UI
 	void CreateCircleMesh();
+	// Standard Triangle Mesh
+	void CreateTriangleMesh();
 
 	void FreeMeshes();
 }

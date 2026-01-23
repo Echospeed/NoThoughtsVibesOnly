@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source Files\ExpUI.cpp" />
     <ClCompile Include="Source Files\GameObject.cpp" />
     <ClCompile Include="Source Files\GamePage.cpp" />
     <ClCompile Include="Source Files\Main.cpp" />
@@ -21,6 +22,7 @@
     <ClCompile Include="Source Files\Util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Header Files\ExpUI.h" />
     <ClInclude Include="Header Files\GameObject.h" />
     <ClInclude Include="Header Files\GamePage.h" />
     <ClInclude Include="Header Files\MenuPage.h" />
