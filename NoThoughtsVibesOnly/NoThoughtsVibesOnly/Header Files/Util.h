@@ -1,7 +1,7 @@
 #pragma once
 #include "pch.h"
 
-namespace Meshes{
+namespace Meshes {
 	extern AEGfxVertexList* pSquareCOriMesh;
 	extern AEGfxVertexList* pSquareLOriMesh;
 	extern AEGfxVertexList* pCircleMesh;

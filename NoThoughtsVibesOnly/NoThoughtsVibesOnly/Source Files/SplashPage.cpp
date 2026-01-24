@@ -38,7 +38,7 @@ void SplashPage_Update()
 	timer += (float)AEFrameRateControllerGetFrameTime();
 	if (timer > 6.0f || AEInputCheckTriggered(AEVK_SPACE)) // 6 seconds or space key
 	{
-		next = STATE_MENU;
+		StateManagerChangeState(STATE_MENU);
 	}
 }
 

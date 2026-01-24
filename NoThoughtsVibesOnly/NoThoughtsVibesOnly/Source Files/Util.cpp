@@ -1,6 +1,6 @@
 #include "Util.h"
 
-namespace Meshes{
+namespace Meshes {
 	AEGfxVertexList* pSquareCOriMesh = nullptr;
 	AEGfxVertexList* pSquareLOriMesh = nullptr;
 	AEGfxVertexList* pCircleMesh = nullptr;
@@ -84,7 +84,7 @@ namespace Meshes{
 	//to be called in unload/cleanup
 	void FreeMeshes()
 	{
-		if (pSquareCOriMesh){
+		if (pSquareCOriMesh) {
 			AEGfxMeshFree(pSquareCOriMesh);
 			pSquareCOriMesh = nullptr;
 		}
@@ -98,7 +98,7 @@ namespace Meshes{
 			AEGfxMeshFree(pCircleMesh);
 			pCircleMesh = nullptr;
 		}
-		if(pTriangleMesh)
+		if (pTriangleMesh)
 		{
 			AEGfxMeshFree(pTriangleMesh);
 			pTriangleMesh = nullptr;

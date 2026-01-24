@@ -11,26 +11,37 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source Files\Button.cpp" />
+    <ClCompile Include="Source Files\Collider.cpp" />
     <ClCompile Include="Source Files\ExpUI.cpp" />
     <ClCompile Include="Source Files\GameObject.cpp" />
     <ClCompile Include="Source Files\GamePage.cpp" />
+    <ClCompile Include="Source Files\Input.cpp" />
     <ClCompile Include="Source Files\Main.cpp" />
     <ClCompile Include="Source Files\MenuPage.cpp" />
     <ClCompile Include="Source Files\Particles.cpp" />
-    <ClCompile Include="Source Files\pch.cpp" />
     <ClCompile Include="Source Files\SplashPage.cpp" />
+    <ClCompile Include="Source Files\SpriteRenderer.cpp" />
     <ClCompile Include="Source Files\StateManager.cpp" />
+    <ClCompile Include="Source Files\TextRenderer.cpp" />
+    <ClCompile Include="Source Files\Transform.cpp" />
     <ClCompile Include="Source Files\Util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Header Files\Button.h" />
+    <ClInclude Include="Header Files\Collider.h" />
     <ClInclude Include="Header Files\ExpUI.h" />
     <ClInclude Include="Header Files\GameObject.h" />
     <ClInclude Include="Header Files\GamePage.h" />
+    <ClInclude Include="Header Files\Input.h" />
     <ClInclude Include="Header Files\MenuPage.h" />
     <ClInclude Include="Header Files\Particles.h" />
     <ClInclude Include="Header Files\pch.h" />
     <ClInclude Include="Header Files\SplashPage.h" />
+    <ClInclude Include="Header Files\SpriteRenderer.h" />
     <ClInclude Include="Header Files\StateManager.h" />
+    <ClInclude Include="Header Files\TextRenderer.h" />
+    <ClInclude Include="Header Files\Transform.h" />
     <ClInclude Include="Header Files\Util.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

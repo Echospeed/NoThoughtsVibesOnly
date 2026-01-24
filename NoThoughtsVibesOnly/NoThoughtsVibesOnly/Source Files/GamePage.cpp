@@ -127,7 +127,7 @@ void Game_Draw()
     // Draw Background (with Grids)
     AEGfxSetColorToMultiply(0.5f, 0.5f, 0.5f, 1.0f);
 
-    
+
 
     // Draw Objects
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);

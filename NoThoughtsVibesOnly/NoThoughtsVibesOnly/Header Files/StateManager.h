@@ -4,7 +4,8 @@
 // Enumeration for Game States to handle transitions
 //add new levels here
 
-enum GameState {
+enum GameState 
+{
 	STATE_SPLASH,
 	STATE_MENU,
 	STATE_PLAYING,
@@ -12,13 +13,22 @@ enum GameState {
 	STATE_QUIT
 };
 
-// Function Pointer Type
-typedef void (*FP)(void);
+typedef void(*FP)(void);
 
-// Declare variables as extern here
 extern int current, previous, next;
+
 extern FP fpLoad, fpInitialize, fpUpdate, fpDraw, fpFree, fpUnload;
 
-// Function Prototypes
-void StateManager_Init(GameState state);
-void StateManager_Update();
+extern const f32 SCREEN_W, SCREEN_H;
+
+void StateManagerInit(GameState state);
+
+void StateManagerUpdate();
+
+void StateManagerChangeState(GameState state);
+
+void StateManagerMenuPage();
+
+void StateManagerGamePage();
+
+void StateManagerQuit();

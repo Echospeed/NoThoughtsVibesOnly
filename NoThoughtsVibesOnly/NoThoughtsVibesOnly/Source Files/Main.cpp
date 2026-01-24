@@ -32,7 +32,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	// System Initializer (Audio, Input, Graphics, etc.)
 	
 	// State Manager Initialization
-	StateManager_Init(STATE_SPLASH);
+	StateManagerInit(STATE_SPLASH);
 
 	f64 deltaTime = AEFrameRateControllerGetFrameTime();
 	// Game Loop
@@ -41,7 +41,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		// Informing the system about the loop's start
 		if (current != STATE_RESTART)
 		{
-			StateManager_Update();
+			StateManagerUpdate();
 			fpLoad();
 		}
 		else
@@ -52,7 +52,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		fpInitialize();
 
-		// Game Loop
+		//Game Loop
 		while (next == current)
 		{
 			AESysFrameStart();
@@ -66,7 +66,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
 			// Your own rendering logic goes here
-			//AEGfxSetBackgroundColor(0.5f, 0.5f, 0.5f);
+			AEGfxSetBackgroundColor(0.5f, 0.5f, 0.5f);
 			AEGfxSetRenderMode(AE_GFX_RM_COLOR);
 			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
@@ -85,6 +85,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		current = next;
 	}
 
-	// Free the system
+	// free the system
 	AESysExit();
 }

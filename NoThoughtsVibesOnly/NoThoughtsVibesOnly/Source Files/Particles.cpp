@@ -1,6 +1,5 @@
 #include "Particles.h"
 
-
 ParticleSystem::ParticleSystem()
 {
     particleMesh = nullptr;
