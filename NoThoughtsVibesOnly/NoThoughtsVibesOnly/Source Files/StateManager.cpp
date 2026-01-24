@@ -1,6 +1,7 @@
 #include "StateManager.h"
 #include "MenuPage.h"
 #include "GamePage.h"
+#include "SplashPage.h"
 
 int current = 0, previous = 0, next = 0;
 
@@ -17,6 +18,14 @@ void StateManager_Update()
     
     switch (current)
     {
+    case STATE_SPLASH:
+        fpLoad = SplashPage_Load;
+        fpInitialize = SplashPage_Init;
+        fpUpdate = SplashPage_Update;
+        fpDraw = SplashPage_Draw;
+        fpFree = SplashPage_Free;
+        fpUnload = SplashPage_Unload;
+        break;
     case STATE_MENU:
         fpLoad = Main_Load;
         fpInitialize = Main_Init;

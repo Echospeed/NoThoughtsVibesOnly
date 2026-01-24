@@ -5,6 +5,7 @@
 //add new levels here
 
 enum GameState {
+	STATE_SPLASH,
 	STATE_MENU,
 	STATE_PLAYING,
 	STATE_RESTART,

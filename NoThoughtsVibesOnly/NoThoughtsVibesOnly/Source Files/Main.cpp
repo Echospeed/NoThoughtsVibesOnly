@@ -32,7 +32,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	// System Initializer (Audio, Input, Graphics, etc.)
 	
 	// State Manager Initialization
-	StateManager_Init(STATE_MENU);
+	StateManager_Init(STATE_SPLASH);
 
 	f64 deltaTime = AEFrameRateControllerGetFrameTime();
 	// Game Loop
@@ -66,7 +66,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
 			// Your own rendering logic goes here
-			AEGfxSetBackgroundColor(0.5f, 0.5f, 0.5f);
+			//AEGfxSetBackgroundColor(0.5f, 0.5f, 0.5f);
 			AEGfxSetRenderMode(AE_GFX_RM_COLOR);
 			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 

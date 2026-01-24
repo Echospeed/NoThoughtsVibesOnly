@@ -18,6 +18,7 @@
     <ClCompile Include="Source Files\MenuPage.cpp" />
     <ClCompile Include="Source Files\Particles.cpp" />
     <ClCompile Include="Source Files\pch.cpp" />
+    <ClCompile Include="Source Files\SplashPage.cpp" />
     <ClCompile Include="Source Files\StateManager.cpp" />
     <ClCompile Include="Source Files\Util.cpp" />
   </ItemGroup>
@@ -28,6 +29,7 @@
     <ClInclude Include="Header Files\MenuPage.h" />
     <ClInclude Include="Header Files\Particles.h" />
     <ClInclude Include="Header Files\pch.h" />
+    <ClInclude Include="Header Files\SplashPage.h" />
     <ClInclude Include="Header Files\StateManager.h" />
     <ClInclude Include="Header Files\Util.h" />
   </ItemGroup>
