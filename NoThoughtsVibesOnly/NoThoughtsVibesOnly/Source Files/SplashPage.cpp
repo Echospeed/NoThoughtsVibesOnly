@@ -52,7 +52,7 @@ void SplashPage_Draw()
 
 	// Example: Draw a simple rectangle as a placeholder for a logo
 	AEMtx33 transform, scale, translate;
-	AEMtx33Scale(&scale, AEClamp(Lerp(1000, 1525.0f, timer),0,1525), AEClamp(Lerp(300.0f, 445.0f, timer),0,445));
+	AEMtx33Scale(&scale, Lerp(1000, 1525.0f, timer/6.0f), Lerp(300.0f, 445.0f, timer/6.0f));
 	AEMtx33Trans(&translate, 0.0f, 0.0f);
 	AEMtx33Concat(&transform, &translate, &scale);
 	AEGfxSetTransform(transform.m);
