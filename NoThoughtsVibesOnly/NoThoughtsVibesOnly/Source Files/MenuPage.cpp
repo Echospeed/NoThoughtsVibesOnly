@@ -40,6 +40,9 @@ void Main_Load()
 
 void Main_Init()
 {
+	// Reset the camera to the origin so the menu is centered
+	AEGfxSetCamPosition(0.0f, 0.0f);
+
 	InitTextRenderer(mainText, "No Thoughts, Vibes Only", 1.0f, 1.0f, 1.0f, 1.0f);
 	InitButton(startButton, "START", nullptr, { 0.0f, 100.0f }, { 300.0f, 75.0f }, StateManagerGamePage, 0.0f, 0.6f, 0.0f);
 	InitButton(controlsButton, "CONTROL", nullptr, { 0.0f, 0.0f }, { 300.0f, 75.0f }, nullptr, 0.0f, 0.3f, 0.7f);
