@@ -19,6 +19,7 @@
     <ClCompile Include="Source Files\Input.cpp" />
     <ClCompile Include="Source Files\Main.cpp" />
     <ClCompile Include="Source Files\MenuPage.cpp" />
+    <ClCompile Include="Source Files\MiniMap.cpp" />
     <ClCompile Include="Source Files\Particles.cpp" />
     <ClCompile Include="Source Files\SplashPage.cpp" />
     <ClCompile Include="Source Files\SpriteRenderer.cpp" />
@@ -35,6 +36,7 @@
     <ClInclude Include="Header Files\GamePage.h" />
     <ClInclude Include="Header Files\Input.h" />
     <ClInclude Include="Header Files\MenuPage.h" />
+    <ClInclude Include="Header Files\MiniMap.h" />
     <ClInclude Include="Header Files\Particles.h" />
     <ClInclude Include="Header Files\pch.h" />
     <ClInclude Include="Header Files\SplashPage.h" />

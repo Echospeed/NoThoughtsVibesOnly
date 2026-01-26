@@ -3,7 +3,7 @@
 #include "StateManager.h"
 #include <vector>
 #include "ExpUI.h"
-// #include "MiniMap.h"
+#include "MiniMap.h"
 
 // ---------------------------------------------------------------------------
 // World Settings
@@ -19,7 +19,11 @@ static std::vector<GameObject> sEnemyList;
 static GameObject sPlayer;
 static float playerSpeed = 300.0f;
 
-Experience PlayerExp;
+// Experience PlayerExp;
+
+static float sCamX = 0.0f;
+static float sCamY = 0.0f;
+const float CAM_SPEED = 5.0f; // Higher = tighter, Lower = smoother/looser
 
 void Game_Load()
 {
@@ -38,6 +42,8 @@ void Game_Init()
     sPlayer.color = 0xFFFF0000; // Red
     sPlayer.pMesh = Meshes::pSquareCOriMesh;
     sPlayer.velocity = { 0.0f, 0.0f };
+    sCamX = sPlayer.pos.x;
+    sCamY = sPlayer.pos.y;
 
     // Initialize Enemies
     for (int i = 0; i < 5; ++i) {
@@ -79,6 +85,11 @@ void Game_Update()
     if (sPlayer.pos.y > halfWorldHeight - halfPlayerSize) sPlayer.pos.y = halfWorldHeight - halfPlayerSize;
     if (sPlayer.pos.y < -halfWorldHeight + halfPlayerSize) sPlayer.pos.y = -halfWorldHeight + halfPlayerSize;
 
+    // Smooth Camera Follow (Lerp)
+    // This calculates the difference between player and camera, and moves a fraction of that distance
+    sCamX += (sPlayer.pos.x - sCamX) * CAM_SPEED * dt;
+    sCamY += (sPlayer.pos.y - sCamY) * CAM_SPEED * dt;
+
     // -----------------------------------------------------------------------
     // Game State Controls
     // -----------------------------------------------------------------------
@@ -99,7 +110,7 @@ void Game_Draw()
     // -----------------------------------------------------------------------
     // Camera Follow
     // -----------------------------------------------------------------------
-    AEGfxSetCamPosition(sPlayer.pos.x, sPlayer.pos.y);
+    AEGfxSetCamPosition(sCamX, sCamY);
 
     AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
@@ -127,7 +138,22 @@ void Game_Draw()
     // Draw Background (with Grids)
     AEGfxSetColorToMultiply(0.5f, 0.5f, 0.5f, 1.0f);
 
-
+    // Vertical Lines
+    for (float gx = -WORLD_WIDTH / 2; gx <= WORLD_WIDTH / 2; gx += GRID_SIZE) {
+        AEMtx33Scale(&s, 2.0f, WORLD_HEIGHT);
+        AEMtx33Trans(&t, gx, 0.0f);
+        AEMtx33Concat(&transform, &t, &s);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
+    }
+    // Horizontal Lines
+    for (float gy = -WORLD_HEIGHT / 2; gy <= WORLD_HEIGHT / 2; gy += GRID_SIZE) {
+        AEMtx33Scale(&s, WORLD_WIDTH, 2.0f);
+        AEMtx33Trans(&t, 0.0f, gy);
+        AEMtx33Concat(&transform, &t, &s);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
+    }
 
     // Draw Objects
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
@@ -145,7 +171,7 @@ void Game_Draw()
     // DrawExpBar(PlayerExp, -700.0f + camX, 400.0f + camY, 200.0f, 30.0f);
 
     // Minimap
-    // DrawMinimap(sPlayer, sEnemyList);
+    DrawMinimap(sPlayer, sEnemyList, sCamX, sCamY);
 }
 
 void Game_Free()

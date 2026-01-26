@@ -60,6 +60,9 @@
     <ClCompile Include="Source Files\ExpUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source Files\MiniMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Header Files\Particles.h">
@@ -107,5 +110,8 @@
     <ClInclude Include="Header Files\SplashPage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+	<ClInclude Include="Header Files\MiniMap.h">
+	  <Filter>Header Files</Filter>
+	</ClInclude>
   </ItemGroup>
 </Project>
