@@ -1,9 +1,11 @@
 #include "pch.h"
 #include "GamePage.h"
 #include "StateManager.h"
-#include <vector>
 #include "ExpUI.h"
 #include "MiniMap.h"
+#include "Player.h"
+#include "Enemy.h"
+#include <vector>
 
 // ---------------------------------------------------------------------------
 // World Settings
@@ -15,15 +17,15 @@ const float GRID_SIZE = 100.0f;
 // ---------------------------------------------------------------------------
 // Global/Static Variables
 // ---------------------------------------------------------------------------
-static std::vector<GameObject> sEnemyList;
-static GameObject sPlayer;
-static float playerSpeed = 300.0f;
+static Player sPlayer;
+static std::vector<Enemy> sEnemy;
 
-// Experience PlayerExp;
+const float ENEMY_NO = 10.0f; // Number of Enemies
 
+// Camera variables
 static float sCamX = 0.0f;
 static float sCamY = 0.0f;
-const float CAM_SPEED = 5.0f; // Higher = tighter, Lower = smoother/looser
+const float CAM_SPEED = 5.0f; // Camera Speed (higher = smoother, lower = sharper)
 
 void Game_Load()
 {
@@ -34,28 +36,23 @@ void Game_Load()
 
 void Game_Init()
 {
-    sEnemyList.clear();
+    sEnemy.clear();
 
     // Initialize Player
-    sPlayer.pos = { 0.0f, 0.0f };
-    sPlayer.scale = 50.0f;
-    sPlayer.color = 0xFFFF0000; // Red
-    sPlayer.pMesh = Meshes::pSquareCOriMesh;
-    sPlayer.velocity = { 0.0f, 0.0f };
+    sPlayer.Init();
+
+    // Reset Camera to player
     sCamX = sPlayer.pos.x;
     sCamY = sPlayer.pos.y;
 
     // Initialize Enemies
-    for (int i = 0; i < 5; ++i) {
-        GameObject enemy;
+    for (int i = 0; i < ENEMY_NO; ++i) {
+        Enemy enemy;
         float rX = (rand() % (int)WORLD_WIDTH) - (WORLD_WIDTH / 2.0f);
         float rY = (rand() % (int)WORLD_HEIGHT) - (WORLD_HEIGHT / 2.0f);
 
-        enemy.pos = { rX, rY };
-        enemy.pMesh = Meshes::pTriangleMesh;
-        enemy.color = 0xFFFFFF00; // Yellow
-        enemy.scale = 1.0f;
-        sEnemyList.push_back(enemy);
+        enemy.Init(rX, rY);
+        sEnemy.push_back(enemy);
     }
 }
 
@@ -63,57 +60,27 @@ void Game_Update()
 {
     float dt = (float)AEFrameRateControllerGetFrameTime();
 
-    // Reset Velocity
-    sPlayer.velocity = { 0.0f, 0.0f };
+    // Update Player
+    sPlayer.Update(dt, WORLD_WIDTH, WORLD_HEIGHT);
 
-    // Player Input
-    if (AEInputCheckCurr(AEVK_W)) sPlayer.velocity.y += playerSpeed;
-    if (AEInputCheckCurr(AEVK_S)) sPlayer.velocity.y -= playerSpeed;
-    if (AEInputCheckCurr(AEVK_A)) sPlayer.velocity.x -= playerSpeed;
-    if (AEInputCheckCurr(AEVK_D)) sPlayer.velocity.x += playerSpeed;
-
-    // Apply Movement
-    sPlayer.Update(dt);
-
-    // Boundary Logic
-    float halfWorldWidth = WORLD_WIDTH / 2.0f;
-    float halfWorldHeight = WORLD_HEIGHT / 2.0f;
-    float halfPlayerSize = sPlayer.scale / 2.0f;
-
-    if (sPlayer.pos.x > halfWorldWidth - halfPlayerSize) sPlayer.pos.x = halfWorldWidth - halfPlayerSize;
-    if (sPlayer.pos.x < -halfWorldWidth + halfPlayerSize) sPlayer.pos.x = -halfWorldWidth + halfPlayerSize;
-    if (sPlayer.pos.y > halfWorldHeight - halfPlayerSize) sPlayer.pos.y = halfWorldHeight - halfPlayerSize;
-    if (sPlayer.pos.y < -halfWorldHeight + halfPlayerSize) sPlayer.pos.y = -halfWorldHeight + halfPlayerSize;
-
-    // Smooth Camera Follow (Lerp)
-    // This calculates the difference between player and camera, and moves a fraction of that distance
+    // Smooth Camera Follow
     sCamX += (sPlayer.pos.x - sCamX) * CAM_SPEED * dt;
     sCamY += (sPlayer.pos.y - sCamY) * CAM_SPEED * dt;
 
-    // -----------------------------------------------------------------------
     // Game State Controls
-    // -----------------------------------------------------------------------
-
-    // Restart Level
     if (AEInputCheckTriggered(AEVK_R)) current = STATE_RESTART;
-
-    // Return to Main Menu
     if (AEInputCheckTriggered(AEVK_Q)) next = STATE_MENU;
 
-    for (auto& enemy : sEnemyList) {
+    // Update Enemies
+    for (auto& enemy : sEnemy) {
         enemy.Update(dt);
     }
 }
 
 void Game_Draw()
 {
-    // -----------------------------------------------------------------------
     // Camera Follow
-    // -----------------------------------------------------------------------
     AEGfxSetCamPosition(sCamX, sCamY);
-
-    AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
-    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
     // -----------------------------------------------------------------------
     // Draw World
@@ -159,7 +126,7 @@ void Game_Draw()
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
     sPlayer.Draw();
 
-    for (auto& enemy : sEnemyList) {
+    for (auto& enemy : sEnemy) {
         enemy.Draw();
     }
 
@@ -171,12 +138,12 @@ void Game_Draw()
     // DrawExpBar(PlayerExp, -700.0f + camX, 400.0f + camY, 200.0f, 30.0f);
 
     // Minimap
-    DrawMinimap(sPlayer, sEnemyList, sCamX, sCamY);
+    DrawMinimap(sPlayer, sEnemy, sCamX, sCamY);
 }
 
 void Game_Free()
 {
-    sEnemyList.clear();
+    sEnemy.clear();
 }
 
 void Game_Unload()

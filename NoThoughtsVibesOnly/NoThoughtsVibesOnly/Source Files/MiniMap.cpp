@@ -7,11 +7,11 @@
 const float MINI_WORLD_REF_WIDTH = 2000.0f;
 
 const float MINI_SIZE = 200.0f;
-const float MINI_X = 650.0f;    // Screen Offset X
-const float MINI_Y = 300.0f;    // Screen Offset Y
+const float MINI_X = 650.0f; // Screen Offset X
+const float MINI_Y = 300.0f; // Screen Offset Y
 const float MINI_SCALE = MINI_SIZE / MINI_WORLD_REF_WIDTH;
 
-void DrawMinimap(const GameObject& player, const std::vector<GameObject>& enemies, float camX, float camY)
+void DrawMinimap(const Player& player, const std::vector<Enemy>& enemies, float camX, float camY) 
 {
 
     // Calculate World Coordinates for the Minimap Background

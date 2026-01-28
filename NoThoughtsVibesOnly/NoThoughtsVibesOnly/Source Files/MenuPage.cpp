@@ -11,19 +11,19 @@
 // Stuct Objects and Variables
 // ---------------------------------------------------------------------------
 
-//Mouse
+// Mouse
 Mouse worldMouse; // World Position Mouse: Used on UI Game Object
 
-//Buttons
+// Buttons
 Button startButton;
 Button controlsButton;
 Button creditsButton;
 Button quitButton;
 
-//Text Renderer
+// Text Renderer
 TextRenderer mainText;
 
-//Font 
+// Font 
 s8 fontPath{};
 
 void Main_Load()

@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="Source Files\Button.cpp" />
     <ClCompile Include="Source Files\Collider.cpp" />
+    <ClCompile Include="Source Files\Enemy.cpp" />
     <ClCompile Include="Source Files\ExpUI.cpp" />
     <ClCompile Include="Source Files\GameObject.cpp" />
     <ClCompile Include="Source Files\GamePage.cpp" />
@@ -22,6 +23,7 @@
     <ClCompile Include="Source Files\MenuPage.cpp" />
     <ClCompile Include="Source Files\MiniMap.cpp" />
     <ClCompile Include="Source Files\Particles.cpp" />
+    <ClCompile Include="Source Files\Player.cpp" />
     <ClCompile Include="Source Files\SplashPage.cpp" />
     <ClCompile Include="Source Files\SpriteRenderer.cpp" />
     <ClCompile Include="Source Files\StateManager.cpp" />
@@ -32,6 +34,7 @@
   <ItemGroup>
     <ClInclude Include="Header Files\Button.h" />
     <ClInclude Include="Header Files\Collider.h" />
+    <ClInclude Include="Header Files\Enemy.h" />
     <ClInclude Include="Header Files\ExpUI.h" />
     <ClInclude Include="Header Files\GameObject.h" />
     <ClInclude Include="Header Files\GamePage.h" />
@@ -41,6 +44,7 @@
     <ClInclude Include="Header Files\MiniMap.h" />
     <ClInclude Include="Header Files\Particles.h" />
     <ClInclude Include="Header Files\pch.h" />
+    <ClInclude Include="Header Files\Player.h" />
     <ClInclude Include="Header Files\SplashPage.h" />
     <ClInclude Include="Header Files\SpriteRenderer.h" />
     <ClInclude Include="Header Files\StateManager.h" />
