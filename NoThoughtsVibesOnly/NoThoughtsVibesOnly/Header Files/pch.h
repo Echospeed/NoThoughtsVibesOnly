@@ -18,5 +18,6 @@
 #include "Button.h"
 #include <vector>
 #include <string>
+#include <iostream>
 
 #endif //PCH_H

@@ -2,14 +2,17 @@
 #include "Util.h"
 #include "SpriteRenderer.h"
 
-void InitSpriteRenderer(SpriteRenderer& spriteRenderer, const char* texturePath, f32 width, f32 height)
+AEGfxVertexList* list{ nullptr };
+
+void InitSpriteRenderer(SpriteRenderer& spriteRenderer, const char* texturePath, f32 width, f32 height, MeshType mesh)
 {
     spriteRenderer.texture = (texturePath != NULL) ? AEGfxTextureLoad(texturePath) : nullptr;
     spriteRenderer.width = width;
     spriteRenderer.height = height;
+    spriteRenderer.meshType = mesh;
 }
 
-void DrawSpriteRenderer(const SpriteRenderer& spriteRenderer, Transform& transform, f32 r = 0, f32 g = 0, f32 b = 0)
+void DrawSpriteRenderer(const SpriteRenderer& spriteRenderer, Transform& transform)
 {
     if (!spriteRenderer.texture)
     {
@@ -22,11 +25,23 @@ void DrawSpriteRenderer(const SpriteRenderer& spriteRenderer, Transform& transfo
         AEGfxTextureSet(spriteRenderer.texture, 0, 0);
     }
     AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
-    AEGfxSetColorToAdd(r, g, b, 1.0f);
+    AEGfxSetColorToAdd(spriteRenderer.colour.r, spriteRenderer.colour.g, spriteRenderer.colour.b, 1.0f);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(1.0f);
 	TransformMovement(transform);
-    AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
+    if (spriteRenderer.meshType == MESH_SQUARE)
+    {
+        list = Meshes::pSquareCOriMesh;
+    }
+    else if (spriteRenderer.meshType == MESH_TRIANGLE)
+    {
+        list = Meshes::pTriangleMesh;
+    }
+    else if (spriteRenderer.meshType == MESH_CIRCLE)
+    {
+        list = Meshes::pCircleMesh;
+    }
+    AEGfxMeshDraw(list, AE_GFX_MDM_TRIANGLES);
 }
 
 void FreeSpriteRenderer(SpriteRenderer& spriteRenderer)
@@ -37,4 +52,5 @@ void FreeSpriteRenderer(SpriteRenderer& spriteRenderer)
         AEGfxTextureUnload(spriteRenderer.texture);
         spriteRenderer.texture = nullptr;
 	}
+    list = nullptr;
 }

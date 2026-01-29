@@ -15,7 +15,6 @@ struct Button
     TextRenderer textRenderer{};
     const char* texturePath{};
 	f32 r{}, g{}, b{}; // Tinted when hovered
-    f32 baseR{}, baseG{}, baseB{}; // Default white
     bool isHovered{ false };
     ButtonFunction onClick{ nullptr };
 };

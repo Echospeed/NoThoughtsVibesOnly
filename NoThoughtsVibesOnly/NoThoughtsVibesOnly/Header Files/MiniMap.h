@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include "Player.h"
-#include "Enemy.h"
+#include "GameObject.h"
 
-void DrawMinimap(const Player& player, const std::vector<Enemy>& enemies, float camX, float camY);
+void DrawMinimap(const std::vector<GameObject*>& enemies, float camX, float camY);

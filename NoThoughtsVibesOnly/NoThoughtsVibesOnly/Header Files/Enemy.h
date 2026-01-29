@@ -1,19 +1,10 @@
 #pragma once
-#include "pch.h"
+#include "AEEngine.h"
+#include "GameObject.h"
 
-struct Enemy
+class Enemy : public GameObject
 {
-    AEVec2 pos;
-    float scale;
-    unsigned int color;
-    AEGfxVertexList* pMesh;
-
-    // Initialize with specific position
-    void Init(float startX, float startY);
-
-    // Update logic
-    void Update(float dt);
-
-    // Render the enemy
-    void Draw();
+public:
+	void Start();
+	void Update(f32 deltaTime);
 };

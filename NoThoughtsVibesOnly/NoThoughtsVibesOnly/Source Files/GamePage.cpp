@@ -6,6 +6,8 @@
 #include "Player.h"
 #include "Enemy.h"
 #include <vector>
+#include <iostream>
+
 
 // ---------------------------------------------------------------------------
 // World Settings
@@ -15,17 +17,22 @@ const float WORLD_HEIGHT = 2000.0f;
 const float GRID_SIZE = 100.0f;
 
 // ---------------------------------------------------------------------------
-// Global/Static Variables
+// Global/Static Object Vectors $DO NOT MOVE, MUST INITIALISE BEFORE USE$
 // ---------------------------------------------------------------------------
-static Player sPlayer;
-static std::vector<Enemy> sEnemy;
+std::vector<GameObject*> objects;
 
-const float ENEMY_NO = 10.0f; // Number of Enemies
+// ---------------------------------------------------------------------------
+// Global/Static GameObjects and Variables
+// ---------------------------------------------------------------------------
+GameObject* pPlayer{nullptr};
 
-// Camera variables
+
+
+// Experience PlayerExp;
+
 static float sCamX = 0.0f;
 static float sCamY = 0.0f;
-const float CAM_SPEED = 5.0f; // Camera Speed (higher = smoother, lower = sharper)
+const float CAM_SPEED = 5.0f; // Higher = tighter, Lower = smoother/looser
 
 void Game_Load()
 {
@@ -36,51 +43,76 @@ void Game_Load()
 
 void Game_Init()
 {
-    sEnemy.clear();
-
     // Initialize Player
-    sPlayer.Init();
+    pPlayer = new Player();
 
-    // Reset Camera to player
-    sCamX = sPlayer.pos.x;
-    sCamY = sPlayer.pos.y;
+    // Initilize Camera
+    sCamX = pPlayer->transform.position.x;
+    sCamY = pPlayer->transform.position.y;
 
     // Initialize Enemies
-    for (int i = 0; i < ENEMY_NO; ++i) {
-        Enemy enemy;
-        float rX = (rand() % (int)WORLD_WIDTH) - (WORLD_WIDTH / 2.0f);
-        float rY = (rand() % (int)WORLD_HEIGHT) - (WORLD_HEIGHT / 2.0f);
-
-        enemy.Init(rX, rY);
-        sEnemy.push_back(enemy);
+    for (int i = 0; i < 5; ++i) {
+        Enemy* enemy = new Enemy;
     }
+    
+    for(auto& obj : objects) {
+        obj->Start();
+	}
+
+	std::cout << "Game_Init is running!\n";
 }
 
 void Game_Update()
 {
     float dt = (float)AEFrameRateControllerGetFrameTime();
 
-    // Update Player
-    sPlayer.Update(dt, WORLD_WIDTH, WORLD_HEIGHT);
+	//testObject.Update(dt);
 
-    // Smooth Camera Follow
-    sCamX += (sPlayer.pos.x - sCamX) * CAM_SPEED * dt;
-    sCamY += (sPlayer.pos.y - sCamY) * CAM_SPEED * dt;
+    // Boundary Logic
+    float halfWorldWidth = WORLD_WIDTH / 2.0f;
+    float halfWorldHeight = WORLD_HEIGHT / 2.0f;
+    float halfPlayerSizex = (pPlayer->transform.scale.x / 2.0f);
+    float halfPlayerSizey = (pPlayer->transform.scale.y / 2.0f);
 
+    if (pPlayer->transform.position.x > halfWorldWidth - halfPlayerSizex) pPlayer->transform.position.x = halfWorldWidth - halfPlayerSizex;
+    if (pPlayer->transform.position.x < -halfWorldWidth + halfPlayerSizex) pPlayer->transform.position.x = -halfWorldWidth + halfPlayerSizex;
+    if (pPlayer->transform.position.y > halfWorldHeight - halfPlayerSizey) pPlayer->transform.position.y = halfWorldHeight - halfPlayerSizey;
+    if (pPlayer->transform.position.y < -halfWorldHeight + halfPlayerSizey) pPlayer->transform.position.y = -halfWorldHeight + halfPlayerSizey;
+
+    // Smooth Camera Follow (Lerp)
+    // This calculates the difference between player and camera, and moves a fraction of that distance
+    sCamX += (pPlayer->transform.position.x - sCamX) * CAM_SPEED * dt;
+    sCamY += (pPlayer->transform.position.y - sCamY) * CAM_SPEED * dt;
+
+    // -----------------------------------------------------------------------
     // Game State Controls
-    if (AEInputCheckTriggered(AEVK_R)) current = STATE_RESTART;
-    if (AEInputCheckTriggered(AEVK_Q)) next = STATE_MENU;
-
-    // Update Enemies
-    for (auto& enemy : sEnemy) {
-        enemy.Update(dt);
+    // -----------------------------------------------------------------------
+    for (auto& obj : objects) {
+        obj->Update(dt);
     }
+
+    // Restart Level
+    if (AEInputCheckTriggered(AEVK_R))
+    {
+        StateManagerChangeState(STATE_RESTART);
+    }
+    // Return to Main Menu
+    if (AEInputCheckTriggered(AEVK_Q))
+    {
+        StateManagerChangeState(STATE_MENU);
+    }
+
 }
 
 void Game_Draw()
 {
+    // -----------------------------------------------------------------------
     // Camera Follow
+    // -----------------------------------------------------------------------
     AEGfxSetCamPosition(sCamX, sCamY);
+
+    AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
     // -----------------------------------------------------------------------
     // Draw World
@@ -124,11 +156,6 @@ void Game_Draw()
 
     // Draw Objects
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-    sPlayer.Draw();
-
-    for (auto& enemy : sEnemy) {
-        enemy.Draw();
-    }
 
     // -----------------------------------------------------------------------
     // Draw UI (HUD)
@@ -137,13 +164,27 @@ void Game_Draw()
     // XP Bar
     // DrawExpBar(PlayerExp, -700.0f + camX, 400.0f + camY, 200.0f, 30.0f);
 
+
     // Minimap
-    DrawMinimap(sPlayer, sEnemy, sCamX, sCamY);
+    DrawMinimap(objects, sCamX, sCamY);
+    
+    for (auto& obj : objects) {
+        obj->Draw();
+    }
 }
 
 void Game_Free()
 {
-    sEnemy.clear();
+    for (auto& obj : objects)
+    {
+        delete obj;
+        obj = nullptr;
+    }
+
+    objects.clear();
+
+    pPlayer = nullptr;
+	//FreeSpriteRenderer(testObject.spriteRenderer);
 }
 
 void Game_Unload()

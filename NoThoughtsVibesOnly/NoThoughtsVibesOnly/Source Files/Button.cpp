@@ -17,9 +17,9 @@ void InitButton(Button& button, const char* text, const char* texture, AEVec2 po
     button.onClick = onClick;
     
     // Default Colors
-    button.baseR = r; 
-    button.baseG = g; 
-    button.baseB = b;
+    button.sprite.colour.r = r; 
+    button.sprite.colour.g = g;
+    button.sprite.colour.b = b;
 
     // Collider 
 	button.collider.position = position;
@@ -32,7 +32,7 @@ void InitButton(Button& button, const char* text, const char* texture, AEVec2 po
 
 	// Sprite Renderer
     button.texturePath = texture;
-	InitSpriteRenderer(button.sprite, button.texturePath, scale.x, scale.y);
+	InitSpriteRenderer(button.sprite, button.texturePath, scale.x, scale.y, MESH_SQUARE);
 }
 
 void InitButton(Button& button, const char* text, const char* texture, AEVec2 position, AEVec2 scale, ButtonFunction onClick, f32 r, f32 g, f32 b)
@@ -48,7 +48,7 @@ void UpdateButton(Button& button)
 
 void DrawButton(Button& button)
 {
-	DrawSpriteRenderer(button.sprite, button.transform, button.baseR, button.baseG, button.baseB);
+	DrawSpriteRenderer(button.sprite, button.transform);
 	DrawTextRenderer(button.textRenderer, button.transform.position, button.textRenderer.scale);
 }
 

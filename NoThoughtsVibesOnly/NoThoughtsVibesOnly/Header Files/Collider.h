@@ -2,6 +2,11 @@
 #include "AEEngine.h"
 #include "Input.h"
 
+enum ColliderType {
+	SQUARE,
+	CIRCLE
+};
+
 struct SquareCollider {
 	AEVec2 position;
 	AEVec2 scale;

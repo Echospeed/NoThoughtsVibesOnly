@@ -11,13 +11,13 @@ enum TextAlignment
 
 struct TextRenderer
 {
-	s8 font;
-	std::string text;
+	s8 font{};
+	std::string text{};
 	AEVec2 position{};
 	f32 scale{};
-	f32 r; 
-	f32 g; 
-	f32 b;
+	f32 r{0.0f};
+	f32 g{0.0f}; 
+	f32 b{0.0f};
 	TextAlignment alignment{ ALIGN_CENTER };
 };
 
@@ -26,7 +26,5 @@ void LoadTextRenderer(TextRenderer& textRenderer, s8 font);
 void InitTextRenderer(TextRenderer& textRenderer, const char* text, f32 scale, f32 r, f32 g, f32 b);
 
 void DrawTextRenderer(const TextRenderer& textRenderer, AEVec2 position, f32 scale);
-
-void DrawTextRenderer(const TextRenderer& textRenderer, AEVec2 position, f32 scale, TextAlignment alignment);
 
 void FreeTextRenderer(TextRenderer& textRenderer);

@@ -34,7 +34,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	// State Manager Initialization
 	StateManagerInit(STATE_SPLASH);
 
-	f64 deltaTime = AEFrameRateControllerGetFrameTime();
+	// f64 deltaTime = AEFrameRateControllerGetFrameTime();
 	// Game Loop
 	while (gGameRunning && current != STATE_QUIT)
 	{

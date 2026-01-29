@@ -40,31 +40,6 @@ void DrawTextRenderer(const TextRenderer& textRenderer, AEVec2 position, f32 sca
 	AEGfxPrint(textRenderer.font, textRenderer.text.c_str(), drawX, drawY, scale, textRenderer.r, textRenderer.g, textRenderer.b, 1.0f);
 }
 
-void DrawTextRenderer(const TextRenderer& textRenderer, AEVec2 position, f32 scale, TextAlignment alignment = ALIGN_CENTER)
-{
-	f32 width, height;
-	AEGfxGetPrintSize(textRenderer.font, textRenderer.text.c_str(), scale, &width, &height);
-
-	f32 normX = position.x / (SCREEN_W / 2.0F);
-	f32 normY = position.y / (SCREEN_H / 2.0F);
-
-	f32 drawX{}, drawY{};
-	if (textRenderer.alignment == ALIGN_CENTER)
-	{
-		// Center the text by adjusting the x position (default)
-		drawX = normX - (width / 2.0f);
-		drawY = normY - (height / 2.0f);
-	}
-	else if (textRenderer.alignment == ALIGN_RIGHT)
-	{
-		// Right align the text by adjusting the x position
-		drawX = normX - (width / 2.0f);
-		drawY = (height / 2.0f);
-	}
-
-	AEGfxPrint(textRenderer.font, textRenderer.text.c_str(), drawX, drawY, scale, textRenderer.r, textRenderer.g, textRenderer.b, 1.0f);
-}
-
 void FreeTextRenderer(TextRenderer& textRenderer)
 {
 	AEGfxDestroyFont(textRenderer.font);
