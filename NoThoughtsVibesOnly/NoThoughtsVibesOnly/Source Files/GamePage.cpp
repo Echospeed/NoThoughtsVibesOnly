@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "GamePage.h"
 #include "StateManager.h"
-#include "ExpUI.h"
 #include "MiniMap.h"
 #include "Player.h"
 #include "Enemy.h"
@@ -54,7 +53,7 @@ void Game_Init()
 
     // Spawn regular enemies
     for (int i = 0; i < 3; ++i)
-        new Enemy(); // optional, regular enemies
+        new Enemy(player); // optional, regular enemies
 
     // Spawn AI enemies with player reference
     for (int i = 0; i < 5; ++i)
