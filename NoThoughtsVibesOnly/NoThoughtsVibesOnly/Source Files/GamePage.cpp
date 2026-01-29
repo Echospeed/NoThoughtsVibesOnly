@@ -5,6 +5,7 @@
 #include "MiniMap.h"
 #include "Player.h"
 #include "Enemy.h"
+#include "AIEnemy.h"
 #include <vector>
 #include <iostream>
 
@@ -39,28 +40,33 @@ void Game_Load()
     Meshes::CreateTriangleMesh();
     Meshes::CreateSquareLeftOriginMesh();
     Meshes::CreateSquareCenterOriginMesh();
+	Meshes::CreateCircleMesh();
 }
 
 void Game_Init()
 {
-    // Initialize Player
-    pPlayer = new Player();
+    // Create the player first
+    Player* player = new Player();
+    pPlayer = player; // optional for camera follow
 
-    // Initilize Camera
-    sCamX = pPlayer->transform.position.x;
-    sCamY = pPlayer->transform.position.y;
+    sCamX = player->transform.position.x;
+    sCamY = player->transform.position.y;
 
-    // Initialize Enemies
-    for (int i = 0; i < 5; ++i) {
-        Enemy* enemy = new Enemy;
-    }
-    
-    for(auto& obj : objects) {
+    // Spawn regular enemies
+    for (int i = 0; i < 3; ++i)
+        new Enemy(); // optional, regular enemies
+
+    // Spawn AI enemies with player reference
+    for (int i = 0; i < 5; ++i)
+        new AIEnemy(player); // pass player pointer
+
+    // Call Start() for all objects
+    for (auto& obj : objects)
         obj->Start();
-	}
 
-	std::cout << "Game_Init is running!\n";
+    std::cout << "Game_Init running\n";
 }
+
 
 void Game_Update()
 {

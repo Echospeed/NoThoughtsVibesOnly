@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source Files\AIEnemy.cpp" />
     <ClCompile Include="Source Files\Button.cpp" />
     <ClCompile Include="Source Files\Collider.cpp" />
     <ClCompile Include="Source Files\Colour.cpp" />
@@ -32,6 +33,7 @@
     <ClCompile Include="Source Files\Util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Header Files\AIEnemy.h" />
     <ClInclude Include="Header Files\Button.h" />
     <ClInclude Include="Header Files\Collider.h" />
     <ClInclude Include="Header Files\Colour.h" />
