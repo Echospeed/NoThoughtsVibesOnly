@@ -14,7 +14,7 @@ public:
 
 private:
     Player* targetPlayer{ nullptr }; // reference to the player
-    float speed{ 150.0f };           // movement speed
+    float speed{ 300.0f };           // movement speed
     float stopDistance{ 200.0f };     // minimum distance from player
     float velX{ 0.0f };
     float velY{ 0.0f };
