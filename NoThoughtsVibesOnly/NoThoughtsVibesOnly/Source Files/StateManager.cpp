@@ -2,6 +2,7 @@
 #include "MenuPage.h"
 #include "GamePage.h"
 #include "SplashPage.h"
+#include "FinishPage.h"
 
 int current = 0, previous = 0, next = 0;
 
@@ -44,6 +45,14 @@ void StateManagerUpdate()
 			fpDraw = Game_Draw;
 			fpFree = Game_Free;
 			fpUnload = Game_Unload;
+			break;
+		case STATE_FINISH:
+			fpLoad = FinishPage_Load;
+			fpInitialize = FinishPage_Init;
+			fpUpdate = FinishPage_Update;
+			fpDraw = FinishPage_Draw;
+			fpFree = FinishPage_Free;
+			fpUnload = FinishPage_Unload;
 			break;
 		case STATE_RESTART:
 			// Handled in Main.cpp game loop

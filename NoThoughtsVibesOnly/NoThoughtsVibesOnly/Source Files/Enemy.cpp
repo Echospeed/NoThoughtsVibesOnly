@@ -4,6 +4,8 @@ const float WORLD_WIDTH = 2000.0f;
 const float WORLD_HEIGHT = 2000.0f;
 
 namespace {
+	
+	f32 speed = 50.0f;
 
 	AEVec2 operator-(const AEVec2& a, const AEVec2& b) {
 		return { a.x - b.x, a.y - b.y };
@@ -17,7 +19,7 @@ namespace {
 		return { vec.x * scalar, vec.y * scalar };
 	}
 
-	AEVec2 AddVectors(const AEVec2& a, const AEVec2& b) {
+	AEVec2 operator+(const AEVec2& a, const AEVec2& b) {
 		return { a.x + b.x, a.y + b.y };
 	}
 
@@ -49,7 +51,7 @@ void Enemy::Start() // Initialize enemy properties
 		(float)(rand() % (int)WORLD_HEIGHT - halfWorldHeight)
 	};
 
-	transform.scale = { 1.0f, 1.0f }; // Enemy size
+	transform.scale = { 15.0f, 15.0f }; // Enemy size
 	transform.rotation = 0.0f;
 
 	spriteRenderer.colour = { 1.0f, 1.0f, 0.0f }; // Yellow
@@ -94,8 +96,10 @@ void Enemy::Update(f32 deltaTime) // Update enemy each frame
 	}
 
 	// Basically moves towards your player the further it is from the player the faster it moves
+	AEVec2 direction{};
 	AEVec2 displacement = targetPlayer->transform.position - this->transform.position;
-	AEVec2 damped_displacement = ScaleVector(displacement, 0.02f); // Dampen the movement
-	this->transform.position = AddVectors(this->transform.position, damped_displacement);
+	AEVec2Normalize(&direction,&displacement);
+	//AEVec2 damped_displacement = ScaleVector(direction, 0.02f); // Dampen the movement
+	this->transform.position = transform.position + direction * deltaTime * speed;
 	std::cout << "Enemy - Update: Enemy Position (" << this->transform.position.x << ',' << this->transform.position.y << ")\n";
 }

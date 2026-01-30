@@ -106,6 +106,11 @@ void Game_Update()
             ++it;
         }
     }
+	//check if enemy count is 0 to finish level or press space key
+    if (objects.size() <= 0.0f || AEInputCheckTriggered(AEVK_SPACE)) // space key
+    {
+        StateManagerChangeState(STATE_FINISH);
+    }
 
     // Restart Level
     if (AEInputCheckTriggered(AEVK_R))
@@ -187,6 +192,8 @@ void Game_Draw()
         AEGfxSetTransform(aoeTransform.m);
         AEGfxMeshDraw(Meshes::pCircleMesh, AE_GFX_MDM_TRIANGLES);
     }
+
+
 
     // Draw Objects
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
