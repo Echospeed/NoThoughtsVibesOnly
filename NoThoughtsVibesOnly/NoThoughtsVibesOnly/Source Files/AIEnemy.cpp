@@ -14,7 +14,7 @@ AIEnemy::AIEnemy(Player* target)
         std::cout << "Warning: AIEnemy has a null player reference!\n";
 
     // DO NOT push into objects manually! It's already handled.
-    spriteRenderer.texture = nullptr; // we just want a colored shape
+    spriteRenderer.texture = nullptr; // We just want a colored shape
 
     // Initialize velocity to 0
     velX = 0.0f;
@@ -32,10 +32,10 @@ void AIEnemy::Start()
         (float)(rand() % (int)WORLD_HEIGHT - halfWorldHeight)
     };
 
-    transform.scale = { 50.0f, 50.0f };
+    transform.scale = { 30.0f, 30.0f }; // AIEnemy size
     transform.rotation = 0.0f;
 
-    spriteRenderer.colour = { 0.0f, 1.0f, 0.0f }; // green
+    spriteRenderer.colour = { 0.0f, 1.0f, 0.0f }; // Green
     spriteRenderer.meshType = MESH_CIRCLE;
 
     std::cout << "AIEnemy spawned at ("
@@ -45,13 +45,13 @@ void AIEnemy::Start()
 
 void AIEnemy::Update(f32 deltaTime)
 {
-    if (!targetPlayer) return; // safety check
+    if (!targetPlayer) return; // Safety check
 
     float dx = targetPlayer->transform.position.x - transform.position.x;
     float dy = targetPlayer->transform.position.y - transform.position.y;
     float distance = std::sqrt(dx * dx + dy * dy);
 
-    // --- Flee logic: move away if player is too close ---
+    // Flee logic: move away if player is too close
     if (distance < 200.0f) // flee if within 200 units
     {
         float nx = -dx / distance;
@@ -61,15 +61,15 @@ void AIEnemy::Update(f32 deltaTime)
         velY = ny * speed;
     }
 
-    // --- Update position with velocity ---
+    // Update position with velocity
     transform.position.x += velX * deltaTime;
     transform.position.y += velY * deltaTime;
 
-    // --- Rotate to face movement direction ---
+    // Rotate to face movement direction
     if (velX != 0.0f || velY != 0.0f)
         transform.rotation = atan2f(velY, velX);
 
-    // --- Wall bounce ---
+    // Wall bounce
     float halfWorldWidth = WORLD_WIDTH / 2.0f;
     float halfWorldHeight = WORLD_HEIGHT / 2.0f;
     float halfEnemyWidth = transform.scale.x / 2.0f;
@@ -78,7 +78,7 @@ void AIEnemy::Update(f32 deltaTime)
     if (transform.position.x > halfWorldWidth - halfEnemyWidth)
     {
         transform.position.x = halfWorldWidth - halfEnemyWidth;
-        velX = -velX; // bounce horizontally
+        velX = -velX; // Bounce horizontally
     }
     if (transform.position.x < -halfWorldWidth + halfEnemyWidth)
     {
@@ -88,11 +88,32 @@ void AIEnemy::Update(f32 deltaTime)
     if (transform.position.y > halfWorldHeight - halfEnemyHeight)
     {
         transform.position.y = halfWorldHeight - halfEnemyHeight;
-        velY = -velY; // bounce vertically
+        velY = -velY; // Bounce vertically
     }
     if (transform.position.y < -halfWorldHeight + halfEnemyHeight)
     {
         transform.position.y = -halfWorldHeight + halfEnemyHeight;
         velY = -velY;
+    }
+
+    // AoE logic
+    if (distance < targetPlayer->AOE_RADIUS * 2.0f)
+    {
+        // Take damage
+        this->health -= targetPlayer->AOE_DAMAGE * deltaTime;
+
+        // Visual feedback (Red)
+        spriteRenderer.colour.r = 1.0f;
+        spriteRenderer.colour.g = 0.0f;
+    }
+    else
+    {
+        // Reset color (Green)
+        spriteRenderer.colour.r = 0.0f;
+        spriteRenderer.colour.g = 1.0f;
+    }
+
+    if (this->health <= 0.0f) {
+        this->isActive = false;
     }
 }

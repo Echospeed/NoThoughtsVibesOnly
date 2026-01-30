@@ -1,5 +1,5 @@
 #pragma once
-//Defines a class structure to manage game entities using the engine's math and graphics classes.
+// Defines a class structure to manage game entities using the engine's math and graphics classes.
 #include "AEEngine.h"
 #include "SpriteRenderer.h"
 #include "Transform.h"
@@ -7,9 +7,12 @@
 class GameObject {
     public:
     GameObject(AEVec2 pos = { 0.0f, 0.0f }, AEVec2 scale = { 50.0f, 50.0f }, f32 rot = 0.0f, AEGfxTexture* texture = nullptr, f32 width = 100.0f, f32 height = 100.0f); // Default Constructor
-    ~GameObject(); //Destructor
+    ~GameObject(); // Destructor
     Transform transform;
 	SpriteRenderer spriteRenderer;
+
+    bool isActive = true; // If false, the game loop will delete this object
+
     virtual void Start();
     virtual void Update(f32 deltaTime);
 	void Draw();

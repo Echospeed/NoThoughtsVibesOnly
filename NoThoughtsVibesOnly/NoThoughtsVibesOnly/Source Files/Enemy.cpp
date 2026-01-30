@@ -31,37 +31,69 @@ Enemy::Enemy(Player* target)
 		std::cout << "Warning: AIEnemy has a null player reference!\n";
 
 	// DO NOT push into objects manually! It's already handled.
-	spriteRenderer.texture = nullptr; // we just want a colored shape
+	spriteRenderer.texture = nullptr; // We just want a colored shape
 
 	// Initialize velocity to 0
 	velX = 0.0f;
 	velY = 0.0f;
 }
 
-void Enemy::Start() //Initialize enemy properties
+void Enemy::Start() // Initialize enemy properties
 {
-	float rX = (rand() % static_cast<int>(2000.0f - (2000.0f/ 2.0f)));
-	float rY = (rand() % static_cast<int>(2000.0f - (2000.0f / 2.0f)));
+	// Random starting position inside red box
+	float halfWorldWidth = WORLD_WIDTH / 2.0f;
+	float halfWorldHeight = WORLD_HEIGHT / 2.0f;
 
-	transform.position = { rX, rY};
-	transform.scale = { 30.0f, 30.0f };
+	transform.position = {
+		(float)(rand() % (int)WORLD_WIDTH - halfWorldWidth),
+		(float)(rand() % (int)WORLD_HEIGHT - halfWorldHeight)
+	};
+
+	transform.scale = { 1.0f, 1.0f }; // Enemy size
 	transform.rotation = 0.0f;
-	spriteRenderer.colour.r = 1.0f;
-	spriteRenderer.colour.g = 1.0f;
-	spriteRenderer.colour.b = 0.0f;
-	spriteRenderer.meshType = MESH_SQUARE;
-	std::cout << "Enemy - Start: Enemy Initialized at Position (" << this->transform.position.x << ',' << this->transform.position.y << ")\n";
+
+	spriteRenderer.colour = { 1.0f, 1.0f, 0.0f }; // Yellow
+	spriteRenderer.meshType = MESH_TRIANGLE;
+
+	std::cout << "Enemy spawned at ("
+		<< transform.position.x << ", "
+		<< transform.position.y << ")\n";
 }
 
-void Enemy::Update(f32 deltaTime) //Update enemy each frame
+void Enemy::Update(f32 deltaTime) // Update enemy each frame
 {
 
 	//f32 speed = 3.0f;
 	// Simple enemy logic can be added here
 
-	if (!targetPlayer) return; // safety check
+	if (!targetPlayer) return; // Safety check
 
-	// basically moves towards your player the further it is from the player the faster it moves
+	float dx = targetPlayer->transform.position.x - transform.position.x;
+	float dy = targetPlayer->transform.position.y - transform.position.y;
+	float distance = std::sqrt(dx * dx + dy * dy);
+
+	// AoE logic
+	if (distance < targetPlayer->AOE_RADIUS * 2.0f)
+    {
+		// Take damage
+        this->health -= targetPlayer->AOE_DAMAGE * deltaTime;
+
+        // Visual feedback (Red)
+        spriteRenderer.colour.r = 1.0f;
+        spriteRenderer.colour.g = 0.0f;
+    }
+	else
+	{
+		// Reset color (Yellow)
+		spriteRenderer.colour.g = 1.0f;
+	}
+
+	// Death Check
+	if (this->health <= 0.0f) {
+		this->isActive = false;
+	}
+
+	// Basically moves towards your player the further it is from the player the faster it moves
 	AEVec2 displacement = targetPlayer->transform.position - this->transform.position;
 	AEVec2 damped_displacement = ScaleVector(displacement, 0.02f); // Dampen the movement
 	this->transform.position = AddVectors(this->transform.position, damped_displacement);

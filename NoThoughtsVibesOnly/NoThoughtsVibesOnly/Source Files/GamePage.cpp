@@ -17,18 +17,14 @@ const float WORLD_HEIGHT = 2000.0f;
 const float GRID_SIZE = 100.0f;
 
 // ---------------------------------------------------------------------------
-// Global/Static Object Vectors $DO NOT MOVE, MUST INITIALISE BEFORE USE$
+// Global/Static Object Vectors (DO NOT MOVE, MUST INITIALISE BEFORE USE)
 // ---------------------------------------------------------------------------
 std::vector<GameObject*> objects;
 
 // ---------------------------------------------------------------------------
 // Global/Static GameObjects and Variables
 // ---------------------------------------------------------------------------
-GameObject* pPlayer{nullptr};
-
-
-
-// Experience PlayerExp;
+Player* pPlayer{ nullptr };
 
 static float sCamX = 0.0f;
 static float sCamY = 0.0f;
@@ -96,6 +92,21 @@ void Game_Update()
         obj->Update(dt);
     }
 
+    // Remove Dead Objects
+    for (auto it = objects.begin(); it != objects.end(); )
+    {
+        GameObject* obj = *it;
+        if (obj->isActive == false)
+        {
+            delete obj;             // Free memory
+            it = objects.erase(it); // Remove from vector
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
     // Restart Level
     if (AEInputCheckTriggered(AEVK_R))
     {
@@ -159,16 +170,30 @@ void Game_Draw()
         AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
     }
 
+    // Draw AoE Circle (Orange Circle)
+    if (pPlayer) {
+        AEGfxSetColorToMultiply(1.0f, 0.647f, 0.5f, 0.3f);
+        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+
+        AEMtx33 scale, trans, aoeTransform;
+
+        float diameter = pPlayer->AOE_RADIUS * 2.0f;
+
+        AEMtx33Scale(&scale, diameter, diameter);
+        AEMtx33Trans(&trans, pPlayer->transform.position.x, pPlayer->transform.position.y);
+
+        AEMtx33Concat(&aoeTransform, &trans, &scale);
+
+        AEGfxSetTransform(aoeTransform.m);
+        AEGfxMeshDraw(Meshes::pCircleMesh, AE_GFX_MDM_TRIANGLES);
+    }
+
     // Draw Objects
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
     // -----------------------------------------------------------------------
     // Draw UI (HUD)
     // -----------------------------------------------------------------------
-
-    // XP Bar
-    // DrawExpBar(PlayerExp, -700.0f + camX, 400.0f + camY, 200.0f, 30.0f);
-
 
     // Minimap
     DrawMinimap(objects, sCamX, sCamY);
