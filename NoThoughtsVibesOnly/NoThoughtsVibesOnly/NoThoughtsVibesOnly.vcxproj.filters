@@ -57,19 +57,19 @@
     <ClCompile Include="Source Files\SplashPage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source Files\ExpUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Source Files\MiniMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source Files\Player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source Files\Enemy.cpp">
+    <ClCompile Include="Source Files\NPC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source Files\Colour.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source Files\AIEnemy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source Files\FinishPage.cpp">
@@ -116,6 +116,9 @@
     <ClInclude Include="Header Files\TextRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Header Files\ExpUI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Header Files\SplashPage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -125,13 +128,16 @@
     <ClInclude Include="Header Files\Player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\Enemy.h">
+    <ClInclude Include="Header Files\NPC.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Header Files\Colour.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\AIEnemy.h">
+    <ClInclude Include="Header Files\NPCType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Header Files\GameObjectType.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Header Files\FinishPage.h">

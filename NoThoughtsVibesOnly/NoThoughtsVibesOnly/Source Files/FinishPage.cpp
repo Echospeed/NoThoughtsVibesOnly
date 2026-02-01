@@ -36,6 +36,7 @@ void FinishPage_Init()
 
 void FinishPage_Update()
 {
+	AEGfxSetCamPosition(0.0f, 0.0f);
 	// Update the lose page
 	GetMouseWorldPosition(worldMouse.position.x, worldMouse.position.y);
 
@@ -69,11 +70,11 @@ void FinishPage_Draw()
 void FinishPage_Free()
 {
 	// Free resources for the finish page
+	FreeTextRenderer(GameOverText);
+	FreeButton(RestartButton);
 }
 
 void FinishPage_Unload()
 {
-	FreeTextRenderer(GameOverText);
-	FreeButton(RestartButton);
 	// Unload resources for the finish page
 }

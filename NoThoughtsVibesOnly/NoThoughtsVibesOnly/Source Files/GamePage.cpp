@@ -1,10 +1,11 @@
 #include "pch.h"
 #include "GamePage.h"
 #include "StateManager.h"
+#include "ExpUI.h"
 #include "MiniMap.h"
 #include "Player.h"
-#include "Enemy.h"
-#include "AIEnemy.h"
+#include "NPC.h"
+#include "GameObjectType.h"
 #include <vector>
 #include <iostream>
 
@@ -17,14 +18,18 @@ const float WORLD_HEIGHT = 2000.0f;
 const float GRID_SIZE = 100.0f;
 
 // ---------------------------------------------------------------------------
-// Global/Static Object Vectors (DO NOT MOVE, MUST INITIALISE BEFORE USE)
+// Global/Static Object Vectors $DO NOT MOVE, MUST INITIALISE BEFORE USE$
 // ---------------------------------------------------------------------------
 std::vector<GameObject*> objects;
 
 // ---------------------------------------------------------------------------
 // Global/Static GameObjects and Variables
 // ---------------------------------------------------------------------------
-Player* pPlayer{ nullptr };
+GameObject* pPlayer{nullptr};
+
+
+
+// Experience PlayerExp;
 
 static float sCamX = 0.0f;
 static float sCamY = 0.0f;
@@ -35,33 +40,46 @@ void Game_Load()
     Meshes::CreateTriangleMesh();
     Meshes::CreateSquareLeftOriginMesh();
     Meshes::CreateSquareCenterOriginMesh();
-	Meshes::CreateCircleMesh();
+    Meshes::CreateCircleMesh();
 }
 
 void Game_Init()
 {
-    // Create the player first
-    Player* player = new Player();
-    pPlayer = player; // optional for camera follow
+    // Initialize Player
+    pPlayer = new Player();
 
-    sCamX = player->transform.position.x;
-    sCamY = player->transform.position.y;
+    // Initilize Camera
+    sCamX = pPlayer->transform.position.x;
+    sCamY = pPlayer->transform.position.y;
 
-    // Spawn regular enemies
-    for (int i = 0; i < 3; ++i)
-        new Enemy(player); // optional, regular enemies
+    // Initialize Enemies
+    for (int i = 0; i < 5; ++i) {
+        NPC* n = new NPC;
+        n->ObjectType = NP;
+        n->type = NPC_WALK;
+        n->target = pPlayer;
+    }
 
-    // Spawn AI enemies with player reference
-    for (int i = 0; i < 5; ++i)
-        new AIEnemy(player); // pass player pointer
+    for (int i = 0; i < 5; ++i) {
+        NPC* n = new NPC;
+        n->ObjectType = NP;
+        n->type = NPC_RANGER;
+        n->target = pPlayer;
+    }
 
-    // Call Start() for all objects
-    for (auto& obj : objects)
+    for (int i = 0; i < 5; ++i) {
+        NPC* n = new NPC;
+        n->ObjectType = NP;
+        n->type = NPC_MELEE;
+        n->target = pPlayer;
+    }
+
+    for(auto& obj : objects) {
         obj->Start();
+	}
 
-    std::cout << "Game_Init running\n";
+	std::cout << "Game_Init is running!\n";
 }
-
 
 void Game_Update()
 {
@@ -92,26 +110,11 @@ void Game_Update()
         obj->Update(dt);
     }
 
-    // Remove Dead Objects
-    for (auto it = objects.begin(); it != objects.end(); )
-    {
-        GameObject* obj = *it;
-        if (obj->isActive == false)
-        {
-            delete obj;             // Free memory
-            it = objects.erase(it); // Remove from vector
-        }
-        else
-        {
-            ++it;
-        }
-    }
-	//check if enemy count is 0 to finish level or press space key
-    if (objects.size() <= 0.0f || AEInputCheckTriggered(AEVK_SPACE)) // space key
+    //check if enemy count is 0 to finish level or press space key
+    if (AEInputCheckTriggered(AEVK_SPACE)) // space key
     {
         StateManagerChangeState(STATE_FINISH);
     }
-
     // Restart Level
     if (AEInputCheckTriggered(AEVK_R))
     {
@@ -175,32 +178,16 @@ void Game_Draw()
         AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
     }
 
-    // Draw AoE Circle (Orange Circle)
-    if (pPlayer) {
-        AEGfxSetColorToMultiply(1.0f, 0.647f, 0.5f, 0.3f);
-        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
-
-        AEMtx33 scale, trans, aoeTransform;
-
-        float diameter = pPlayer->AOE_RADIUS * 2.0f;
-
-        AEMtx33Scale(&scale, diameter, diameter);
-        AEMtx33Trans(&trans, pPlayer->transform.position.x, pPlayer->transform.position.y);
-
-        AEMtx33Concat(&aoeTransform, &trans, &scale);
-
-        AEGfxSetTransform(aoeTransform.m);
-        AEGfxMeshDraw(Meshes::pCircleMesh, AE_GFX_MDM_TRIANGLES);
-    }
-
-
-
     // Draw Objects
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
     // -----------------------------------------------------------------------
     // Draw UI (HUD)
     // -----------------------------------------------------------------------
+
+    // XP Bar
+    // DrawExpBar(PlayerExp, -700.0f + camX, 400.0f + camY, 200.0f, 30.0f);
+
 
     // Minimap
     DrawMinimap(objects, sCamX, sCamY);

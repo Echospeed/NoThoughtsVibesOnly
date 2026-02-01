@@ -75,9 +75,9 @@ namespace Meshes {
 	void CreateTriangleMesh()
 	{
 		AEGfxMeshStart();
-		AEGfxTriAdd(-1.0f, -1.0f, 0xFFFFFFFF, 0.0f, 0.0f,
-			1.0f, -1.0f, 0xFFFFFFFF, 0.0f, 0.0f,
-			0.0f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f);
+		AEGfxTriAdd(0.0f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f,
+			-1.0f, -1.0f, 0xFFFFFFFF, 0.0f, 0.0f,
+			1.0f, -1.0f, 0xFFFFFFFF, 0.0f, 0.0f);
 		pTriangleMesh = AEGfxMeshEnd();
 	}
 

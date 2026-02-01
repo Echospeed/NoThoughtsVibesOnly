@@ -12,10 +12,10 @@ enum MeshType
 
 struct SpriteRenderer {
 
-	AEGfxTexture* texture;
-	f32 width;
-	f32 height;
-	Colour colour;
+	AEGfxTexture* texture{ nullptr };
+	f32 width{};
+	f32 height{};
+	Colour colour{};
 	MeshType meshType{ MESH_SQUARE };
 };
 

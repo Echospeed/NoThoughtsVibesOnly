@@ -20,12 +20,11 @@ void DrawSpriteRenderer(const SpriteRenderer& spriteRenderer, Transform& transfo
     }
     else
     {
-        
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxTextureSet(spriteRenderer.texture, 0, 0);
     }
-    AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
-    AEGfxSetColorToAdd(spriteRenderer.colour.r, spriteRenderer.colour.g, spriteRenderer.colour.b, 1.0f);
+    AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.0f);
+    AEGfxSetColorToAdd(spriteRenderer.colour.r, spriteRenderer.colour.g, spriteRenderer.colour.b, spriteRenderer.colour.a);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(1.0f);
 	TransformMovement(transform);
