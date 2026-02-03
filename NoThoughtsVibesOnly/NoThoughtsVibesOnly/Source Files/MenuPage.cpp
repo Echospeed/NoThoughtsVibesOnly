@@ -77,7 +77,7 @@ void Main_Init()
 	currentMenuState = MENU_MAIN;
 
 	// Initialize Main Menu UI
-	InitTextRenderer(mainText, "No Thoughts, Vibes Only", 1.0f, 1.0f, 1.0f, 1.0f);
+	InitTextRenderer(mainText, "HUIN!!!!!!!!", 1.0f, 1.0f, 1.0f, 1.0f);
 
 	// Link Start button to game state
 	InitButton(startButton, "START", nullptr, { 0.0f, 100.0f }, { 300.0f, 75.0f }, StateManagerGamePage, 0.0f, 0.6f, 0.0f);
