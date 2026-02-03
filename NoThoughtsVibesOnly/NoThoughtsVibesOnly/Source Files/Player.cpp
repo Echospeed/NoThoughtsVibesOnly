@@ -42,14 +42,14 @@ void Player::Update(f32 deltaTime)
     // ------------------------
         
     Mouse mousePos = { 0.0f, 0.0f };
-    AEVec2 dir = { 0.0f, 0.0f };
+    AEVec2 mouseDir = { 0.0f, 0.0f };
 
     //mouse.x and mouse.y are in screen coordinates, need to convert to world coordinates
     GetMouseWorldPosition(mousePos.position.x, mousePos.position.y);
-    dir.x = mousePos.position.x - transform.position.x;
-    dir.y = mousePos.position.y - transform.position.y;
+    mouseDir.x = mousePos.position.x - transform.position.x;
+    mouseDir.y = mousePos.position.y - transform.position.y;
 
-    AEVec2Normalize(&dir, &dir);
+    AEVec2Normalize(&mouseDir, &mouseDir);
 
 	//std::cout << "Player Position (" << transform.position.x << ", " << transform.position.y << ")\n";
 	//std::cout << "Mouse Position (" << mousePos.position.x << ", " << mousePos.position.y << ")\n";
@@ -58,7 +58,7 @@ void Player::Update(f32 deltaTime)
     shootCooldown -= deltaTime;
     if (AEInputCheckTriggered(AEVK_LBUTTON)) //&& shootCooldown <= 0.0f
     {
-        Shoot(dir);
+        Shoot(mouseDir);
         shootCooldown = 0.20f; // fire rate 4/sec
     }
 

@@ -84,6 +84,7 @@ void Game_Init()
             Bullet* bullet = new Bullet();
 			bullet->startPos = n; 
             bullet->owner = BulletOwner::ENEMY;
+            bullet->spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 0.0f }; // invisible
             // doesnt have a type need to set a enum for enemy bullets and player bullet separately and also create a interaction for ranger npc and player
 		}
     }
@@ -101,6 +102,7 @@ void Game_Init()
         bullet->startPos = pPlayer;
         bullet->isActive = false;   // start inactive
         bullet->owner = BulletOwner::PLAYER;
+        bullet->spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 0.0f }; // invisible
     }
 
     for(auto& obj : objects) {
@@ -302,6 +304,7 @@ void Game_Draw()
 
     // Draw Objects
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+    DrawMinimap(objects, sCamX, sCamY);
     for (auto& obj : objects)
     {
         // Skip invisible NPCs
@@ -314,7 +317,6 @@ void Game_Draw()
     }
 
     // Draw MiniMap
-    DrawMinimap(objects, sCamX, sCamY);
     DrawTextRenderer(ammoText, { -500.0f , 400.0f }, 1.0f);
 }
 

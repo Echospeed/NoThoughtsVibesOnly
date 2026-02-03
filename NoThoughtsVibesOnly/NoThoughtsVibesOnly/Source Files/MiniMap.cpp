@@ -52,8 +52,8 @@ void DrawMinimap(const std::vector<GameObject*>& objs, f32 camX, f32 camY)
         f32 entityMiniX = mapWorldX + entity->transform.position.x * MINI_SCALE;
         f32 entityMiniY = mapWorldY + entity->transform.position.y * MINI_SCALE;
 
-        CreateSquare(Meshes::pSquareCOriMesh, &transform, &scale, &rot, &trans,
-            entityMiniX, entityMiniY, 6.0f, 6.0f, 0.0f,
+        CreateSquare(Meshes::pCircleMesh, &transform, &scale, &rot, &trans,
+            entityMiniX, entityMiniY, 2.0f, 2.0f, 0.0f,
             1.0f, 1.0f, 0.0f, 1.0f);
     }
 

@@ -19,7 +19,7 @@ void Bullet::Start()
     spriteRenderer.width = 0.0f;
     spriteRenderer.height = 0.0f;
     spriteRenderer.texture = nullptr;
-    spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 1.0f };
+    //spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f };
     spriteRenderer.meshType = MESH_CIRCLE;
 
     ObjectType = ObjectType::SHOT;
