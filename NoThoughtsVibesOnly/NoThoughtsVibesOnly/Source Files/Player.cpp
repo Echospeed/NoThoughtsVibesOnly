@@ -26,10 +26,10 @@ void Player::Update(f32 deltaTime)
     // ------------------------
     // Movement
     // ------------------------
-    if (AEInputCheckCurr(AEVK_W)) transform.position.y += 300.0f * deltaTime;
-    if (AEInputCheckCurr(AEVK_S)) transform.position.y -= 300.0f * deltaTime;
-    if (AEInputCheckCurr(AEVK_A)) transform.position.x -= 300.0f * deltaTime;
-    if (AEInputCheckCurr(AEVK_D)) transform.position.x += 300.0f * deltaTime;
+    if (AEInputCheckCurr(AEVK_W)) transform.position.y += 2000.0f * deltaTime;
+    if (AEInputCheckCurr(AEVK_S)) transform.position.y -= 2000.0f * deltaTime;
+    if (AEInputCheckCurr(AEVK_A)) transform.position.x -= 2000.0f * deltaTime;
+    if (AEInputCheckCurr(AEVK_D)) transform.position.x += 2000.0f * deltaTime;
 
     // ------------------------
     // Rotation via QE
@@ -79,7 +79,7 @@ void Player::Update(f32 deltaTime)
         {
             if (dist < 100.0f)
             {
-                np->health -= 5.0f * deltaTime;
+                np->health -= 100.0f; // * deltaTime;
                 np->spriteRenderer.colour.r = 1.0f;
                 np->spriteRenderer.colour.g = 0.0f;
                 np->spriteRenderer.colour.b = 0.0f;

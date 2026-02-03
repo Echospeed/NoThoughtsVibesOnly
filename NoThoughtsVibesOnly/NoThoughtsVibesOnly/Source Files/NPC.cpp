@@ -120,6 +120,26 @@ void NPC::RangerNPCs(f32 deltaTime)
 {
 	if (!target || health <= 0.0f) return;
 
+	// 1. Timer Logic: Pick a new direction every 2.0 seconds
+	changeDirTimer -= deltaTime;
+	if (changeDirTimer <= 0.0f)
+	{
+		// Generate random direction between -1 and 1
+		float randX = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+		float randY = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+
+		// Normalize so diagonal isn't faster
+		f32 len = sqrtf(randX * randX + randY * randY);
+		if (len > 0) {
+			velocity.x = (randX / len) * speed; // Set velocity, not position
+			velocity.y = (randY / len) * speed;
+		}
+		changeDirTimer = 2.0f; // Reset timer
+	}
+
+	// 2. Apply Movement
+	transform.position.x += velocity.x * deltaTime;
+	transform.position.y += velocity.y * deltaTime;
 	// Move like before
 	AEVec2 dirVec = { target->transform.position.x - transform.position.x,
 					  target->transform.position.y - transform.position.y };
@@ -148,7 +168,7 @@ void NPC::RangerNPCs(f32 deltaTime)
 	if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh; velocity.y = -velocity.y; }
 	if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh; velocity.y = -velocity.y; }
 
-	// 🔫 Ranger shooting
+	// Ranger shooting
 	fireCooldown -= deltaTime;
 	if (fireCooldown <= 0.0f)
 	{
@@ -180,6 +200,26 @@ void NPC::WalkNPCs(f32 deltaTime)
 {
 	if (!target || health <= 0.0f) return;
 
+	// 1. Timer Logic: Pick a new direction every 2.0 seconds
+	changeDirTimer -= deltaTime;
+	if (changeDirTimer <= 0.0f)
+	{
+		// Generate random direction between -1 and 1
+		float randX = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+		float randY = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+
+		// Normalize so diagonal isn't faster
+		f32 len = sqrtf(randX * randX + randY * randY);
+		if (len > 0) {
+			velocity.x = (randX / len) * speed; // Set velocity, not position
+			velocity.y = (randY / len) * speed;
+		}
+		changeDirTimer = 2.0f; // Reset timer
+	}
+
+	// 2. Apply Movement
+	transform.position.x += velocity.x * deltaTime;
+	transform.position.y += velocity.y * deltaTime;
 
 	// Wall bounce
 	f32 halfWorldWidth = WORLD_WIDTH / 2.0f;

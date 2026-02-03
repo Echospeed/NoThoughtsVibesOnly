@@ -20,6 +20,7 @@ public:
 private:
 	AEVec2 velocity{ 0.0f, 0.0f };
 	f32 speed{ 200.0f };
+	f32 changeDirTimer = 0.0f;
 	void BomberNPCs(f32 deltaTime);
 	void RangerNPCs(f32 deltaTime);
 	void WalkNPCs(f32 deltaTime);
