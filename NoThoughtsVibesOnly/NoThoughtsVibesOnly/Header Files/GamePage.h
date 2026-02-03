@@ -15,5 +15,6 @@ void Game_Free();
 void Game_Unload();
 
 extern std::vector<GameObject*> objects;
-extern const float WORLD_WIDTH;
-extern const float WORLD_HEIGHT;
+extern const f32 WORLD_WIDTH;
+extern const f32 WORLD_HEIGHT;
+extern int availableBullets;

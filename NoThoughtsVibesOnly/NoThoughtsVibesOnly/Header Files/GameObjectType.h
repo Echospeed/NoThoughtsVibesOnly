@@ -3,5 +3,12 @@ enum ObjectType
 {
 	NONE,
 	PLAYER,
-	NP
+	NP,
+	SHOT
+};
+
+enum class BulletOwner
+{
+	PLAYER,
+	ENEMY
 };

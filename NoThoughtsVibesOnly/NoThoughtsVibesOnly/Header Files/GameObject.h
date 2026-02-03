@@ -15,6 +15,8 @@ class GameObject {
     virtual void Update(f32 deltaTime);
 	void Draw();
     ObjectType ObjectType;
+    bool isActive = true; // true by default, set to false when object should be deleted
+
 
     private:
 	void Load();

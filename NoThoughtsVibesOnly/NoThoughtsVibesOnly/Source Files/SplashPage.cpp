@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "SplashPage.h"
 #include "AEEngine.h"
 #include "Util.h"
@@ -5,11 +6,11 @@
 AEGfxTexture* ss_DigiPen_Logo;
 
 // Simple timer or input check to transition to the menu
-static float timer = 0.0f;
+static f32 timer = 0.0f;
 
 namespace
 {
-	float Lerp(float a, float b, float t)
+	f32 Lerp(f32 a, f32 b, f32 t)
 	{
 	return a + t * (b - a);
 	}
@@ -21,7 +22,7 @@ void SplashPage_Load()
 	const char* path = "Assets/DigiPen_Singapore_WEB_RED.png";
 	ss_DigiPen_Logo = AEGfxTextureLoad(path);
 
-	//std::printf("[Splash] AEGfxTextureLoad('%s') => %p\n", path, (void*)ss_DigiPen_Logo);
+	std::printf("[Splash] AEGfxTextureLoad('%s') => %p\n", path, (void*)ss_DigiPen_Logo);
 
 	//ss_DigiPen_Logo = AEGfxTextureLoad("Assets/DigiPen_Singapore_WEB_RED.png");
 	//ss_DigiPen_Logo = nullptr;
@@ -35,7 +36,7 @@ void SplashPage_Init()
 
 void SplashPage_Update()
 {
-	timer += (float)AEFrameRateControllerGetFrameTime();
+	timer += (f32)AEFrameRateControllerGetFrameTime();
 	if (timer > 6.0f || AEInputCheckTriggered(AEVK_SPACE)) // 6 seconds or space key
 	{
 		StateManagerChangeState(STATE_MENU);

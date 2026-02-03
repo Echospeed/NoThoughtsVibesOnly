@@ -1,11 +1,14 @@
-#include <iostream>
+﻿#include "pch.h"
 #include "Player.h"
+#include "AEEngine.h"
+#include <iostream>
+#include "Bullet.h"
 #include "NPC.h"
-#include "GameObject.h"
 #include "GamePage.h"
-#include <Math.h>
+#include <math.h>
+#include "Input.h"
 
-void Player::Start() //Initialize player properties
+void Player::Start()
 {
     transform.position = { 0.0f, 0.0f };
     transform.scale = { 50.0f, 50.0f };
@@ -14,32 +17,65 @@ void Player::Start() //Initialize player properties
     spriteRenderer.colour.r = 1.0f;
     spriteRenderer.colour.g = 0.0f;
     spriteRenderer.colour.b = 0.0f;
-	std::cout << "Player - Start: Player Initialized at Position (" << this->transform.position.x << ',' << this->transform.position.y << ")\n";
+
+    //std::cout << "Player Initialized at ("        << transform.position.x << ", " << transform.position.y << ")\n";
 }
 
-void Player::Update(f32 deltaTime) //Update player each frame
+void Player::Update(f32 deltaTime)
 {
-    if (AEInputCheckCurr(AEVK_W)) this->transform.position.y += 300.0f * deltaTime;
-    if (AEInputCheckCurr(AEVK_S)) this->transform.position.y -= 300.0f * deltaTime;
-    if (AEInputCheckCurr(AEVK_A)) this->transform.position.x -= 300.0f * deltaTime;
-    if (AEInputCheckCurr(AEVK_D)) this->transform.position.x += 300.0f * deltaTime;
+    // ------------------------
+    // Movement
+    // ------------------------
+    if (AEInputCheckCurr(AEVK_W)) transform.position.y += 300.0f * deltaTime;
+    if (AEInputCheckCurr(AEVK_S)) transform.position.y -= 300.0f * deltaTime;
+    if (AEInputCheckCurr(AEVK_A)) transform.position.x -= 300.0f * deltaTime;
+    if (AEInputCheckCurr(AEVK_D)) transform.position.x += 300.0f * deltaTime;
 
+    // ------------------------
+    // Rotation via QE
+    // ------------------------
+    if (AEInputCheckCurr(AEVK_Q)) transform.rotation -= rotationSpeed * deltaTime;
+    if (AEInputCheckCurr(AEVK_E)) transform.rotation += rotationSpeed * deltaTime;
+
+    // ------------------------
+    // Shooting
+    // ------------------------
+        
+    Mouse mousePos = { 0.0f, 0.0f };
+    AEVec2 dir = { 0.0f, 0.0f };
+
+    //mouse.x and mouse.y are in screen coordinates, need to convert to world coordinates
+    GetMouseWorldPosition(mousePos.position.x, mousePos.position.y);
+    dir.x = mousePos.position.x - transform.position.x;
+    dir.y = mousePos.position.y - transform.position.y;
+
+    AEVec2Normalize(&dir, &dir);
+
+	//std::cout << "Player Position (" << transform.position.x << ", " << transform.position.y << ")\n";
+	//std::cout << "Mouse Position (" << mousePos.position.x << ", " << mousePos.position.y << ")\n";
+	//std::cout << "Player Shooting towards (" << dir.x << ", " << dir.y << ")\n";
+
+    shootCooldown -= deltaTime;
+    if (AEInputCheckTriggered(AEVK_LBUTTON)) //&& shootCooldown <= 0.0f
+    {
+        Shoot(dir);
+        shootCooldown = 0.20f; // fire rate 4/sec
+    }
+
+    // ------------------------
+    // NPC Interaction (unchanged)
+    // ------------------------
     for (GameObject* n : objects)
     {
-        if (n->ObjectType != NP)
-        {
-            continue;
-        }
+        if (n->ObjectType != NP) continue;
 
-        // Check if its within player range
-        AEVec2 dir;
-        dir.x = n->transform.position.x - this->transform.position.x;
-        dir.y = n->transform.position.y - this->transform.position.y;
-
-        f32 dist = sqrt((dir.x * dir.x) + (dir.y * dir.y));
+        AEVec2 dir {0.0f, 0.0f};
+        dir.x = n->transform.position.x - transform.position.x;
+        dir.y = n->transform.position.y - transform.position.y;
+        f32 dist = sqrtf(dir.x * dir.x + dir.y * dir.y);
 
         NPC* np = dynamic_cast<NPC*>(n);
-        if (np != nullptr)
+        if (np)
         {
             if (dist < 100.0f)
             {
@@ -47,15 +83,32 @@ void Player::Update(f32 deltaTime) //Update player each frame
                 np->spriteRenderer.colour.r = 1.0f;
                 np->spriteRenderer.colour.g = 0.0f;
                 np->spriteRenderer.colour.b = 0.0f;
-                std::cout << "Player - Update: The NPC health is currently at " << np->health << std::endl;
             }
             else
             {
-                np->spriteRenderer.colour.r = np->baseColour.r;
-		        np->spriteRenderer.colour.g = np->baseColour.g;
-		        np->spriteRenderer.colour.b = np->baseColour.b;
+                np->spriteRenderer.colour = np->baseColour;
             }
         }
     }
-    std::cout << "Player - Update: Player Position (" << this->transform.position.x << ',' << this->transform.position.y << ")\n";
+}
+
+void Player::Shoot(AEVec2 dir)
+{
+    // Create Bullet
+    for(GameObject* obj : objects)
+    {
+        if (obj->ObjectType == SHOT && !obj->isActive)
+        {
+            Bullet* bullet = dynamic_cast<Bullet*>(obj);
+            if (bullet->owner == BulletOwner::PLAYER)
+            {
+                bullet->isActive = true;
+                bullet->transform.position = transform.position;
+                bullet->dir = dir; // set direction
+                bullet->lifeTime = bullet->maxLifeTime; // reset lifetime
+				bullet->spriteRenderer.colour.a = 1.0f; // make visible
+                break;
+            }
+        }
+	}
 }

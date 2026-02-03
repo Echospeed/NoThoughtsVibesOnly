@@ -1,23 +1,24 @@
+#include "pch.h"
 #include "Collider.h"
 
 bool isOverlapping(SquareCollider const& A, SquareCollider const& B)
 {
 	//AABB vs AABB collision detection
 	// 1. Get the corners of the square A
-	float halfWidthA = A.scale.x / 2.0f;
-	float halfHeightA = A.scale.y / 2.0f;
-	float leftA = A.position.x - halfWidthA;
-	float rightA = A.position.x + halfWidthA;
-	float topA = A.position.y + halfHeightA;
-	float bottomA = A.position.y - halfHeightA;
+	f32 halfWidthA = A.scale.x / 2.0f;
+	f32 halfHeightA = A.scale.y / 2.0f;
+	f32 leftA = A.position.x - halfWidthA;
+	f32 rightA = A.position.x + halfWidthA;
+	f32 topA = A.position.y + halfHeightA;
+	f32 bottomA = A.position.y - halfHeightA;
 
 	// 2. Get the corners of the transformed square B For simplicity, we will treat B as an AABB for now
-	float halfWidthB = B.scale.x / 2.0f;
-	float halfHeightB = B.scale.y / 2.0f;
-	float leftB = B.position.x - halfWidthB;
-	float rightB = B.position.x + halfWidthB;
-	float topB = B.position.y + halfHeightB;
-	float bottomB = B.position.y - halfHeightB;
+	f32 halfWidthB = B.scale.x / 2.0f;
+	f32 halfHeightB = B.scale.y / 2.0f;
+	f32 leftB = B.position.x - halfWidthB;
+	f32 rightB = B.position.x + halfWidthB;
+	f32 topB = B.position.y + halfHeightB;
+	f32 bottomB = B.position.y - halfHeightB;
 
 	// 3. Check for overlap
 	if (leftA > rightB || rightA < leftB || topA < bottomB || bottomA > topB) {

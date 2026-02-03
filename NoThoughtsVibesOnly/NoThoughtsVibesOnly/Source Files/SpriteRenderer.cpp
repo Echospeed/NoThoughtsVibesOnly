@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "AEEngine.h"
 #include "Util.h"
 #include "SpriteRenderer.h"
@@ -14,7 +15,7 @@ void InitSpriteRenderer(SpriteRenderer& spriteRenderer, const char* texturePath,
 
 void DrawSpriteRenderer(const SpriteRenderer& spriteRenderer, Transform& transform)
 {
-    if (!spriteRenderer.texture)
+    if (spriteRenderer.texture != nullptr)
     {
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     }
@@ -45,7 +46,7 @@ void DrawSpriteRenderer(const SpriteRenderer& spriteRenderer, Transform& transfo
 
 void FreeSpriteRenderer(SpriteRenderer& spriteRenderer)
 {
-    if(spriteRenderer.texture)
+    if(spriteRenderer.texture != nullptr)
     {
         // Assuming there's a function to free textures
         AEGfxTextureUnload(spriteRenderer.texture);

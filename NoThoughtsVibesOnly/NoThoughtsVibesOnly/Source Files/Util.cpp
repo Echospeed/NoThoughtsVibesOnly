@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Util.h"
 
 namespace Meshes {
@@ -52,12 +53,12 @@ namespace Meshes {
 		AEGfxMeshStart();
 
 		int steps = 32;
-		float angleStep = (2.0f * 3.14159f) / (float)steps;
+		f32 angleStep = (2.0f * 3.14159f) / (f32)steps;
 
 		for (int i = 0; i < steps; ++i)
 		{
-			float theta1 = i * angleStep;
-			float theta2 = (i + 1) * angleStep;
+			f32 theta1 = i * angleStep;
+			f32 theta2 = (i + 1) * angleStep;
 
 			// Center (0,0), Point A, Point B - White Color (0xFFFFFFFF)
 			AEGfxTriAdd(

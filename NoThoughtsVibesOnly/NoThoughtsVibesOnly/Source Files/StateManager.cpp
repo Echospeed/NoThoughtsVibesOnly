@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "StateManager.h"
 #include "MenuPage.h"
 #include "GamePage.h"
@@ -53,6 +54,14 @@ void StateManagerUpdate()
 			fpDraw = FinishPage_Draw;
 			fpFree = FinishPage_Free;
 			fpUnload = FinishPage_Unload;
+			break;
+		case STATE_WIN:
+			fpLoad = WinPage_Load;
+			fpInitialize = WinPage_Init;
+			fpUpdate = WinPage_Update;
+			fpDraw = WinPage_Draw;
+			fpFree = WinPage_Free;
+			fpUnload = WinPage_Unload;
 			break;
 		case STATE_RESTART:
 			// Handled in Main.cpp game loop

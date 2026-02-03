@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "FinishPage.h"
+#include "WinPage.h"
 #include "AEEngine.h"
 #include "Util.h"
 #include "Button.h"
@@ -13,30 +13,30 @@ namespace {
 	f32 timer = 0.0f;
 }
 
-TextRenderer GameOverText;
-Button RestartButton;
+TextRenderer WinText;
+Button WinButton;
 
-void FinishPage_Load()
+void WinPage_Load()
 {
 	// Load resources for the lose page
 	fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
-	LoadTextRenderer(GameOverText, fontPath);
-	LoadButton(RestartButton, fontPath);
+	LoadTextRenderer(WinText, fontPath);
+	LoadButton(WinButton, fontPath);
 
 	Meshes::CreateSquareCenterOriginMesh();
 }
 
-void FinishPage_Init()
+void WinPage_Init()
 {
 	// Initialize the lose page
 	AEGfxSetBackgroundColor(0.1f, 0.1f, 0.15f);
 	InitialScale = 1.5f;
-	InitTextRenderer(GameOverText, "YOU LOSE!", 1.0f, 1.0f, 0.0f, 0.0f);
-	InitButton(RestartButton, "RESTART", nullptr, { 0.0f, -200.0f }, { 300.0f, 75.0f }, StateManagerMenuPage, 0.0f, 0.6f, 0.0f);
+	InitTextRenderer(WinText, "YOU WIN!", 1.0f, 1.0f, 0.0f, 0.0f);
+	InitButton(WinButton, "RESTART", nullptr, { 0.0f, -200.0f }, { 300.0f, 75.0f }, StateManagerMenuPage, 0.0f, 0.6f, 0.0f);
 	timer = 0.0f;
 }
 
-void FinishPage_Update()
+void WinPage_Update()
 {
 	AEGfxSetCamPosition(0.0f, 0.0f);
 	// Update the lose page
@@ -49,36 +49,36 @@ void FinishPage_Update()
 		InitialScale += (FinalScale - InitialScale) * 0.6f * dt;
 	}
 
-	RestartButton.isHovered = isOverlapping(RestartButton.collider, worldMouse);
+	WinButton.isHovered = isOverlapping(WinButton.collider, worldMouse);
 
-	if (RestartButton.isHovered)
+	if (WinButton.isHovered)
 	{
 		// Change the colour of the startButton when hovered
 		if (AEInputCheckTriggered(AEVK_LBUTTON))
 		{
-			RestartButton.onClick();
+			WinButton.onClick();
 		}
 	}
 }
 
-void FinishPage_Draw()
+void WinPage_Draw()
 {
 	// Draw the lose page
-	DrawTextRenderer(GameOverText, { 0.0f, 250.0f }, InitialScale);
-	DrawButton(RestartButton);
+	DrawTextRenderer(WinText, { 0.0f, 250.0f }, InitialScale);
+	DrawButton(WinButton);
 
 }
 
-void FinishPage_Free()
+void WinPage_Free()
 {
-	// Free resources for the finish page
-	FreeTextRenderer(GameOverText);
-	FreeButton(RestartButton);
+	// Free resources for the Win page
+	FreeTextRenderer(WinText);
+	FreeButton(WinButton);
 }
 
-void FinishPage_Unload()
+void WinPage_Unload()
 {
 	AEGfxDestroyFont(fontPath);
 	Meshes::FreeMeshes();
-	// Unload resources for the finish page
+	// Unload resources for the Win page
 }

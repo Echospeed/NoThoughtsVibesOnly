@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Button.h"
 #include "Transform.h"
 
@@ -55,4 +56,5 @@ void DrawButton(Button& button)
 void FreeButton(Button& button)
 {
     FreeSpriteRenderer(button.sprite);
+	FreeTextRenderer(button.textRenderer);
 }

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "TextRenderer.h"
 #include "StateManager.h"
 
@@ -42,5 +43,6 @@ void DrawTextRenderer(const TextRenderer& textRenderer, AEVec2 position, f32 sca
 
 void FreeTextRenderer(TextRenderer& textRenderer)
 {
-	AEGfxDestroyFont(textRenderer.font);
+	//AEGfxDestroyFont(textRenderer.font);
+	textRenderer.text.clear();
 }
