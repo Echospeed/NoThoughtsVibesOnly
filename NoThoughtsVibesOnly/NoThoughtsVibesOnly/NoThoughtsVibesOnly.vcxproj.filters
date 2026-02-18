@@ -57,7 +57,7 @@
     <ClCompile Include="Source Files\SplashPage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source Files\ExpUI.cpp">
+    <ClCompile Include="Source Files\GameUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source Files\MiniMap.cpp">
@@ -125,7 +125,7 @@
     <ClInclude Include="Header Files\TextRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\ExpUI.h">
+    <ClInclude Include="Header Files\GameUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Header Files\SplashPage.h">

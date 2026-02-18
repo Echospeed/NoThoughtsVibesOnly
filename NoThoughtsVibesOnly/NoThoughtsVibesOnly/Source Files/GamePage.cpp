@@ -1,7 +1,7 @@
 ﻿#include "pch.h"
 #include "GamePage.h"
 #include "StateManager.h"
-#include "ExpUI.h"
+#include "GameUI.h"
 #include "MiniMap.h"
 #include "Player.h"
 #include "NPC.h"
@@ -32,14 +32,18 @@ GameObject* pPlayer{nullptr};
 // ---------------------------------------------------------------------------
 // AMMO TEXT
 // ---------------------------------------------------------------------------
-TextRenderer ammoText;
-s8 gameFont = 0; // Handle for the font
-char ammoBuffer[500]; // Buffer to hold the text string "Ammo: 50"
+//TextRenderer ammoText;
+//s8 gameFont = 0; // Handle for the font
+//char ammoBuffer[500]; // Buffer to hold the text string "Ammo: 50"
 
 // Camera position
 static f32 sCamX = 0.0f;
 static f32 sCamY = 0.0f;
 const f32 CAM_SPEED = 5.0f; // Higher = tighter, Lower = smoother/looser
+
+// Game UI
+GameUI UIelements{};
+
 
 void Game_Load()
 {
@@ -48,12 +52,18 @@ void Game_Load()
     Meshes::CreateSquareCenterOriginMesh();
     Meshes::CreateCircleMesh();
     // Load the font
-    gameFont = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
-    LoadTextRenderer(ammoText, gameFont);
+    //gameFont = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
+    //LoadTextRenderer(ammoText, gameFont);
+
+    // UI Elements
+    UIelements.Load();
 }
 
 void Game_Init()
 {
+    // UI Elements
+    UIelements.Init();
+
     // Initialize Player
     pPlayer = new Player();
 
@@ -64,7 +74,7 @@ void Game_Init()
     // Initialize Ammo UI (Top Left corner usually)
     // Position x=-700, y=400 puts it in top-left area relative to camera center if UI follows camera
     // But since we draw UI *after* resetting camera, we use screen coordinates logic.
-    InitTextRenderer(ammoText, "Ammo: 100%", 1.0f, 1.0f, 1.0f, 1.0f); // White text
+    //InitTextRenderer(ammoText, "Ammo: 100%", 1.0f, 1.0f, 1.0f, 1.0f); // White text
 
     // Initialize Enemies
     for (int i = 0; i < 5; ++i) {
@@ -116,6 +126,10 @@ void Game_Update()
 {
     f32 dt = (f32)AEFrameRateControllerGetFrameTime();
 
+    // UI Elements
+    UIelements.Update(dt);
+    UIelements.UpdatePositionWithCamera(sCamX, sCamY);
+    UIelements.UpdateHealth(dynamic_cast<Player*>(pPlayer)->health, dynamic_cast<Player*>(pPlayer)->maxHealth);
 	//testObject.Update(dt);
 
     // Boundary Logic
@@ -215,8 +229,8 @@ void Game_Update()
 
     // Format the text string
     AEGfxSetCamPosition(0.0f, 0.0f);
-    sprintf_s(ammoBuffer, "Ammo: %d / %d", availableBullets, 500);
-    ammoText.text = ammoBuffer;
+    //sprintf_s(ammoBuffer, "Ammo: %d / %d", availableBullets, 500);
+    //ammoText.text = ammoBuffer;
 
 
     //check if enemy count is 0 to finish level or press space key
@@ -315,9 +329,14 @@ void Game_Draw()
         }
         obj->Draw();
     }
-
     // Draw MiniMap
-    DrawTextRenderer(ammoText, { -500.0f , 400.0f }, 1.0f);
+    //DrawTextRenderer(ammoText, { -500.0f , 400.0f }, 1.0f);
+
+    // UI Elements
+    UIelements.Draw(Meshes::pSquareLOriMesh);
+
+
+
 }
 
 void Game_Free()
@@ -338,5 +357,7 @@ void Game_Free()
 void Game_Unload()
 {
     Meshes::FreeMeshes();
-    AEGfxDestroyFont(gameFont); // <--- Add this to stop leaks!
+    //AEGfxDestroyFont(gameFont); // <--- Add this to stop leaks!
+    // UI Elements
+    UIelements.Unload();
 }
