@@ -6,6 +6,7 @@
 #include <iostream>
 #include "Button.hpp"
 #include "Input.hpp"
+#include "Audio.hpp"
 
 // ---------------------------------------------------------------------------
 // Struct GameObject and Variables
@@ -42,6 +43,8 @@ TextRenderer controlsText; // Header for controls
 TextRenderer creditsText;  // Header for credits
 TextRenderer infoText;     // Body text for details
 
+// Initalizing audio
+Audio MenuAudio{ "Assets/bouken.mp3", -1, 1.0f, 1.0f, AudioType::MUSIC};
 
 // ---------------------------------------------------------------------------
 // Helper Functions for Button Transitions
@@ -120,6 +123,11 @@ void Main_Update()
 
 void Main_Draw()
 {
+	//simple trigger to test audio
+	if(AEInputCheckTriggered(AEVK_0)){
+		MenuAudio.Play();
+	}
+
 	if (currentMenuState == MENU_MAIN)
 	{
 		// Draw Main Menu
@@ -187,6 +195,7 @@ void Main_Free()
 
 void Main_Unload()
 {
+
 	AEGfxDestroyFont(fontPath);
 	Meshes::FreeMeshes();
 }

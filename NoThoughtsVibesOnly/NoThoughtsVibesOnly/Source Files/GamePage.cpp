@@ -1,7 +1,6 @@
 #include "pch.hpp"
 #include "GamePage.hpp"
 #include "StateManager.hpp"
-#include "ExpUI.hpp"
 #include "MiniMap.hpp"
 #include "Player.hpp"
 #include "NPC.hpp"

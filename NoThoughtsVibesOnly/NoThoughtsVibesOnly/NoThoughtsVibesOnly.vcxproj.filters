@@ -27,9 +27,6 @@
     <ClInclude Include="Header Files\Colour.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\ExpUI.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Header Files\FinishPage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -99,6 +96,9 @@
     <ClInclude Include="Header Files\WinPage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Header Files\Audio.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source Files\Bullet.cpp">
@@ -111,9 +111,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source Files\Colour.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source Files\ExpUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source Files\FinishPage.cpp">
@@ -180,6 +177,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source Files\WinPage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source Files\Audio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

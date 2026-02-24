@@ -1,9 +1,17 @@
 #include "pch.hpp"
 #include "Audio.hpp"
+#include <iostream>
 
 Audio::Audio(const std::string& filepath, s8 loop, f32 volume, f32 pitch, AudioType type)
 	: isLoaded(false), loop(loop), volume(volume), pitch(pitch), audioType(type), audioResource({nullptr}), group({ nullptr })
 {
+
+	if(filepath.empty())
+	{
+		std::cout << "Failed to load sound effect: " << filepath << "\n";
+		return;
+	}
+
 	if (audioType == AudioType::SOUND)
 	{
 		audioResource = AEAudioLoadSound(filepath.c_str());
@@ -16,19 +24,23 @@ Audio::Audio(const std::string& filepath, s8 loop, f32 volume, f32 pitch, AudioT
 	else // MUSIC
 	{
 		audioResource = AEAudioLoadMusic(filepath.c_str());
+
+		AEAudioGroup music_group = AEAudioCreateGroup();
+		this->group = music_group;
 		isLoaded = true;
 	}
 }
 
 Audio::~Audio()
 {
-	Free();
+	//Free();
 }
 
 void Audio::Play()
 {
 	if (!isLoaded) return;
 	AEAudioPlay(this->audioResource, this->group, this->volume, this->pitch, this->loop);
+	//std::cout << "Play;\n";
 }
 
 void Audio::SetVolume(f32 volume, f32 pitch, s8 loop)

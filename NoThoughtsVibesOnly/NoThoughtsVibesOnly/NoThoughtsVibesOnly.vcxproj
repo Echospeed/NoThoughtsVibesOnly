@@ -11,11 +11,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Header Files\Audio.hpp" />
     <ClInclude Include="Header Files\Bullet.hpp" />
     <ClInclude Include="Header Files\Button.hpp" />
     <ClInclude Include="Header Files\Collider.hpp" />
     <ClInclude Include="Header Files\Colour.hpp" />
-    <ClInclude Include="Header Files\ExpUI.hpp" />
     <ClInclude Include="Header Files\FinishPage.hpp" />
     <ClInclude Include="Header Files\GameObject.hpp" />
     <ClInclude Include="Header Files\GameObjectType.hpp" />
@@ -41,11 +41,11 @@
     <ClInclude Include="Header Files\WinPage.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source Files\Audio.cpp" />
     <ClCompile Include="Source Files\Bullet.cpp" />
     <ClCompile Include="Source Files\Button.cpp" />
     <ClCompile Include="Source Files\Collider.cpp" />
     <ClCompile Include="Source Files\Colour.cpp" />
-    <ClCompile Include="Source Files\ExpUI.cpp" />
     <ClCompile Include="Source Files\FinishPage.cpp" />
     <ClCompile Include="Source Files\GameObject.cpp" />
     <ClCompile Include="Source Files\GamePage.cpp" />
