@@ -11,8 +11,8 @@
 #include "GamePage.hpp"
 
 GameObject::GameObject(AEVec2 pos, AEVec2 scale, f32 rot, AEGfxTexture* texture, f32 width, f32 height, GameState state)
+	: transform({ pos, scale, rot }), spriteRenderer({ texture, width, height }), ObjectType(ObjectType::NONE)
 {
-	Init(pos, scale, rot, texture, width, height);
 	switch (state)
 	{
 	case STATE_MENU:
@@ -54,7 +54,7 @@ void GameObject::Start()
 // ============================================================================
 void GameObject::Update(f32 deltaTime)
 {
-	(void)deltaTime; // Suppress unused parameter warning
+	static_cast<void>(deltaTime); // Suppress unused parameter warning
 	Draw();
 }
 
