@@ -1,14 +1,14 @@
-#include "pch.h"
-#include "MenuPage.h"
-#include "Util.h"
+#include "pch.hpp"
+#include "MenuPage.hpp"
+#include "Util.hpp"
 #include "AEEngine.h"
 #include <vector>
 #include <iostream>
-#include "Button.h"
-#include "Input.h"
+#include "Button.hpp"
+#include "Input.hpp"
 
 // ---------------------------------------------------------------------------
-// Struct Objects and Variables
+// Struct GameObject and Variables
 // ---------------------------------------------------------------------------
 enum MenuState {
 	MENU_MAIN,
@@ -18,15 +18,23 @@ enum MenuState {
 
 static MenuState currentMenuState = MENU_MAIN;
 
+// ---------------------------------------------------------------------------
+// Global/Static Object Vectors $DO NOT MOVE, MUST INITIALISE BEFORE USE$
+// ---------------------------------------------------------------------------
+std::vector<GameObject*> mainPageObj;
+
+// Font 
+s8 fontPath{};
+
 // Mouse
 Mouse worldMouse;
 
 // Buttons
-Button startButton;
-Button controlsButton;
-Button creditsButton;
-Button quitButton;
-Button backButton;
+Button* startButton{ nullptr };
+Button* controlsButton{ nullptr };
+Button* creditsButton{ nullptr };
+Button* quitButton{ nullptr };
+Button* backButton{ nullptr };
 
 // Text Renderers
 TextRenderer mainText;
@@ -34,8 +42,6 @@ TextRenderer controlsText; // Header for controls
 TextRenderer creditsText;  // Header for credits
 TextRenderer infoText;     // Body text for details
 
-// Font 
-s8 fontPath{};
 
 // ---------------------------------------------------------------------------
 // Helper Functions for Button Transitions
@@ -53,13 +59,7 @@ void Main_Load()
 	fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
 
 	// Load Main Buttons
-	LoadButton(startButton, fontPath);
-	LoadButton(controlsButton, fontPath);
-	LoadButton(creditsButton, fontPath);
-	LoadButton(quitButton, fontPath);
-
 	// Load Back Button
-	LoadButton(backButton, fontPath);
 
 	// Load Text
 	LoadTextRenderer(mainText, fontPath);
@@ -77,59 +77,44 @@ void Main_Init()
 	currentMenuState = MENU_MAIN;
 
 	// Initialize Main Menu UI
-	InitTextRenderer(mainText, "HUIN!!!!!!!!", 1.0f, 1.0f, 1.0f, 1.0f);
+	mainText.SetText("HUIN!!!!!!!!");
 
 	// Link Start button to game state
-	InitButton(startButton, "START", nullptr, { 0.0f, 100.0f }, { 300.0f, 75.0f }, StateManagerGamePage, 0.0f, 0.6f, 0.0f);
+	startButton = new Button(fontPath, { 0.0f, 100.0f }, { 300.0f, 75.0f }, StateManagerGamePage, { 0.0f, 0.6f, 0.0f, 1.0f });
+	startButton->textRenderer.SetText("START");
 
-	// Link Controls/Credits buttons to local helper functions
-	InitButton(controlsButton, "CONTROLS", nullptr, { 0.0f, 0.0f }, { 300.0f, 75.0f }, GoToControls, 0.0f, 0.3f, 0.7f);
-	InitButton(creditsButton, "CREDITS", nullptr, { 0.0f, -100.0f }, { 300.0f, 75.0f }, GoToCredits, 0.5f, 0.0f, 0.5f);
+	// Control Button
+	controlsButton = new Button(fontPath, { 0.0f, 0.0f }, { 300.0f, 75.0f }, GoToControls, { 0.0f, 0.3f, 0.7f, 1.0f });
+	controlsButton->textRenderer.SetText("CONTROLS");
 
-	// Link Quit button to quit application
-	InitButton(quitButton, "QUIT", nullptr, { 0.0f, -200.0f }, { 300.0f, 75.0f }, StateManagerQuit, 0.7f, 0.0f, 0.0f);
+	// Credit Button
+	creditsButton = new Button(fontPath, { 0.0f, -100.0f }, { 300.0f, 75.0f }, GoToCredits, { 0.5f, 0.0f, 0.5f, 1.0f });
+	creditsButton->textRenderer.SetText("CREDITS");
 
-	// Initialize Sub-Menu UI
-	InitButton(backButton, "BACK", nullptr, { 0.0f, -350.0f }, { 200.0f, 75.0f }, GoToMain, 0.7f, 0.0f, 0.0f);
+	// Quit Button
+	quitButton = new Button(fontPath, { 0.0f, -200.0f }, { 300.0f, 75.0f }, StateManagerQuit, { 0.7f, 0.0f, 0.0f, 1.0f });
+	quitButton->textRenderer.SetText("QUIT");
+
+	// Back Bautton
+	backButton = new Button(fontPath, { 0.0f, -350.0f }, { 200.0f, 75.0f }, GoToMain, { 0.7f, 0.0f, 0.0f, 1.0f });
+	backButton->textRenderer.SetText("BACK"); //=> Set Draw Function in Class to draw.
 
 	// Initialize Headers
-	InitTextRenderer(controlsText, "CONTROLS", 1.0f, 1.0f, 1.0f, 1.0f);
-	InitTextRenderer(creditsText, "CREDITS", 1.0f, 1.0f, 1.0f, 1.0f);
+	InitTextRenderer(controlsText, "CONTROLS", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
+	InitTextRenderer(creditsText, "CREDITS", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
 
 	AEGfxSetBackgroundColor(0.1f, 0.1f, 0.15f);
 }
 
 void Main_Update()
 {
-	GetMouseWorldPosition(worldMouse.position.x, worldMouse.position.y);
+	f32 dt = (f32)AEFrameRateControllerGetFrameTime();
 
-	if (currentMenuState == MENU_MAIN)
+	for (auto& obj : mainPageObj)
 	{
-		// Update Main Menu Buttons
-		startButton.isHovered = isOverlapping(startButton.collider, worldMouse);
-		controlsButton.isHovered = isOverlapping(controlsButton.collider, worldMouse);
-		creditsButton.isHovered = isOverlapping(creditsButton.collider, worldMouse);
-		quitButton.isHovered = isOverlapping(quitButton.collider, worldMouse);
-
-		if (startButton.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
-			startButton.onClick();
-
-		else if (controlsButton.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
-			controlsButton.onClick();
-
-		else if (creditsButton.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
-			creditsButton.onClick();
-
-		else if (quitButton.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
-			quitButton.onClick();
-	}
-	else if (currentMenuState == MENU_CONTROLS || currentMenuState == MENU_CREDITS)
-	{
-		// Update Back Button
-		backButton.isHovered = isOverlapping(backButton.collider, worldMouse);
-
-		if (backButton.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
-			backButton.onClick();
+		if (!obj) continue;
+		obj->Update(dt);
+		
 	}
 }
 
@@ -139,10 +124,10 @@ void Main_Draw()
 	{
 		// Draw Main Menu
 		DrawTextRenderer(mainText, { 0.0f, 250.0f }, 1.5f);
-		DrawButton(startButton);
+		/*DrawButton(startButton);
 		DrawButton(controlsButton);
 		DrawButton(creditsButton);
-		DrawButton(quitButton);
+		DrawButton(quitButton);*/
 	}
 	else if (currentMenuState == MENU_CONTROLS)
 	{
@@ -150,16 +135,16 @@ void Main_Draw()
 		DrawTextRenderer(controlsText, { 0.0f, 250.0f }, 1.5f);
 
 		// Text Content for Controls
-		InitTextRenderer(infoText, "W, A, S, D - Move Character", 1.0f, 1.0f, 1.0f, 1.0f);
+		InitTextRenderer(infoText, "W, A, S, D - Move Character", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
 		DrawTextRenderer(infoText, { 0.0f, 100.0f }, 1.0f);
 
-		InitTextRenderer(infoText, "Q - Return to Main Menu", 1.0f, 1.0f, 1.0f, 1.0f);
+		InitTextRenderer(infoText, "Q - Return to Main Menu", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
 		DrawTextRenderer(infoText, { 0.0f, 0.0f }, 1.0f);
 
-		InitTextRenderer(infoText, "R - Restart Level", 1.0f, 1.0f, 1.0f, 1.0f);
+		InitTextRenderer(infoText, "R - Restart Level", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
 		DrawTextRenderer(infoText, { 0.0f, -100.0f }, 1.0f);
 
-		DrawButton(backButton);
+		//DrawButton(backButton);
 	}
 	else if (currentMenuState == MENU_CREDITS)
 	{
@@ -167,31 +152,37 @@ void Main_Draw()
 		DrawTextRenderer(creditsText, { 0.0f, 250.0f }, 1.5f);
 
 		// Text Content for Credits
-		InitTextRenderer(infoText, "Created By:", 1.0f, 1.0f, 1.0f, 1.0f);
+		InitTextRenderer(infoText, "Created By:", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
 		DrawTextRenderer(infoText, { 0.0f, 100.0f }, 1.0f);
 
-		InitTextRenderer(infoText, "No Thoughts, Vibes Only", 0.0f, 1.0f, 1.0f, 1.0f);
+		InitTextRenderer(infoText, "No Thoughts, Vibes Only", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
 		DrawTextRenderer(infoText, { 0.0f, 0.0f }, 1.0f);
 
-		InitTextRenderer(infoText, "DigiPen Institute of Technology", 0.7f, 0.7f, 0.7f, 1.0f); // Cyan
+		InitTextRenderer(infoText, "DigiPen Institute of Technology", { 1.0f, 1.0f }, 0.7f, 0.7f, 1.0f); // Cyan
 		DrawTextRenderer(infoText, { 0.0f, -100.0f }, 0.8f);
 
-		DrawButton(backButton);
+		//DrawButton(backButton);
 	}
 }
 
 void Main_Free()
 {
-	FreeButton(startButton);
-	FreeButton(controlsButton);
-	FreeButton(creditsButton);
-	FreeButton(quitButton);
-	FreeButton(backButton);
-
 	FreeTextRenderer(mainText);
 	FreeTextRenderer(controlsText);
 	FreeTextRenderer(creditsText);
 	FreeTextRenderer(infoText);
+
+	delete startButton;     startButton = nullptr;
+	delete controlsButton;  controlsButton = nullptr;
+	delete creditsButton;   creditsButton = nullptr;
+	delete quitButton;      quitButton = nullptr;
+	delete backButton;      backButton = nullptr;
+
+	//for (auto& obj : mainPageObj) { delete obj; obj = nullptr; }
+
+	//// 3. Clear the vector and reset global pointers
+	mainPageObj.clear();
+	mainPageObj.shrink_to_fit();
 }
 
 void Main_Unload()

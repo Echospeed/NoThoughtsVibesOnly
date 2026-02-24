@@ -1,95 +1,146 @@
-#include "pch.h"
-#include "StateManager.h"
-#include "MenuPage.h"
-#include "GamePage.h"
-#include "SplashPage.h"
-#include "FinishPage.h"
+#include "pch.hpp"
+#include "MenuPage.hpp"
+#include "GamePage.hpp"
+#include "SplashPage.hpp"
+#include "FinishPage.hpp"
+#include "PausePage.hpp"
+#include "WinPage.hpp"
 
-int current = 0, previous = 0, next = 0;
-
-FP fpLoad = nullptr, fpInitialize = nullptr, fpUpdate = nullptr, fpDraw = nullptr, fpFree = nullptr, fpUnload = nullptr;
-
+// ============================================================================
+// Screen dimensions
+// ============================================================================
 const f32 SCREEN_W = 1600.0f;
 const f32 SCREEN_H = 900.0f;
 
-void StateManagerInit(GameState state)
+// ============================================================================
+// Concrete IState wrappers - delegate to each page's free functions
+// ============================================================================
+class SplashState final : public IState
 {
-	next = previous = current = state;
+public:
+    void Load()   override { SplashPage_Load(); }
+    void Init()   override { SplashPage_Init(); }
+    void Update() override { SplashPage_Update(); }
+    void Draw()   override { SplashPage_Draw(); }
+    void Free()   override { SplashPage_Free(); }
+    void Unload() override { SplashPage_Unload(); }
+};
+
+class MenuState final : public IState
+{
+public:
+    void Load()   override { Main_Load(); }
+    void Init()   override { Main_Init(); }
+    void Update() override { Main_Update(); }
+    void Draw()   override { Main_Draw(); }
+    void Free()   override { Main_Free(); }
+    void Unload() override { Main_Unload(); }
+};
+
+class PlayingState final : public IState
+{
+public:
+    void Load()   override { Game_Load(); }
+    void Init()   override { Game_Init(); }
+    void Update() override { Game_Update(); }
+    void Draw()   override { Game_Draw(); }
+    void Free()   override { Game_Free(); }
+    void Unload() override { Game_Unload(); }
+};
+
+class PauseState final : public IState
+{
+public:
+    void Load()   override { PausePage_Load(); }
+    void Init()   override { PausePage_Init(); }
+    void Update() override { PausePage_Update(); }
+    void Draw()   override { PausePage_Draw(); }
+    void Free()   override { PausePage_Free(); }
+    void Unload() override { PausePage_Unload(); }
+};
+
+class FinishState final : public IState
+{
+public:
+    void Load()   override { FinishPage_Load(); }
+    void Init()   override { FinishPage_Init(); }
+    void Update() override { FinishPage_Update(); }
+    void Draw()   override { FinishPage_Draw(); }
+    void Free()   override { FinishPage_Free(); }
+    void Unload() override { FinishPage_Unload(); }
+};
+
+class WinState final : public IState
+{
+public:
+    void Load()   override { WinPage_Load(); }
+    void Init()   override { WinPage_Init(); }
+    void Update() override { WinPage_Update(); }
+    void Draw()   override { WinPage_Draw(); }
+    void Free()   override { WinPage_Free(); }
+    void Unload() override { WinPage_Unload(); }
+};
+
+// ============================================================================
+// StateManager - Singleton
+// ============================================================================
+StateManager& StateManager::Get()
+{
+    static StateManager instance;
+    return instance;
 }
 
-void StateManagerUpdate()
+void StateManager::Init(GameState startState)
 {
-	printf("StateManager_Update: Current State = %d\n", current);
-
-	switch (current)
-	{
-		case STATE_SPLASH:
-			fpLoad = SplashPage_Load;
-			fpInitialize = SplashPage_Init;
-			fpUpdate = SplashPage_Update;
-			fpDraw = SplashPage_Draw;
-			fpFree = SplashPage_Free;
-			fpUnload = SplashPage_Unload;
-			break;
-		case STATE_MENU:
-			fpLoad = Main_Load;
-			fpInitialize = Main_Init;
-			fpUpdate = Main_Update;
-			fpDraw = Main_Draw;
-			fpFree = Main_Free;
-			fpUnload = Main_Unload;
-			break;
-		case STATE_PLAYING:
-			fpLoad = Game_Load;
-			fpInitialize = Game_Init;
-			fpUpdate = Game_Update;
-			fpDraw = Game_Draw;
-			fpFree = Game_Free;
-			fpUnload = Game_Unload;
-			break;
-		case STATE_FINISH:
-			fpLoad = FinishPage_Load;
-			fpInitialize = FinishPage_Init;
-			fpUpdate = FinishPage_Update;
-			fpDraw = FinishPage_Draw;
-			fpFree = FinishPage_Free;
-			fpUnload = FinishPage_Unload;
-			break;
-		case STATE_WIN:
-			fpLoad = WinPage_Load;
-			fpInitialize = WinPage_Init;
-			fpUpdate = WinPage_Update;
-			fpDraw = WinPage_Draw;
-			fpFree = WinPage_Free;
-			fpUnload = WinPage_Unload;
-			break;
-		case STATE_RESTART:
-			// Handled in Main.cpp game loop
-			break;
-		case STATE_QUIT:
-			// Handled in Main.cpp game loop
-			break;
-		default:
-			break;
-	}
+    current = previous = next = startState;
+    currentState = nullptr;
 }
 
-void StateManagerChangeState(GameState state)
+void StateManager::ChangeState(GameState newState)
 {
-	next = state;
+    next = newState;
 }
 
-void StateManagerMenuPage()
+IState* StateManager::CreateState(GameState state)
 {
-	StateManagerChangeState(STATE_MENU);
+    switch (state)
+    {
+    case STATE_SPLASH:  return new SplashState();
+    case STATE_MENU:    return new MenuState();
+    case STATE_PLAYING: return new PlayingState();
+    case STATE_PAUSE:   return new PauseState();
+    case STATE_FINISH:  return new FinishState();
+    case STATE_WIN:     return new WinState();
+    default:            return nullptr;
+    }
 }
 
-void StateManagerGamePage()
+void StateManager::LoadCurrentState()
 {
-	StateManagerChangeState(STATE_PLAYING);
+    printf("StateManager::LoadCurrentState: State = %d\n", current);
+    delete currentState;
+    currentState = CreateState(current);
+    if (currentState)
+        currentState->Load();
 }
 
-void StateManagerQuit()
+void StateManager::RevertToPrevious()
 {
-	StateManagerChangeState(STATE_QUIT);
+    next = previous;
+    current = next;
 }
+
+void StateManager::Advance()
+{
+    previous = current;
+    current = next;
+}
+
+// ============================================================================
+// Free function wrappers
+// ============================================================================
+void StateManagerInit(GameState state) { StateManager::Get().Init(state); }
+void StateManagerChangeState(GameState state) { StateManager::Get().ChangeState(state); }
+void StateManagerMenuPage() { StateManager::Get().ChangeState(STATE_MENU); }
+void StateManagerGamePage() { StateManager::Get().ChangeState(STATE_PLAYING); }
+void StateManagerQuit() { StateManager::Get().ChangeState(STATE_QUIT); }

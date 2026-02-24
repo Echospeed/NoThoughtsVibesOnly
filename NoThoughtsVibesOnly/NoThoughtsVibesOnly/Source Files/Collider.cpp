@@ -1,5 +1,5 @@
-#include "pch.h"
-#include "Collider.h"
+#include "pch.hpp"
+#include "Collider.hpp"
 
 bool isOverlapping(SquareCollider const& A, SquareCollider const& B)
 {

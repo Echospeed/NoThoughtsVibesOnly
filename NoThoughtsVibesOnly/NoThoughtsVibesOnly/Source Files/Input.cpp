@@ -1,6 +1,6 @@
-#include "pch.h"
-#include "Input.h"
-#include "StateManager.h"
+#include "pch.hpp"
+#include "Input.hpp"
+#include "StateManager.hpp"
 
 void GetMouseWorldPosition(f32& outWorldX, f32& outWorldY)
 {

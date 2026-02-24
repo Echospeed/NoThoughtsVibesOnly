@@ -1,60 +1,58 @@
-#include "pch.h"
-#include "Button.h"
-#include "Transform.h"
+#include "pch.hpp"
+#include "Button.hpp"
+#include "Transform.hpp"
 
-void LoadButton(Button& button, s8 &font)
+Button::Button(s8 font, AEVec2 pos, AEVec2 size, ButtonFunction function, Colour colour, std::string text)
+    : GameObject(pos, size, 0.0f, nullptr, size.x, size.y, STATE_MENU)
 {
-    if (font == 0)
+    this->textRenderer.font = font;
+	this->textRenderer.position = pos;
+	this->textRenderer.scale = size;
+	this->textRenderer.SetText(text);
+
+    this->spriteRenderer.width = this->transform.scale.x;
+    this->spriteRenderer.height = this->transform.scale.y;
+	this->spriteRenderer.colour = colour;
+	this->ogColour = colour;
+	this->tintColour.r = colour.r * 0.8f;
+	this->tintColour.g = colour.g * 0.8f;
+	this->tintColour.b = colour.b * 0.8f;
+
+    this->collider.position = this->transform.position;
+    this->collider.scale = this->transform.scale;
+    this->onClick = function;
+}
+
+void Button::Update(f32 deltaTime)
+{
+    GameObject::Update(deltaTime);
+
+    static_cast<void>(deltaTime);
+
+	Mouse mouse;
+
+	GetMouseWorldPosition(mouse.position.x, mouse.position.y);
+
+    if (isOverlapping(this->collider, mouse))
     {
-	    printf("Button font load fail.\n");
+        // Tint the button when hovered
+        this->spriteRenderer.colour = this->tintColour;
+
+        if (AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            if (this->onClick)
+				this->onClick();
+        }
     }
-    LoadTextRenderer(button.textRenderer, font);
+    else
+    {
+        // Reset tint when not hovered
+        this->spriteRenderer.colour = this->ogColour;
+    }
+    this->textRenderer.Draw();
 }
 
-void InitButton(Button& button, const char* text, const char* texture, AEVec2 position, AEVec2 scale, ButtonFunction onClick, f32 r, f32 g, f32 b, TextAlignment textAlignment = ALIGN_CENTER)
+Button::~Button()
 {
-    button.transform.position = position;
-    button.transform.scale = scale;
-    button.onClick = onClick;
-    
-    // Default Colors
-    button.sprite.colour.r = r; 
-    button.sprite.colour.g = g;
-    button.sprite.colour.b = b;
-
-    // Collider 
-	button.collider.position = position;
-	button.collider.scale = scale;
-
-	// Text Renderer
-    button.textRenderer.text = text;
-	button.textRenderer.alignment = textAlignment;
-	InitTextRenderer(button.textRenderer, button.textRenderer.text.c_str(), 1.0f, 1.0f, 1.0f, 1.0f);
-
-	// Sprite Renderer
-    button.texturePath = texture;
-	InitSpriteRenderer(button.sprite, button.texturePath, scale.x, scale.y, MESH_SQUARE);
-}
-
-void InitButton(Button& button, const char* text, const char* texture, AEVec2 position, AEVec2 scale, ButtonFunction onClick, f32 r, f32 g, f32 b)
-{
-	InitButton(button, text, texture, position, scale, onClick, r, g, b, ALIGN_CENTER);
-}
-
-void UpdateButton(Button& button)
-{
-    // Potentially add update logic here in the future
-	TransformMovement(button.transform);
-}
-
-void DrawButton(Button& button)
-{
-	DrawSpriteRenderer(button.sprite, button.transform);
-	DrawTextRenderer(button.textRenderer, button.transform.position, button.textRenderer.scale);
-}
-
-void FreeButton(Button& button)
-{
-    FreeSpriteRenderer(button.sprite);
-	FreeTextRenderer(button.textRenderer);
+    FreeTextRenderer(this->textRenderer);
 }

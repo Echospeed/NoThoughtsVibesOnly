@@ -1,29 +1,39 @@
-﻿#include "pch.h"
-#include "Bullet.h"
-#include "GamePage.h"
-#include "NPC.h"
-#include "Player.h"
-#include "GameObjectType.h"
+#include "pch.hpp"
+#include "Bullet.hpp"
+#include "GamePage.hpp"
+#include "NPC.hpp"
+#include "Player.hpp"
+#include "GameObjectType.hpp"
 #include <math.h>
 
 extern GameObject* pPlayer;
 
 void Bullet::Start()
 {
-    if (!startPos) return;
-
-    transform.position = startPos->transform.position;
+    // FIX: Don't return early - initialize even if startPos is null
+    // Pooled bullets start with null startPos and get assigned later
+    if (startPos) {
+        transform.position = startPos->transform.position;
+    } else {
+        transform.position = { -1000.0f, -1000.0f }; // offscreen
+    }
+    
     transform.scale = { 10.0f, 10.0f };
     transform.rotation = 0.0f;
 
     spriteRenderer.width = 0.0f;
     spriteRenderer.height = 0.0f;
     spriteRenderer.texture = nullptr;
-    //spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f };
     spriteRenderer.meshType = MESH_CIRCLE;
 
     ObjectType = ObjectType::SHOT;
-    isActive = true;
+    
+    // Pooled bullets should start inactive
+    // They will be activated when fired
+    if (!startPos) {
+        isActive = false;
+        spriteRenderer.colour.a = 0.0f;
+    }
 }
 
 void Bullet::Update(f32 deltaTime)
@@ -42,11 +52,12 @@ void Bullet::Update(f32 deltaTime)
         return; 
     }
 
-    // --- NEW FIX: Deactivate if off-screen ---
-    // Assuming WORLD_WIDTH/HEIGHT are accessible (you might need to include GamePage.h or use extern)
-    // Or just use a large safe number like 2000.0f
-    if (transform.position.x > 2000.0f || transform.position.x < -2000.0f ||
-        transform.position.y > 2000.0f || transform.position.y < -2000.0f)
+    // Deactivate if outside world boundaries
+    f32 halfWorldWidth = WORLD_WIDTH / 2.0f;
+    f32 halfWorldHeight = WORLD_HEIGHT / 2.0f;
+    
+    if (transform.position.x > halfWorldWidth || transform.position.x < -halfWorldWidth ||
+        transform.position.y > halfWorldHeight || transform.position.y < -halfWorldHeight)
     {
         HideBullet();
         return;
@@ -55,7 +66,7 @@ void Bullet::Update(f32 deltaTime)
     if (owner == BulletOwner::PLAYER)
     {
         // Interact with NPCs
-        for (auto& obj : objects)
+        for (auto& obj : gamePageObj)
         {
             if (!obj || !obj->isActive || obj->ObjectType != NP) continue;
 
@@ -68,7 +79,11 @@ void Bullet::Update(f32 deltaTime)
 
             if (dist < 30.0f)
             {
-				npc->health -= 100.0f; // player bullet does 5 damage
+                // Get upgraded damage from player
+                Player* player = dynamic_cast<Player*>(startPos);
+                f32 damage = player ? player->GetBulletDamage() : 100.0f;
+                
+                npc->health -= damage;
                 HideBullet();
                 break;
             }
@@ -84,9 +99,8 @@ void Bullet::Update(f32 deltaTime)
 
         if (dist < 30.0f)
         {
-            // TODO: reduce player health
-			Player* player = dynamic_cast<Player*>(pPlayer);
-			player->health -= 25.0f; //enemy bullet does 5 damage
+            Player* player = dynamic_cast<Player*>(pPlayer);
+            player->health -= 25.0f; // enemy bullet does 25 damage
             HideBullet();
         }
     }
@@ -107,9 +121,15 @@ void Bullet::Activate(GameObject* shooter, AEVec2 direction, BulletOwner newOwne
     isActive = true;
     lifeTime = maxLifeTime;
     spriteRenderer.colour.a = 1.0f;
+    
+    // Set position to shooter's position
+    if (shooter) {
+        transform.position = shooter->transform.position;
+    }
+    
     // Set color based on owner
-        if (owner == BulletOwner::PLAYER)
-            spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 1.0f }; // yellow
-        else
-            spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f }; // red for enemy
+    if (owner == BulletOwner::PLAYER)
+        spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 1.0f }; // yellow
+    else
+        spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f }; // red for enemy
 }

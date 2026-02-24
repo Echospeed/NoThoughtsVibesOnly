@@ -1,5 +1,5 @@
-#include "pch.h"
-#include "Particles.h"
+#include "pch.hpp"
+#include "Particles.hpp"
 
 ParticleSystem::ParticleSystem()
 {

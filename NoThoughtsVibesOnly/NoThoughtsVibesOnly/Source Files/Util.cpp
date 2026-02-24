@@ -1,5 +1,5 @@
-#include "pch.h"
-#include "Util.h"
+#include "pch.hpp"
+#include "Util.hpp"
 
 namespace Meshes {
 	AEGfxVertexList* pSquareCOriMesh = nullptr;

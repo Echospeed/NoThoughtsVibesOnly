@@ -84,78 +84,102 @@
     <ClCompile Include="Source Files\WinPage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source Files\WaveSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source Files\PowerUpSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source Files\PausePage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source Files\GameUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Header Files\Particles.h">
+    <ClInclude Include="Header Files\Particles.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\StateManager.h">
+    <ClInclude Include="Header Files\StateManager.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\Util.h">
+    <ClInclude Include="Header Files\Util.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\GamePage.h">
+    <ClInclude Include="Header Files\GamePage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\MenuPage.h">
+    <ClInclude Include="Header Files\MenuPage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\pch.h">
+    <ClInclude Include="Header Files\pch.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\GameObject.h">
+    <ClInclude Include="Header Files\GameObject.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\Transform.h">
+    <ClInclude Include="Header Files\Transform.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\Collider.h">
+    <ClInclude Include="Header Files\Collider.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\SpriteRenderer.h">
+    <ClInclude Include="Header Files\SpriteRenderer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\Button.h">
+    <ClInclude Include="Header Files\Button.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\Input.h">
+    <ClInclude Include="Header Files\Input.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\TextRenderer.h">
+    <ClInclude Include="Header Files\TextRenderer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\ExpUI.h">
+    <ClInclude Include="Header Files\ExpUI.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\SplashPage.h">
+    <ClInclude Include="Header Files\SplashPage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\MiniMap.h">
+    <ClInclude Include="Header Files\MiniMap.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\Player.h">
+    <ClInclude Include="Header Files\Player.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\NPC.h">
+    <ClInclude Include="Header Files\NPC.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\Colour.h">
+    <ClInclude Include="Header Files\Colour.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\NPCType.h">
+    <ClInclude Include="Header Files\NPCType.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\GameObjectType.h">
+    <ClInclude Include="Header Files\GameObjectType.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\FinishPage.h">
+    <ClInclude Include="Header Files\FinishPage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\Bullet.h">
+    <ClInclude Include="Header Files\Bullet.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\WinPage.h">
+    <ClInclude Include="Header Files\WinPage.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Header Files\WaveSystem.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Header Files\PowerUpSystem.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Header Files\PausePage.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Header Files\GameUI.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

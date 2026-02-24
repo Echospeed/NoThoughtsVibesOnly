@@ -16,6 +16,7 @@
     <ClCompile Include="Source Files\Collider.cpp" />
     <ClCompile Include="Source Files\Colour.cpp" />
     <ClCompile Include="Source Files\FinishPage.cpp" />
+    <ClCompile Include="Source Files\GameUI.cpp" />
     <ClCompile Include="Source Files\NPC.cpp" />
     <ClCompile Include="Source Files\ExpUI.cpp" />
     <ClCompile Include="Source Files\GameObject.cpp" />
@@ -25,44 +26,51 @@
     <ClCompile Include="Source Files\MenuPage.cpp" />
     <ClCompile Include="Source Files\MiniMap.cpp" />
     <ClCompile Include="Source Files\Particles.cpp" />
+    <ClCompile Include="Source Files\PausePage.cpp" />
     <ClCompile Include="Source Files\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Source Files\Player.cpp" />
+    <ClCompile Include="Source Files\PowerUpSystem.cpp" />
     <ClCompile Include="Source Files\SplashPage.cpp" />
     <ClCompile Include="Source Files\SpriteRenderer.cpp" />
     <ClCompile Include="Source Files\StateManager.cpp" />
     <ClCompile Include="Source Files\TextRenderer.cpp" />
     <ClCompile Include="Source Files\Transform.cpp" />
     <ClCompile Include="Source Files\Util.cpp" />
+    <ClCompile Include="Source Files\WaveSystem.cpp" />
     <ClCompile Include="Source Files\WinPage.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Header Files\Bullet.h" />
-    <ClInclude Include="Header Files\Button.h" />
-    <ClInclude Include="Header Files\Collider.h" />
-    <ClInclude Include="Header Files\Colour.h" />
-    <ClInclude Include="Header Files\FinishPage.h" />
-    <ClInclude Include="Header Files\GameObjectType.h" />
-    <ClInclude Include="Header Files\NPC.h" />
-    <ClInclude Include="Header Files\ExpUI.h" />
-    <ClInclude Include="Header Files\GameObject.h" />
-    <ClInclude Include="Header Files\GamePage.h" />
-    <ClInclude Include="Header Files\Input.h" />
-    <ClInclude Include="Header Files\MenuPage.h" />
-    <ClInclude Include="Header Files\MiniMap.h" />
-    <ClInclude Include="Header Files\NPCType.h" />
-    <ClInclude Include="Header Files\Particles.h" />
-    <ClInclude Include="Header Files\pch.h" />
-    <ClInclude Include="Header Files\Player.h" />
-    <ClInclude Include="Header Files\SplashPage.h" />
-    <ClInclude Include="Header Files\SpriteRenderer.h" />
-    <ClInclude Include="Header Files\StateManager.h" />
-    <ClInclude Include="Header Files\TextRenderer.h" />
-    <ClInclude Include="Header Files\Transform.h" />
-    <ClInclude Include="Header Files\Util.h" />
-    <ClInclude Include="Header Files\WinPage.h" />
+    <ClInclude Include="Header Files\Bullet.hpp" />
+    <ClInclude Include="Header Files\Button.hpp" />
+    <ClInclude Include="Header Files\Collider.hpp" />
+    <ClInclude Include="Header Files\Colour.hpp" />
+    <ClInclude Include="Header Files\FinishPage.hpp" />
+    <ClInclude Include="Header Files\GameObjectType.hpp" />
+    <ClInclude Include="Header Files\GameUI.hpp" />
+    <ClInclude Include="Header Files\NPC.hpp" />
+    <ClInclude Include="Header Files\ExpUI.hpp" />
+    <ClInclude Include="Header Files\GameObject.hpp" />
+    <ClInclude Include="Header Files\GamePage.hpp" />
+    <ClInclude Include="Header Files\Input.hpp" />
+    <ClInclude Include="Header Files\MenuPage.hpp" />
+    <ClInclude Include="Header Files\MiniMap.hpp" />
+    <ClInclude Include="Header Files\NPCType.hpp" />
+    <ClInclude Include="Header Files\Particles.hpp" />
+    <ClInclude Include="Header Files\PausePage.hpp" />
+    <ClInclude Include="Header Files\pch.hpp" />
+    <ClInclude Include="Header Files\Player.hpp" />
+    <ClInclude Include="Header Files\PowerUpSystem.hpp" />
+    <ClInclude Include="Header Files\SplashPage.hpp" />
+    <ClInclude Include="Header Files\SpriteRenderer.hpp" />
+    <ClInclude Include="Header Files\StateManager.hpp" />
+    <ClInclude Include="Header Files\TextRenderer.hpp" />
+    <ClInclude Include="Header Files\Transform.hpp" />
+    <ClInclude Include="Header Files\Util.hpp" />
+    <ClInclude Include="Header Files\WaveSystem.hpp" />
+    <ClInclude Include="Header Files\WinPage.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -118,8 +126,9 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)Src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -142,7 +151,8 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmodL.dll" "$(OutDir)" /s /r /y /q</
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

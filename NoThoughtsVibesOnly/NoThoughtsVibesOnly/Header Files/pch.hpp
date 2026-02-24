@@ -20,33 +20,33 @@
 // ---------------------------------------------------------------------------
 // Project Framework Headers
 // ---------------------------------------------------------------------------
-#include "StateManager.h"
-#include "Util.h"        
-#include "Input.h"       
-#include "Transform.h"   
-#include "Colour.h"      
+#include "StateManager.hpp"
+#include "Util.hpp"        
+#include "Input.hpp"       
+#include "Transform.hpp"   
+#include "Colour.hpp"      
 
 // ---------------------------------------------------------------------------
 // Graphics & UI Headers
 // ---------------------------------------------------------------------------
-#include "SpriteRenderer.h"
-#include "TextRenderer.h"  
-#include "Button.h"        
+#include "SpriteRenderer.hpp"
+#include "TextRenderer.hpp"  
+#include "Button.hpp"        
 
 // ---------------------------------------------------------------------------
 // Game Object System Headers
 // ---------------------------------------------------------------------------
-#include "GameObjectType.h"
-#include "GameObject.h"    
-#include "Collider.h"
+#include "GameObjectType.hpp"
+#include "GameObject.hpp"    
+#include "Collider.hpp"
 // ---------------------------------------------------------------------------
 // Game State Headers
 // ---------------------------------------------------------------------------
-#include "FinishPage.h"
-#include "MenuPage.h"
-#include "SplashPage.h"
-#include "GamePage.h"
-#include "WinPage.h"
+#include "FinishPage.hpp"
+#include "MenuPage.hpp"
+#include "SplashPage.hpp"
+#include "GamePage.hpp"
+#include "WinPage.hpp"
 
 
 #endif //PCH_H

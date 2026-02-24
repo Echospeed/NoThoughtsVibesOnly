@@ -1,7 +1,7 @@
-#include "pch.h"
-#include "SplashPage.h"
+#include "pch.hpp"
+#include "SplashPage.hpp"
 #include "AEEngine.h"
-#include "Util.h"
+#include "Util.hpp"
 
 AEGfxTexture* ss_DigiPen_Logo;
 

@@ -1,8 +1,8 @@
 #pragma once
 #include "AEEngine.h"
-#include "GameObject.h"
-#include "NPCType.h"
-#include "Player.h"
+#include "GameObject.hpp"
+#include "NPCType.hpp"
+#include "Player.hpp"
 
 class NPC : public GameObject
 {
@@ -24,4 +24,5 @@ private:
 	void BomberNPCs(f32 deltaTime);
 	void RangerNPCs(f32 deltaTime);
 	void WalkNPCs(f32 deltaTime);
+	void BossNPCs(f32 deltaTime); // 🔥 BOSS AI FUNCTION
 };
