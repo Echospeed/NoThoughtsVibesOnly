@@ -6,6 +6,14 @@
 #include "Player.hpp"
 #include "NPC.hpp"
 #include "GameObjectType.hpp"
+#include "pch.h"
+#include "GamePage.h"
+#include "StateManager.h"
+#include "GameUI.h"
+#include "MiniMap.h"
+#include "Player.h"
+#include "NPC.h"
+#include "GameObjectType.h"
 #include <vector>
 #include <iostream>
 #include "Bullet.hpp"
@@ -45,6 +53,9 @@ GameUI        gameUI;           // ← NEW: single UI object
 TextRenderer ammoText;
 s8           gameFont = 0;
 char         ammoBuffer[500];
+//TextRenderer ammoText;
+//s8 gameFont = 0; // Handle for the font
+//char ammoBuffer[500]; // Buffer to hold the text string "Ammo: 50"
 
 // ---------------------------------------------------------------------------
 // Camera
@@ -56,6 +67,10 @@ const  f32    CAM_SPEED = 5.0f;
 // ============================================================================
 // Game_Load
 // ============================================================================
+// Game UI
+GameUI UIelements{};
+
+
 void Game_Load()
 {
     Meshes::CreateTriangleMesh();
@@ -64,6 +79,12 @@ void Game_Load()
     Meshes::CreateCircleMesh();
     gameFont = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
     LoadTextRenderer(ammoText, gameFont);
+    // Load the font
+    //gameFont = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
+    //LoadTextRenderer(ammoText, gameFont);
+
+    // UI Elements
+    UIelements.Load();
 }
 
 // ============================================================================
@@ -72,11 +93,19 @@ void Game_Load()
 void Game_Init()
 {
     // Player
+    // UI Elements
+    UIelements.Init();
+
+    // Initialize Player
     pPlayer = new Player();
     sCamX = pPlayer->transform.position.x;
     sCamY = pPlayer->transform.position.y;
 
     InitTextRenderer(ammoText, "Ammo: 100%", { 1.0f,1.0f }, 1.0f, 1.0f, 1.0f);
+    // Initialize Ammo UI (Top Left corner usually)
+    // Position x=-700, y=400 puts it in top-left area relative to camera center if UI follows camera
+    // But since we draw UI *after* resetting camera, we use screen coordinates logic.
+    //InitTextRenderer(ammoText, "Ammo: 100%", 1.0f, 1.0f, 1.0f, 1.0f); // White text
 
     // Systems
     waveSystem.Init(dynamic_cast<Player*>(pPlayer));
@@ -142,6 +171,11 @@ void Game_Update()
         else if (AEInputCheckTriggered(AEVK_3)) powerUpSystem.ApplyPowerUp(choices[2].type, player);
         return;
     }
+    // UI Elements
+    UIelements.Update(dt);
+    UIelements.UpdatePositionWithCamera(sCamX, sCamY);
+    UIelements.UpdateHealth(dynamic_cast<Player*>(pPlayer)->health, dynamic_cast<Player*>(pPlayer)->maxHealth);
+	//testObject.Update(dt);
 
     // Wave system
     waveSystem.Update(dt);
@@ -220,6 +254,32 @@ void Game_Update()
     //sprintf_s(ammoBuffer, "Ammo: %d / %d", availableBullets, 500);
 	ammoText.SetText("Ammo: ", availableBullets, " / 500");
     //ammoText.text = ammoBuffer;
+    // Format the text string
+    AEGfxSetCamPosition(0.0f, 0.0f);
+    //sprintf_s(ammoBuffer, "Ammo: %d / %d", availableBullets, 500);
+    //ammoText.text = ammoBuffer;
+
+
+    //check if enemy count is 0 to finish level or press space key
+    if (AEInputCheckTriggered(AEVK_SPACE)) // space key
+    {
+        StateManagerChangeState(STATE_FINISH);
+    }
+	//win condition: if all NPCs are inactive
+    if (AEInputCheckTriggered(AEVK_RETURN)) // space key
+    {
+        StateManagerChangeState(STATE_WIN);
+    }
+    // Restart Level
+    if (AEInputCheckTriggered(AEVK_R))
+    {
+        StateManagerChangeState(STATE_RESTART);
+    }
+    // Return to Main Menu
+    if (AEInputCheckTriggered(AEVK_Q))
+    {
+        StateManagerChangeState(STATE_MENU);
+    }
 
     // Hotkeys
     if (AEInputCheckTriggered(AEVK_SPACE))  StateManagerChangeState(STATE_FINISH);
@@ -298,55 +358,14 @@ void Game_Draw()
         }
         obj->Draw();
     }
+    // Draw MiniMap
+    //DrawTextRenderer(ammoText, { -500.0f , 400.0f }, 1.0f);
 
-    // ⭐ Health bars follow entities (world space, before camera reset)
-    gameUI.DrawAllHealthBars();
+    // UI Elements
+    UIelements.Draw(Meshes::pSquareLOriMesh);
 
-    // -----------------------------------------------------------------------
-    // SCREEN SPACE (camera reset to 0,0)
-    // -----------------------------------------------------------------------
-    AEGfxSetCamPosition(0.0f, 0.0f);
 
-    // ⭐ All screen-space UI
-    DrawTextRenderer(ammoText, { -500.0f, 400.0f }, 1.0f);
-    gameUI.DrawHealthText();
-    gameUI.DrawXPBar();
-    gameUI.DrawCurrentStats();      // ← shows SPD / DMG / AOE at all times
-    gameUI.DrawWaveInfo();
-    gameUI.DrawWaveTimer();
 
-    if (powerUpSystem.IsWaitingForUpgrade())
-        gameUI.DrawPowerUpScreen();
-
-    // Reset camera back to player
-    AEGfxSetCamPosition(sCamX, sCamY);
-
-    // -----------------------------------------------------------------------
-    // PAUSE OVERLAY
-    // -----------------------------------------------------------------------
-    if (isPaused)
-    {
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-        AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.7f);
-        AEMtx33 pauseTransform, pauseScale, pauseTrans;
-        AEMtx33Scale(&pauseScale, 3000.0f, 3000.0f);
-        AEMtx33Trans(&pauseTrans, 0.0f, 0.0f);
-        AEMtx33Concat(&pauseTransform, &pauseTrans, &pauseScale);
-        AEGfxSetTransform(pauseTransform.m);
-        AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
-
-        TextRenderer pauseText;
-        LoadTextRenderer(pauseText, gameFont);
-        InitTextRenderer(pauseText, "PAUSED", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
-        DrawTextRenderer(pauseText, { 0.0f, 200.0f }, 3.0f);
-        FreeTextRenderer(pauseText);
-
-        TextRenderer hint;
-        LoadTextRenderer(hint, gameFont);
-        InitTextRenderer(hint, "ESC-Resume  R-Restart  Q-Menu", { 0.8f, 0.8f }, 0.8f, 0.8f, 1.0f);
-        DrawTextRenderer(hint, { 0.0f, -50.0f }, 1.2f);
-        FreeTextRenderer(hint);
-    }
 }
 
 // ============================================================================
@@ -369,4 +388,7 @@ void Game_Unload()
 {
     Meshes::FreeMeshes();
     AEGfxDestroyFont(gameFont);
+    //AEGfxDestroyFont(gameFont); // <--- Add this to stop leaks!
+    // UI Elements
+    UIelements.Unload();
 }
