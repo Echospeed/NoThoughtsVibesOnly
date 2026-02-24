@@ -1,11 +1,14 @@
-﻿#include "pch.h"
-#include "NPC.h"
-#include "NPCType.h"
-#include "Player.h"
-#include "GamePage.h"
-#include <Math.h>
+#include "pch.hpp"
+#include "NPC.hpp"
+#include "NPCType.hpp"
+#include "Player.hpp"
+#include "GamePage.hpp"
+#include <math.h>
 #include <iostream>
-#include "Bullet.h"
+#include "Bullet.hpp"
+#include "PowerUpSystem.hpp"
+
+extern PowerUpSystem powerUpSystem;
 
 void NPC::Start() //Initialize enemy properties
 {
@@ -54,6 +57,27 @@ void NPC::Start() //Initialize enemy properties
 		this->baseColour.r = 0.0f;
 		this->baseColour.g = 1.0f;
 		this->baseColour.b = 1.0f;
+		
+		std::cout << "[NPC] Ranger spawned at (" << transform.position.x << ", " << transform.position.y << ")\n";
+	}
+	else if(this->type == NPC_BOSS)
+	{
+		// 🔥 BOSS APPEARANCE - Large, intimidating, purple/magenta
+		transform.scale = { 100.0f, 100.0f }; // 3x bigger than normal enemies
+		spriteRenderer.colour.r = 1.0f;
+		spriteRenderer.colour.g = 0.0f;
+		spriteRenderer.colour.b = 1.0f; // Magenta/Purple
+		spriteRenderer.meshType = MESH_CIRCLE;
+		this->baseColour.r = 1.0f;
+		this->baseColour.g = 0.0f;
+		this->baseColour.b = 1.0f;
+		
+		// Boss stats
+		health = 1000.0f; // 10x more health
+		speed = 150.0f;   // Slightly slower
+		fireRate = 0.5f;  // Shoots twice per second
+		
+		std::cout << "🔥🔥🔥 BOSS SPAWNED! 🔥🔥🔥 at (" << transform.position.x << ", " << transform.position.y << ")\n";
 	}
 
 	//std::cout << "NPC - Start: NPC Initialized at Position (" << this->transform.position.x << ',' << this->transform.position.y << ")\n";
@@ -67,8 +91,16 @@ void NPC::Update(f32 deltaTime) //Update enemy each frame
 	if (health <= 0.0f)
 	{
 		isVisibleToPlayer = false;
-		isActive = false;              // 👈 THIS IS THE KEY
+		// Award XP to player
+		f32 xpReward = 25.0f;  // You can vary this based on enemy type
+		powerUpSystem.AddExperience(xpReward);
+		isActive = false;
 		spriteRenderer.colour.a = 0.0f;
+		
+		if (this->type == NPC_BOSS)
+		{
+			std::cout << "💀💀💀 BOSS DEFEATED! 💀💀💀\n";
+		}
 		return;
 	}
 
@@ -87,6 +119,10 @@ void NPC::Update(f32 deltaTime) //Update enemy each frame
 	else if (this->type == NPC_RANGER)
 	{
 		RangerNPCs(deltaTime);
+	}
+	else if (this->type == NPC_BOSS)
+	{
+		BossNPCs(deltaTime);
 	}
 	//std::cout << "NPC - Update: NPC Position (" << this->transform.position.x << ',' << this->transform.position.y << ")\n";
 }
@@ -140,6 +176,7 @@ void NPC::RangerNPCs(f32 deltaTime)
 	// 2. Apply Movement
 	transform.position.x += velocity.x * deltaTime;
 	transform.position.y += velocity.y * deltaTime;
+	
 	// Move like before
 	AEVec2 dirVec = { target->transform.position.x - transform.position.x,
 					  target->transform.position.y - transform.position.y };
@@ -168,30 +205,60 @@ void NPC::RangerNPCs(f32 deltaTime)
 	if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh; velocity.y = -velocity.y; }
 	if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh; velocity.y = -velocity.y; }
 
-	// Ranger shooting
+	// Ranger shooting - WITH DEBUG OUTPUT
 	fireCooldown -= deltaTime;
 	if (fireCooldown <= 0.0f)
 	{
-		for (auto& obj : objects)
+		int totalBullets = 0;
+		int enemyBullets = 0;
+		int inactiveBullets = 0;
+		int myBullets = 0;
+		
+		for (auto& obj : gamePageObj)
 		{
-			Bullet* b = dynamic_cast<Bullet*>(obj);
-			if (b && !b->isActive && b->startPos == this)
-			{
-				b->transform.position = transform.position;
+			if (obj->ObjectType == SHOT) {
+				totalBullets++;
+				Bullet* b = dynamic_cast<Bullet*>(obj);
+				if (b && b->owner == BulletOwner::ENEMY) {
+					enemyBullets++;
+					if (!b->isActive) {
+						inactiveBullets++;
+						if (b->startPos == this) {
+							myBullets++;
+							
+							// FIRE THE BULLET
+							b->transform.position = transform.position;
 
-				AEVec2 dir = { target->transform.position.x - transform.position.x,
-							   target->transform.position.y - transform.position.y };
-				f32 mag = sqrtf(dir.x * dir.x + dir.y * dir.y);
-				b->dir.x = dir.x / mag;
-				b->dir.y = dir.y / mag;
+							AEVec2 dir = { target->transform.position.x - transform.position.x,
+										   target->transform.position.y - transform.position.y };
+							f32 mag = sqrtf(dir.x * dir.x + dir.y * dir.y);
+							if (mag > 0) {
+								b->dir.x = dir.x / mag;
+								b->dir.y = dir.y / mag;
+							}
 
-				b->isActive = true;
-				b->lifeTime = b->maxLifeTime;
-				b->spriteRenderer.colour.a = 1.0f;
-				b->owner = BulletOwner::ENEMY;
-				break; // fire 1 bullet
+							b->isActive = true;
+							b->lifeTime = b->maxLifeTime;
+							b->spriteRenderer.colour.a = 1.0f;
+							b->spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f }; // Red bullet
+							
+							std::cout << "✓ RANGER FIRED! Total bullets: " << totalBullets 
+									  << " | Enemy: " << enemyBullets 
+									  << " | Inactive: " << inactiveBullets 
+									  << " | Mine: " << myBullets << "\n";
+							break;
+						}
+					}
+				}
 			}
 		}
+		
+		if (myBullets == 0) {
+			std::cout << "✗ RANGER CAN'T FIRE! No bullets assigned. (Total: " 
+					  << totalBullets << ", Enemy: " << enemyBullets 
+					  << ", Inactive: " << inactiveBullets << ")\n";
+		}
+		
 		fireCooldown = fireRate;
 	}
 }
@@ -232,4 +299,105 @@ void NPC::WalkNPCs(f32 deltaTime)
 	if (transform.position.y > halfWorldHeight - halfHeight) { transform.position.y = halfWorldHeight - halfHeight; velocity.y = -velocity.y; }
 	if (transform.position.y < -halfWorldHeight + halfHeight) { transform.position.y = -halfWorldHeight + halfHeight; velocity.y = -velocity.y; }
 	//std::cout << "NPC - WalkNPC: Is running\n";
+}
+
+// ============================================================================
+// 🔥 BOSS AI - Advanced behavior with multiple attack patterns
+// ============================================================================
+void NPC::BossNPCs(f32 deltaTime)
+{
+	if (!target || health <= 0.0f) return;
+
+	// === BOSS MOVEMENT PATTERN ===
+	// Boss orbits around player at medium distance
+	
+	AEVec2 toPlayer = { 
+		target->transform.position.x - transform.position.x,
+		target->transform.position.y - transform.position.y 
+	};
+	f32 distToPlayer = sqrtf(toPlayer.x * toPlayer.x + toPlayer.y * toPlayer.y);
+	
+	// Desired orbit distance
+	const f32 orbitDistance = 300.0f;
+	
+	if (distToPlayer > 0.0f)
+	{
+		// Normalize direction
+		toPlayer.x /= distToPlayer;
+		toPlayer.y /= distToPlayer;
+		
+		// If too far, move closer
+		if (distToPlayer > orbitDistance + 50.0f)
+		{
+			velocity.x = toPlayer.x * speed;
+			velocity.y = toPlayer.y * speed;
+		}
+		// If too close, back away
+		else if (distToPlayer < orbitDistance - 50.0f)
+		{
+			velocity.x = -toPlayer.x * speed;
+			velocity.y = -toPlayer.y * speed;
+		}
+		// At good distance - orbit (perpendicular movement)
+		else
+		{
+			// Perpendicular vector for orbiting
+			velocity.x = -toPlayer.y * speed;
+			velocity.y = toPlayer.x * speed;
+		}
+	}
+	
+	// Apply movement
+	transform.position.x += velocity.x * deltaTime;
+	transform.position.y += velocity.y * deltaTime;
+
+	// Wall bounce
+	f32 halfW = WORLD_WIDTH / 2.0f, halfH = WORLD_HEIGHT / 2.0f;
+	f32 hw = transform.scale.x / 2.0f, hh = transform.scale.y / 2.0f;
+
+	if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw; velocity.x = -velocity.x; }
+	if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw; velocity.x = -velocity.x; }
+	if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh; velocity.y = -velocity.y; }
+	if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh; velocity.y = -velocity.y; }
+
+	// === BOSS ATTACK PATTERN ===
+	// Shoots in 8 directions simultaneously (bullet hell pattern)
+	
+	fireCooldown -= deltaTime;
+	if (fireCooldown <= 0.0f)
+	{
+		int bulletsFired = 0;
+		
+		// Fire 8 bullets in all directions
+		for (auto& obj : gamePageObj)
+		{
+			if (obj->ObjectType == SHOT) {
+				Bullet* b = dynamic_cast<Bullet*>(obj);
+				if (b && b->owner == BulletOwner::ENEMY && !b->isActive && b->startPos == this) {
+					
+					// Calculate direction for this bullet
+					// Spread bullets in a circle pattern
+					f32 angle = (bulletsFired * (2.0f * 3.14159f / 8.0f)); // 8 directions
+					
+					b->transform.position = transform.position;
+					b->dir.x = cosf(angle);
+					b->dir.y = sinf(angle);
+					
+					b->isActive = true;
+					b->lifeTime = b->maxLifeTime;
+					b->spriteRenderer.colour.a = 1.0f;
+					b->spriteRenderer.colour = { 1.0f, 0.0f, 1.0f, 1.0f }; // Magenta bullets
+					
+					bulletsFired++;
+					if (bulletsFired >= 8) break; // 8 bullets per volley
+				}
+			}
+		}
+		
+		if (bulletsFired > 0) {
+			std::cout << "💥 BOSS FIRED " << bulletsFired << " BULLETS IN ALL DIRECTIONS!\n";
+		}
+		
+		fireCooldown = fireRate;
+	}
 }

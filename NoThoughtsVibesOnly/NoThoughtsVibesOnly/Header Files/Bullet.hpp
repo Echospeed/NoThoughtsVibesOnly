@@ -1,7 +1,7 @@
 ﻿#pragma once
-#include "GameObject.h"
-#include "NPC.h"
-#include "GameObjectType.h"
+#include "GameObject.hpp"
+#include "NPC.hpp"
+#include "GameObjectType.hpp"
 
 class Bullet : public GameObject {
 public:
@@ -11,9 +11,9 @@ public:
 
     GameObject* startPos = nullptr;   // who fired
     AEVec2 dir = { 0.0f, 0.0f };
-    f32 speed = 1000.0f;
+    f32 speed = 1500.0f;
     f32 lifeTime = 0.0f;
-    f32 maxLifeTime = 2.0f;
+    f32 maxLifeTime = 4.0f;
     BulletOwner owner = BulletOwner::PLAYER; // PLAYER or ENEMY
     
 private:

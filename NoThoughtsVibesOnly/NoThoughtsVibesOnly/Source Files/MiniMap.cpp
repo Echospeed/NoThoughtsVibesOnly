@@ -1,6 +1,6 @@
-﻿#include "pch.h"
-#include "MiniMap.h"
-#include "NPC.h"
+﻿#include "pch.hpp"
+#include "MiniMap.hpp"
+#include "NPC.hpp"
 
 // ---------------------------------------------------------------------------
 // Minimap Constants
@@ -24,7 +24,7 @@ void DrawMinimap(const std::vector<GameObject*>& objs, f32 camX, f32 camY)
         mapWorldX, mapWorldY, MINI_SIZE, MINI_SIZE, 0.0f,
         0.0f, 0.0f, 0.0f, 0.5f);
 
-    // Draw Objects
+    // Draw gamePageObj
     for (size_t i = 0; i < objs.size(); ++i)
     {
         GameObject* entity = objs[i];
@@ -48,7 +48,7 @@ void DrawMinimap(const std::vector<GameObject*>& objs, f32 camX, f32 camY)
             if (!npc || !npc->isVisibleToPlayer) continue;
         }
 
-        // Draw other objects (enemies, bullets)
+        // Draw other gamePageObj (enemies, bullets)
         f32 entityMiniX = mapWorldX + entity->transform.position.x * MINI_SCALE;
         f32 entityMiniY = mapWorldY + entity->transform.position.y * MINI_SCALE;
 

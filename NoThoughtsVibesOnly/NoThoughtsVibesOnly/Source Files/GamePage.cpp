@@ -1,15 +1,17 @@
-﻿#include "pch.h"
-#include "GamePage.h"
-#include "StateManager.h"
-#include "GameUI.h"
-#include "MiniMap.h"
-#include "Player.h"
-#include "NPC.h"
-#include "GameObjectType.h"
+#include "pch.hpp"
+#include "GamePage.hpp"
+#include "StateManager.hpp"
+#include "ExpUI.hpp"
+#include "MiniMap.hpp"
+#include "Player.hpp"
+#include "NPC.hpp"
+#include "GameObjectType.hpp"
 #include <vector>
 #include <iostream>
-#include "Bullet.h"
-
+#include "Bullet.hpp"
+#include "WaveSystem.hpp"
+#include "PowerUpSystem.hpp"
+#include "GameUI.hpp"           // ← NEW: replaces all the UI function declarations
 
 // ---------------------------------------------------------------------------
 // World Settings
@@ -22,248 +24,222 @@ int availableBullets = 0;
 // ---------------------------------------------------------------------------
 // Global/Static Object Vectors $DO NOT MOVE, MUST INITIALISE BEFORE USE$
 // ---------------------------------------------------------------------------
-std::vector<GameObject*> objects;
+std::vector<GameObject*> gamePageObj;
 
 // ---------------------------------------------------------------------------
-// Global/Static GameObjects and Variables
+// Global/Static GamePage and Variables
 // ---------------------------------------------------------------------------
-GameObject* pPlayer{nullptr};
+GameObject* pPlayer{ nullptr };
+static bool isPaused = false;
 
 // ---------------------------------------------------------------------------
-// AMMO TEXT
+// Systems
 // ---------------------------------------------------------------------------
-//TextRenderer ammoText;
-//s8 gameFont = 0; // Handle for the font
-//char ammoBuffer[500]; // Buffer to hold the text string "Ammo: 50"
+PowerUpSystem powerUpSystem;
+WaveSystem    waveSystem;
+GameUI        gameUI;           // ← NEW: single UI object
 
-// Camera position
-static f32 sCamX = 0.0f;
-static f32 sCamY = 0.0f;
-const f32 CAM_SPEED = 5.0f; // Higher = tighter, Lower = smoother/looser
+// ---------------------------------------------------------------------------
+// Font / Ammo text
+// ---------------------------------------------------------------------------
+TextRenderer ammoText;
+s8           gameFont = 0;
+char         ammoBuffer[500];
 
-// Game UI
-GameUI UIelements{};
+// ---------------------------------------------------------------------------
+// Camera
+// ---------------------------------------------------------------------------
+static f32    sCamX = 0.0f;
+static f32    sCamY = 0.0f;
+const  f32    CAM_SPEED = 5.0f;
 
-
+// ============================================================================
+// Game_Load
+// ============================================================================
 void Game_Load()
 {
     Meshes::CreateTriangleMesh();
     Meshes::CreateSquareLeftOriginMesh();
     Meshes::CreateSquareCenterOriginMesh();
     Meshes::CreateCircleMesh();
-    // Load the font
-    //gameFont = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
-    //LoadTextRenderer(ammoText, gameFont);
-
-    // UI Elements
-    UIelements.Load();
+    gameFont = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
+    LoadTextRenderer(ammoText, gameFont);
 }
 
+// ============================================================================
+// Game_Init
+// ============================================================================
 void Game_Init()
 {
-    // UI Elements
-    UIelements.Init();
-
-    // Initialize Player
+    // Player
     pPlayer = new Player();
-
-    // Initilize Camera
     sCamX = pPlayer->transform.position.x;
     sCamY = pPlayer->transform.position.y;
 
-    // Initialize Ammo UI (Top Left corner usually)
-    // Position x=-700, y=400 puts it in top-left area relative to camera center if UI follows camera
-    // But since we draw UI *after* resetting camera, we use screen coordinates logic.
-    //InitTextRenderer(ammoText, "Ammo: 100%", 1.0f, 1.0f, 1.0f, 1.0f); // White text
+    InitTextRenderer(ammoText, "Ammo: 100%", { 1.0f,1.0f }, 1.0f, 1.0f, 1.0f);
 
-    // Initialize Enemies
-    for (int i = 0; i < 5; ++i) {
-        NPC* n = new NPC;
-        n->ObjectType = NP;
-        n->type = NPC_WALK;
-        n->target = pPlayer;
-    }
+    // Systems
+    waveSystem.Init(dynamic_cast<Player*>(pPlayer));
+    powerUpSystem.Init();
 
-    for (int i = 0; i < 5; ++i) {
-        NPC* n = new NPC;
-        n->ObjectType = NP;
-        n->type = NPC_RANGER;
-        n->target = pPlayer;
-        for(int j =0; j < 3; ++j) 
-        {
-            Bullet* bullet = new Bullet();
-			bullet->startPos = n; 
-            bullet->owner = BulletOwner::ENEMY;
-            bullet->spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 0.0f }; // invisible
-            // doesnt have a type need to set a enum for enemy bullets and player bullet separately and also create a interaction for ranger npc and player
-		}
-    }
+    Player* player = dynamic_cast<Player*>(pPlayer);
+    if (player) player->powerUpSystem = &powerUpSystem;
 
-    for (int i = 0; i < 5; ++i) {
-        NPC* n = new NPC;
-        n->ObjectType = NP;
-        n->type = NPC_MELEE; 
-        n->target = pPlayer;
-    }
+    // ⭐ Init GameUI - one call, done
+    gameUI.Init(gameFont, &waveSystem, &powerUpSystem);
 
+    // Bullet pool - Player
     for (int i = 0; i < 500; ++i)
     {
         Bullet* bullet = new Bullet();
         bullet->startPos = pPlayer;
-        bullet->isActive = false;   // start inactive
+        bullet->isActive = false;
         bullet->owner = BulletOwner::PLAYER;
-        bullet->spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 0.0f }; // invisible
+        bullet->spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 0.0f };
     }
 
-    for(auto& obj : objects) {
-        obj->Start();
-	}
+    // Bullet pool - Enemy
+    for (int i = 0; i < 100; ++i)
+    {
+        Bullet* bullet = new Bullet();
+        bullet->owner = BulletOwner::ENEMY;
+        bullet->isActive = false;
+        bullet->spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 0.0f };
+    }
 
-	//std::cout << "Game_Init is running!\n";
+    for (auto& obj : gamePageObj)
+        obj->Start();
 }
 
+// ============================================================================
+// Game_Update
+// ============================================================================
 void Game_Update()
 {
+    // Pause toggle
+    if (AEInputCheckTriggered(AEVK_ESCAPE))
+    {
+        isPaused = !isPaused;
+        return;
+    }
+
+    if (isPaused)
+    {
+        if (AEInputCheckTriggered(AEVK_R)) { isPaused = false; StateManagerChangeState(STATE_RESTART); return; }
+        if (AEInputCheckTriggered(AEVK_Q)) { isPaused = false; StateManagerChangeState(STATE_MENU);    return; }
+        return;
+    }
+
     f32 dt = (f32)AEFrameRateControllerGetFrameTime();
 
-    // UI Elements
-    UIelements.Update(dt);
-    UIelements.UpdatePositionWithCamera(sCamX, sCamY);
-    UIelements.UpdateHealth(dynamic_cast<Player*>(pPlayer)->health, dynamic_cast<Player*>(pPlayer)->maxHealth);
-	//testObject.Update(dt);
+    // Power-up selection (blocks game update while choosing)
+    if (powerUpSystem.IsWaitingForUpgrade())
+    {
+        PowerUp* choices = powerUpSystem.GetPowerUpChoices();
+        Player* player = dynamic_cast<Player*>(pPlayer);
+        if (AEInputCheckTriggered(AEVK_1)) powerUpSystem.ApplyPowerUp(choices[0].type, player);
+        else if (AEInputCheckTriggered(AEVK_2)) powerUpSystem.ApplyPowerUp(choices[1].type, player);
+        else if (AEInputCheckTriggered(AEVK_3)) powerUpSystem.ApplyPowerUp(choices[2].type, player);
+        return;
+    }
 
-    // Boundary Logic
-    f32 halfWorldWidth = WORLD_WIDTH / 2.0f;
-    f32 halfWorldHeight = WORLD_HEIGHT / 2.0f;
-    f32 halfPlayerSizex = (pPlayer->transform.scale.x / 2.0f);
-    f32 halfPlayerSizey = (pPlayer->transform.scale.y / 2.0f);
+    // Wave system
+    waveSystem.Update(dt);
+    if (AEInputCheckTriggered(AEVK_C) && waveSystem.GetCurrentWave() == 0)
+        waveSystem.StartNextWave();
 
-    if (pPlayer->transform.position.x > halfWorldWidth - halfPlayerSizex) pPlayer->transform.position.x = halfWorldWidth - halfPlayerSizex;
-    if (pPlayer->transform.position.x < -halfWorldWidth + halfPlayerSizex) pPlayer->transform.position.x = -halfWorldWidth + halfPlayerSizex;
-    if (pPlayer->transform.position.y > halfWorldHeight - halfPlayerSizey) pPlayer->transform.position.y = halfWorldHeight - halfPlayerSizey;
-    if (pPlayer->transform.position.y < -halfWorldHeight + halfPlayerSizey) pPlayer->transform.position.y = -halfWorldHeight + halfPlayerSizey;
+    // Boundary clamp
+    f32 halfW = WORLD_WIDTH / 2.0f;
+    f32 halfH = WORLD_HEIGHT / 2.0f;
+    f32 halfPx = pPlayer->transform.scale.x / 2.0f;
+    f32 halfPy = pPlayer->transform.scale.y / 2.0f;
+    if (pPlayer->transform.position.x > halfW - halfPx) pPlayer->transform.position.x = halfW - halfPx;
+    if (pPlayer->transform.position.x < -halfW + halfPx) pPlayer->transform.position.x = -halfW + halfPx;
+    if (pPlayer->transform.position.y > halfH - halfPy) pPlayer->transform.position.y = halfH - halfPy;
+    if (pPlayer->transform.position.y < -halfH + halfPy) pPlayer->transform.position.y = -halfH + halfPy;
 
-    // Smooth Camera Follow (Lerp)
-    // This calculates the difference between player and camera, and moves a fraction of that distance
+    // Camera lerp
     sCamX += (pPlayer->transform.position.x - sCamX) * CAM_SPEED * dt;
     sCamY += (pPlayer->transform.position.y - sCamY) * CAM_SPEED * dt;
 
-    // -----------------------------------------------------------------------
-    // Game State Controls
-    // -----------------------------------------------------------------------
-    /*for (auto& obj : objects) {
-        obj->Update(dt);
-    }*/
-
-    // --- LOGIC: Count Available Ammo ---
+    // Count ammo
     availableBullets = 0;
-    int totalBullets = 0;
-
-    for (auto& obj : objects)
+    for (auto& obj : gamePageObj)
     {
-        // 1. SAFETY CHECK: First, make sure it is actually a bullet (SHOT)
         if (obj->ObjectType == ObjectType::SHOT)
         {
-            // 2. SAFE CAST: Now we know it's safe to treat it as a Bullet
             Bullet* b = (Bullet*)obj;
-
-            // 3. LOGIC: Only count bullets that belong to the player
             if (b->owner == BulletOwner::PLAYER)
             {
-                totalBullets++;
-
-                // Count it if it is ready to be fired (inactive)
-                if (!b->isActive)
-                {
-                    availableBullets++;
-                }
+                if (!b->isActive) availableBullets++;
             }
         }
     }
 
-	// Check Player Health
-    if(dynamic_cast<Player*>(pPlayer)->health <= 0.0f)
+    // Player death
+    if (dynamic_cast<Player*>(pPlayer)->health <= 0.0f)
     {
-        std::cout << "Player has died!\n";
-        
         StateManagerChangeState(STATE_FINISH);
-	}
-    bool anyEnemiesLeft = false;
+        return;
+    }
 
-    for (GameObject* obj : objects)
+    // Win condition
+    if (waveSystem.GetCurrentWave() > 0 && !waveSystem.IsInBreak())
     {
-        // Check if the object is an NPC and is still active in the world
-        if (obj != nullptr && obj->ObjectType == NP && obj->isActive)
+        bool anyEnemiesLeft = false;
+        for (GameObject* obj : gamePageObj)
+            if (obj && obj->isActive && obj->ObjectType == NP)
+            {
+                anyEnemiesLeft = true; break;
+            }
+
+        if (!anyEnemiesLeft)
         {
-            anyEnemiesLeft = true;
-            break; // We found one, so no need to keep checking the rest
+            StateManagerChangeState(STATE_WIN);
+            return;
         }
     }
 
-    if (!anyEnemiesLeft)
+    // Update all gamePageObj
+    for (auto& obj : gamePageObj)
     {
-        std::cout << "All enemies cleared! Victory!\n";
-        StateManagerChangeState(STATE_WIN);
-    }
-
-    for (auto& obj : objects)
-    {
-        if (!obj || !obj->isActive) continue;
-
-        // NPC handling
+        if (!obj) continue;
         if (obj->ObjectType == NP)
         {
             NPC* npc = dynamic_cast<NPC*>(obj);
-
-            // 🔒 Ghost NPCs do NOTHING
-            if (!npc)continue;
-
+            if (!npc || !obj->isActive) continue;
             npc->Update(dt);
         }
         else
         {
-            // Player, bullets, everything else
             obj->Update(dt);
         }
     }
 
-    // Format the text string
-    AEGfxSetCamPosition(0.0f, 0.0f);
+    // Update ammo text
     //sprintf_s(ammoBuffer, "Ammo: %d / %d", availableBullets, 500);
+	ammoText.SetText("Ammo: ", availableBullets, " / 500");
     //ammoText.text = ammoBuffer;
 
-
-    //check if enemy count is 0 to finish level or press space key
-    if (AEInputCheckTriggered(AEVK_SPACE)) // space key
-    {
-        StateManagerChangeState(STATE_FINISH);
-    }
-	//win condition: if all NPCs are inactive
-    if (AEInputCheckTriggered(AEVK_RETURN)) // space key
-    {
-        StateManagerChangeState(STATE_WIN);
-    }
-    // Restart Level
-    if (AEInputCheckTriggered(AEVK_R))
-    {
-        StateManagerChangeState(STATE_RESTART);
-    }
-    // Return to Main Menu
-    if (AEInputCheckTriggered(AEVK_Q))
-    {
-        StateManagerChangeState(STATE_MENU);
-    }
-
+    // Hotkeys
+    if (AEInputCheckTriggered(AEVK_SPACE))  StateManagerChangeState(STATE_FINISH);
+    if (AEInputCheckTriggered(AEVK_RETURN)) StateManagerChangeState(STATE_WIN);
+    if (AEInputCheckTriggered(AEVK_R))      StateManagerChangeState(STATE_RESTART);
+    if (AEInputCheckTriggered(AEVK_Q))      StateManagerChangeState(STATE_MENU);
 }
 
+// ============================================================================
+// Game_Draw
+// ============================================================================
 void Game_Draw()
 {
-    // Camera Follow
+    // -----------------------------------------------------------------------
+    // WORLD SPACE
+    // -----------------------------------------------------------------------
     AEGfxSetCamPosition(sCamX, sCamY);
     AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // Draw World
     AEMtx33 transform, s, t;
 
     // Border
@@ -301,27 +277,20 @@ void Game_Draw()
     }
 
     // AoE indicator
-    f32 aoeRadius = 33.0f; // radius of effect
+    f32    aoeRadius = 30.0f;
     AEVec2 playerPos = pPlayer->transform.position;
-
-    AEMtx33Scale(&s, aoeRadius * 2.0f, aoeRadius * 2.0f); // diameter
+    AEMtx33Scale(&s, aoeRadius * 2.0f, aoeRadius * 2.0f);
     AEMtx33Trans(&t, playerPos.x, playerPos.y);
     AEMtx33Concat(&transform, &t, &s);
     AEGfxSetTransform(transform.m);
-
-    // Semi-transparent black
     AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.5f);
     AEGfxMeshDraw(Meshes::pCircleMesh, AE_GFX_MDM_TRIANGLES);
-
-    // Reset color if needed
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // Draw Objects
-    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-    DrawMinimap(objects, sCamX, sCamY);
-    for (auto& obj : objects)
+    // Game gamePageObj
+    DrawMinimap(gamePageObj, sCamX, sCamY);
+    for (auto& obj : gamePageObj)
     {
-        // Skip invisible NPCs
         if (obj->ObjectType == NP)
         {
             NPC* npc = dynamic_cast<NPC*>(obj);
@@ -329,35 +298,75 @@ void Game_Draw()
         }
         obj->Draw();
     }
-    // Draw MiniMap
-    //DrawTextRenderer(ammoText, { -500.0f , 400.0f }, 1.0f);
 
-    // UI Elements
-    UIelements.Draw(Meshes::pSquareLOriMesh);
+    // ⭐ Health bars follow entities (world space, before camera reset)
+    gameUI.DrawAllHealthBars();
 
+    // -----------------------------------------------------------------------
+    // SCREEN SPACE (camera reset to 0,0)
+    // -----------------------------------------------------------------------
+    AEGfxSetCamPosition(0.0f, 0.0f);
 
+    // ⭐ All screen-space UI
+    DrawTextRenderer(ammoText, { -500.0f, 400.0f }, 1.0f);
+    gameUI.DrawHealthText();
+    gameUI.DrawXPBar();
+    gameUI.DrawCurrentStats();      // ← shows SPD / DMG / AOE at all times
+    gameUI.DrawWaveInfo();
+    gameUI.DrawWaveTimer();
 
+    if (powerUpSystem.IsWaitingForUpgrade())
+        gameUI.DrawPowerUpScreen();
+
+    // Reset camera back to player
+    AEGfxSetCamPosition(sCamX, sCamY);
+
+    // -----------------------------------------------------------------------
+    // PAUSE OVERLAY
+    // -----------------------------------------------------------------------
+    if (isPaused)
+    {
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.7f);
+        AEMtx33 pauseTransform, pauseScale, pauseTrans;
+        AEMtx33Scale(&pauseScale, 3000.0f, 3000.0f);
+        AEMtx33Trans(&pauseTrans, 0.0f, 0.0f);
+        AEMtx33Concat(&pauseTransform, &pauseTrans, &pauseScale);
+        AEGfxSetTransform(pauseTransform.m);
+        AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
+
+        TextRenderer pauseText;
+        LoadTextRenderer(pauseText, gameFont);
+        InitTextRenderer(pauseText, "PAUSED", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
+        DrawTextRenderer(pauseText, { 0.0f, 200.0f }, 3.0f);
+        FreeTextRenderer(pauseText);
+
+        TextRenderer hint;
+        LoadTextRenderer(hint, gameFont);
+        InitTextRenderer(hint, "ESC-Resume  R-Restart  Q-Menu", { 0.8f, 0.8f }, 0.8f, 0.8f, 1.0f);
+        DrawTextRenderer(hint, { 0.0f, -50.0f }, 1.2f);
+        FreeTextRenderer(hint);
+    }
 }
 
+// ============================================================================
+// Game_Free
+// ============================================================================
 void Game_Free()
 {
-    for (auto& obj : objects)
-    {
-        delete obj;
-        obj = nullptr;
-    }
+    waveSystem.Cleanup();
 
-    objects.clear();
-
-    objects.shrink_to_fit();
-
-    pPlayer = nullptr;
+    for (auto& obj : gamePageObj) { delete obj; obj = nullptr; }
+    gamePageObj.clear();
+    gamePageObj.shrink_to_fit();
+    //pPlayer = nullptr;
 }
 
+// ============================================================================
+// Game_Unload
+// ============================================================================
 void Game_Unload()
 {
     Meshes::FreeMeshes();
-    //AEGfxDestroyFont(gameFont); // <--- Add this to stop leaks!
-    // UI Elements
-    UIelements.Unload();
+    AEGfxDestroyFont(gameFont);
 }

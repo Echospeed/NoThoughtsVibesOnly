@@ -1,7 +1,7 @@
 #pragma once
 #include "AEEngine.h"
-#include "Transform.h"
-#include "Colour.h"
+#include "Transform.hpp"
+#include "Colour.hpp"
 
 enum MeshType
 {
@@ -10,12 +10,13 @@ enum MeshType
 	MESH_CIRCLE
 };
 
-struct SpriteRenderer {
+struct SpriteRenderer 
+{
 
 	AEGfxTexture* texture{ nullptr };
 	f32 width{};
 	f32 height{};
-	Colour colour{};
+	Colour colour{0.f, 0.f, 0.f, 1.0f};
 	MeshType meshType{ MESH_SQUARE };
 };
 

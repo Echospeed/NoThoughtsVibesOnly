@@ -1,6 +1,6 @@
 #pragma once
 #include "AEEngine.h"
-#include "Input.h"
+#include "Input.hpp"
 
 enum ColliderType {
 	SQUARE,
