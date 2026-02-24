@@ -113,11 +113,36 @@ void Main_Update()
 {
 	f32 dt = (f32)AEFrameRateControllerGetFrameTime();
 
+
+	if (currentMenuState == MENU_MAIN)
+	{
+		startButton->isActive = true;
+		controlsButton->isActive = true;
+		creditsButton->isActive = true;
+		quitButton->isActive = true;
+		backButton->isActive = false;
+	}
+	else if (currentMenuState == MENU_CONTROLS)
+	{
+		startButton->isActive = false;
+		controlsButton->isActive = false;
+		creditsButton->isActive = false;
+		quitButton->isActive = false;
+		backButton->isActive = true;
+	}
+	else if (currentMenuState == MENU_CREDITS)
+	{
+		startButton->isActive = false;
+		controlsButton->isActive = false;
+		creditsButton->isActive = false;
+		quitButton->isActive = false;
+		backButton->isActive = true;
+	}
+
 	for (auto& obj : mainPageObj)
 	{
 		if (!obj) continue;
 		obj->Update(dt);
-		
 	}
 }
 
@@ -132,10 +157,6 @@ void Main_Draw()
 	{
 		// Draw Main Menu
 		DrawTextRenderer(mainText, { 0.0f, 250.0f }, 1.5f);
-		/*DrawButton(startButton);
-		DrawButton(controlsButton);
-		DrawButton(creditsButton);
-		DrawButton(quitButton);*/
 	}
 	else if (currentMenuState == MENU_CONTROLS)
 	{
@@ -152,7 +173,6 @@ void Main_Draw()
 		InitTextRenderer(infoText, "R - Restart Level", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
 		DrawTextRenderer(infoText, { 0.0f, -100.0f }, 1.0f);
 
-		//DrawButton(backButton);
 	}
 	else if (currentMenuState == MENU_CREDITS)
 	{
@@ -169,7 +189,6 @@ void Main_Draw()
 		InitTextRenderer(infoText, "DigiPen Institute of Technology", { 1.0f, 1.0f }, 0.7f, 0.7f, 1.0f); // Cyan
 		DrawTextRenderer(infoText, { 0.0f, -100.0f }, 0.8f);
 
-		//DrawButton(backButton);
 	}
 }
 

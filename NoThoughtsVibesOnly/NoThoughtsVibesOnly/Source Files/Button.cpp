@@ -25,6 +25,11 @@ Button::Button(s8 font, AEVec2 pos, AEVec2 size, ButtonFunction function, Colour
 
 void Button::Update(f32 deltaTime)
 {
+    if (!isActive)
+    {
+        return;
+    }
+
     GameObject::Update(deltaTime);
 
     static_cast<void>(deltaTime);
