@@ -9,6 +9,8 @@
 #include "Input.hpp"
 #include "PowerUpSystem.hpp"
 
+extern Audio* shootSFX;
+
 void Player::Start()
 {
     transform.position = { 0.0f, 0.0f };
@@ -67,6 +69,7 @@ void Player::Update(f32 deltaTime)
     {
         Shoot(mouseDir);
         shootCooldown = 0.10f; // fire rate 10/sec (faster for continuous shooting)
+        if (shootSFX) shootSFX->Play();
     }
 
     // ========================

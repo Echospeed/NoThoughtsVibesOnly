@@ -52,6 +52,12 @@ static f32    sCamX = 0.0f;
 static f32    sCamY = 0.0f;
 const  f32    CAM_SPEED = 5.0f;
 
+// ---------------------------------------------------------------------------
+// Audio
+// ---------------------------------------------------------------------------
+Audio* bgMusic = nullptr;
+Audio* shootSFX = nullptr;
+
 // ============================================================================
 // Game_Load
 // ============================================================================
@@ -63,6 +69,9 @@ void Game_Load()
     Meshes::CreateCircleMesh();
     gameFont = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
     LoadTextRenderer(ammoText, gameFont);
+    // Audio
+    bgMusic = new Audio("Assets/bouken.mp3", -1, 0.5f, 1.0f, AudioType::MUSIC);
+    shootSFX = new Audio("Assets/ore.mp3", 0, 1.0f, 1.0f, AudioType::SOUND);
 }
 
 // ============================================================================
@@ -108,6 +117,8 @@ void Game_Init()
 
     for (auto& obj : gamePageObj)
         obj->Start();
+    // Start background music
+    if (bgMusic) bgMusic->Play();
 }
 
 // ============================================================================
@@ -119,6 +130,9 @@ void Game_Update()
     if (AEInputCheckTriggered(AEVK_ESCAPE))
     {
         isPaused = !isPaused;
+        // ⭐ Pause/resume music with game
+        if (isPaused) { if (bgMusic) bgMusic->Pause(); }
+        else { if (bgMusic) bgMusic->Resume(); }
         return;
     }
 
@@ -131,7 +145,7 @@ void Game_Update()
 
     f32 dt = (f32)AEFrameRateControllerGetFrameTime();
 
-    // Power-up selection (blocks game update while choosing)
+    // Power-up selection
     if (powerUpSystem.IsWaitingForUpgrade())
     {
         PowerUp* choices = powerUpSystem.GetPowerUpChoices();
@@ -169,15 +183,15 @@ void Game_Update()
         {
             Bullet* b = (Bullet*)obj;
             if (b->owner == BulletOwner::PLAYER)
-            {
                 if (!b->isActive) availableBullets++;
-            }
         }
     }
 
     // Player death
     if (dynamic_cast<Player*>(pPlayer)->health <= 0.0f)
     {
+        // ⭐ Stop music on death
+        if (bgMusic) bgMusic->Stop();
         StateManagerChangeState(STATE_FINISH);
         return;
     }
@@ -194,6 +208,8 @@ void Game_Update()
 
         if (!anyEnemiesLeft)
         {
+            // ⭐ Stop music on win
+            if (bgMusic) bgMusic->Stop();
             StateManagerChangeState(STATE_WIN);
             return;
         }
@@ -215,12 +231,8 @@ void Game_Update()
         }
     }
 
-    // Update ammo text
-    //sprintf_s(ammoBuffer, "Ammo: %d / %d", availableBullets, 500);
-	ammoText.SetText("Ammo: ", availableBullets, " / 500");
-    //ammoText.text = ammoBuffer;
+    ammoText.SetText("Ammo: ", availableBullets, " / 500");
 
-    // Hotkeys
     if (AEInputCheckTriggered(AEVK_SPACE))  StateManagerChangeState(STATE_FINISH);
     if (AEInputCheckTriggered(AEVK_RETURN)) StateManagerChangeState(STATE_WIN);
     if (AEInputCheckTriggered(AEVK_R))      StateManagerChangeState(STATE_RESTART);
@@ -368,4 +380,8 @@ void Game_Unload()
 {
     Meshes::FreeMeshes();
     AEGfxDestroyFont(gameFont);
+
+    // ⭐ Destroy audio
+    delete bgMusic;   bgMusic = nullptr;
+    delete shootSFX;  shootSFX = nullptr;
 }

@@ -25,6 +25,7 @@
 #include "Input.hpp"       
 #include "Transform.hpp"   
 #include "Colour.hpp"      
+#include "Audio.hpp"
 
 // ---------------------------------------------------------------------------
 // Graphics & UI Headers
