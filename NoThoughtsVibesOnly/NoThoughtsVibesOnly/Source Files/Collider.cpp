@@ -1,65 +1,77 @@
+// ============================================================================
+// Collider.cpp - Collision Detection Helpers
+// ============================================================================
+// Provides overloaded isOverlapping() functions for:
+//   - AABB vs AABB  (SquareCollider vs SquareCollider)
+//   - Circle vs Circle (CircleCollider vs CircleCollider)
+//   - AABB vs Mouse point (SquareCollider vs Mouse) - used for UI hit-testing
+//
+// All colliders use world-space coordinates.
+// ============================================================================
+
 #include "pch.hpp"
 #include "Collider.hpp"
 
-bool isOverlapping(SquareCollider const& A, SquareCollider const& B)
+// ============================================================================
+// isOverlapping - AABB vs AABB
+// ============================================================================
+// Standard Axis-Aligned Bounding Box overlap test.
+// Returns true if the two rectangles share any area.
+// ============================================================================
+bool isOverlapping(const SquareCollider& A, const SquareCollider& B)
 {
-	//AABB vs AABB collision detection
-	// 1. Get the corners of the square A
-	f32 halfWidthA = A.scale.x / 2.0f;
-	f32 halfHeightA = A.scale.y / 2.0f;
-	f32 leftA = A.position.x - halfWidthA;
-	f32 rightA = A.position.x + halfWidthA;
-	f32 topA = A.position.y + halfHeightA;
-	f32 bottomA = A.position.y - halfHeightA;
+    const f32 halfWA = A.scale.x / 2.0f;
+    const f32 halfHA = A.scale.y / 2.0f;
+    const f32 leftA = A.position.x - halfWA;
+    const f32 rightA = A.position.x + halfWA;
+    const f32 topA = A.position.y + halfHA;
+    const f32 botA = A.position.y - halfHA;
 
-	// 2. Get the corners of the transformed square B For simplicity, we will treat B as an AABB for now
-	f32 halfWidthB = B.scale.x / 2.0f;
-	f32 halfHeightB = B.scale.y / 2.0f;
-	f32 leftB = B.position.x - halfWidthB;
-	f32 rightB = B.position.x + halfWidthB;
-	f32 topB = B.position.y + halfHeightB;
-	f32 bottomB = B.position.y - halfHeightB;
+    const f32 halfWB = B.scale.x / 2.0f;
+    const f32 halfHB = B.scale.y / 2.0f;
+    const f32 leftB = B.position.x - halfWB;
+    const f32 rightB = B.position.x + halfWB;
+    const f32 topB = B.position.y + halfHB;
+    const f32 botB = B.position.y - halfHB;
 
-	// 3. Check for overlap
-	if (leftA > rightB || rightA < leftB || topA < bottomB || bottomA > topB) {
-		return false; // No collision
-	}
-	return true; // Collision detected	
+    // Separating axis test: no overlap if separated on either axis
+    if (leftA > rightB || rightA < leftB) return false;
+    if (topA  < botB || botA   > topB)  return false;
+
+    return true;
 }
 
-bool isOverlapping(CircleCollider const& A, CircleCollider const& B)
+// ============================================================================
+// isOverlapping - Circle vs Circle
+// ============================================================================
+// Returns true if the distance between centres is less than the sum of radii.
+// Uses squared distance to avoid a sqrt call.
+// ============================================================================
+bool isOverlapping(const CircleCollider& A, const CircleCollider& B)
 {
-	// Circle vs Circle collision detection
-	AEVec2 vecA{A.position.x, A.position.y};
-	AEVec2 vecB{B.position.x, B.position.y};
-	AEVec2 d{};
+    const f32 dx = A.position.x - B.position.x;
+    const f32 dy = A.position.y - B.position.y;
+    const f32 distSq = dx * dx + dy * dy;
+    const f32 radiusSum = A.radius + B.radius;
 
-	AEVec2Sub(&d, &vecA, &vecB);
-	
-	f32 distanceSquared = d.x * d.x + d.y * d.y;
-	f32 radiusSum = A.radius + B.radius;
-	return distanceSquared <= (radiusSum * radiusSum);
+    return distSq <= (radiusSum * radiusSum);
 }
 
-bool isOverlapping(SquareCollider const& A, Mouse const& B)
+// ============================================================================
+// isOverlapping - AABB vs Mouse point
+// ============================================================================
+// Point-in-rectangle test used for button hover detection.
+// The mouse position is treated as an infinitely small point.
+// ============================================================================
+bool isOverlapping(const SquareCollider& A, const Mouse& B)
 {
-	// AABB vs Mouse position collision detection
-	f32 halfWidth = A.scale.x * 0.5f;
-	f32 halfHeight = A.scale.y * 0.5f;
+    const f32 halfW = A.scale.x / 2.0f;
+    const f32 halfH = A.scale.y / 2.0f;
+    const f32 left = A.position.x - halfW;
+    const f32 right = A.position.x + halfW;
+    const f32 bot = A.position.y - halfH;
+    const f32 top = A.position.y + halfH;
 
-	// Compute AABB bounds
-	f32 left = A.position.x - halfWidth;
-	f32 right = A.position.x + halfWidth;
-	f32 bottom = A.position.y - halfHeight;
-	f32 top = A.position.y + halfHeight;
-
-	// Point vs AABB check
-	if (B.position.x < left || B.position.x > right ||
-		B.position.y < bottom || B.position.y > top)
-	{
-		return false;
-	}
-
-	return true;
-	
+    return (B.position.x >= left && B.position.x <= right &&
+        B.position.y >= bot && B.position.y <= top);
 }

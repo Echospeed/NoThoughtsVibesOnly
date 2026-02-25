@@ -23,6 +23,10 @@ public:
 	void Emit(const AEVec2& emitPosition);
 	void Free();
 
+	// In class ParticleSystem:
+	const std::vector<u8>& GetActiveParticles() const { return activeParticles; }
+	std::vector<Particles>& GetParticles() { return particles; }
+
 private:
 	std::vector<Particles> particles;
 	std::vector<u8> activeParticles;

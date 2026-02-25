@@ -1,89 +1,140 @@
-﻿#include "pch.hpp"
+﻿// ============================================================================
+// Main.cpp - Application Entry Point
+// ============================================================================
+// Initialises Alpha Engine, runs the state machine game loop, and exits cleanly.
+//
+// GAME LOOP STRUCTURE:
+// ----------------------------------------------------------------------------
+// The outer loop handles state transitions (Load, Free, Unload).
+// The inner loop runs while the state has not changed (Update, Draw).
+//
+//   OUTER LOOP (state machine):
+//     Normal entry  : LoadCurrentState() -> State->Init()
+//     Restart entry : RevertToPrevious() -> State->Init()  (skips Load/Unload)
+//
+//   INNER LOOP (per frame):
+//     AESysFrameStart()
+//     State->Update()
+//     State->Draw()
+//     AESysFrameEnd()
+//
+//   OUTER LOOP (state exit):
+//     State->Free()
+//     If not RESTART: State->Unload()
+//     StateManager->Advance()  (previous = current, current = next)
+//
+// ESCAPE KEY BEHAVIOUR:
+// ----------------------------------------------------------------------------
+//   ESC exits the application ONLY when not in gameplay/pause/menu states.
+//   Inside those states, ESC is handled by the state's own Update() logic.
+// ============================================================================
+
+#include "pch.hpp"
 #include "StateManager.hpp"
 #include <crtdbg.h>
 
-/* --------------------------------------------------------------------------- */
-// main
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-	_In_opt_ HINSTANCE hPrevInstance,
-	_In_ LPWSTR    lpCmdLine,
-	_In_ int       nCmdShow)
+// ============================================================================
+// WinMain - Entry point
+// ============================================================================
+int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_     LPWSTR    lpCmdLine,
+    _In_     int       nCmdShow)
 {
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(499);
-	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
+    // Enable memory leak detection in debug builds
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    // _CrtSetBreakAlloc(499); // Uncomment to break on a specific allocation number
 
-	int gGameRunning = 1;
+    UNREFERENCED_PARAMETER(hPrevInstance);
+    UNREFERENCED_PARAMETER(lpCmdLine);
 
-	AESysInit(hInstance, nCmdShow, 1600, 900, 1, 60, false, NULL);
-	AESysSetWindowTitle("Alpha Engine - Window");
-	AESysReset();
+    // --- Engine initialisation ---
+    AESysInit(hInstance, nCmdShow,
+        1600, 900,   // Window width, height
+        1,            // Fullscreen (0 = windowed)
+        60,           // Target FPS
+        false,        // Use default window proc
+        NULL);
 
-	printf("Start\n");
+    AESysSetWindowTitle("Alpha Engine - Window");
+    AESysReset();
 
-	StateManagerInit(STATE_SPLASH);
+    printf("[Main] Engine initialised.\n");
 
-	StateManager& sm = StateManager::Get();
+    // --- State machine initialisation ---
+    StateManagerInit(STATE_SPLASH);
+    StateManager& sm = StateManager::Get();
 
-	// Game Loop
-	while (gGameRunning && sm.IsRunning())
-	{
-		if (!sm.IsRestarting())
-		{
-			// Normal transition: create new IState object and call Load()
-			sm.LoadCurrentState();
-		}
-		else
-		{
-			// RESTART: revert current/next back to previous, reuse existing state object
-			sm.RevertToPrevious();
-		}
+    int gGameRunning = 1; // Set to 0 to exit the outer loop
 
-		// Guard: if state object failed to create (STATE_QUIT slipping through etc.)
-		if (!sm.State()) break;
+    // =========================================================================
+    // OUTER GAME LOOP - State transitions
+    // =========================================================================
+    while (gGameRunning && sm.IsRunning())
+    {
+        // --- State entry ---
+        if (!sm.IsRestarting())
+        {
+            // Normal transition: destroy old state, create and load new state
+            sm.LoadCurrentState();
+        }
+        else
+        {
+            // Restart: reuse existing state object (skip Load/Unload)
+            sm.RevertToPrevious();
+        }
 
-		sm.State()->Init();
+        // Safety: if state creation failed (e.g. STATE_QUIT slipped through)
+        if (!sm.State()) break;
 
-		// Inner loop - runs while state has not changed
-		while (sm.GetNext() == sm.GetCurrent())
-		{
-			AESysFrameStart();
+        sm.State()->Init();
 
-			// Escape quits only outside gameplay / pause / menu
-			if (AEInputCheckTriggered(AEVK_ESCAPE) &&
-				sm.GetCurrent() != STATE_PLAYING &&
-				sm.GetCurrent() != STATE_PAUSE &&
-				sm.GetCurrent() != STATE_MENU)
-			{
-				gGameRunning = 0;
-			}
+        // =====================================================================
+        // INNER GAME LOOP - Per-frame update
+        // =====================================================================
+        while (sm.GetNext() == sm.GetCurrent())
+        {
+            AESysFrameStart();
 
-			if (0 == AESysDoesWindowExist())
-				gGameRunning = 0;
+            // ESC quits the application only outside gameplay/pause/menu states
+            if (AEInputCheckTriggered(AEVK_ESCAPE) &&
+                sm.GetCurrent() != STATE_PLAYING &&
+                sm.GetCurrent() != STATE_PAUSE &&
+                sm.GetCurrent() != STATE_MENU)
+            {
+                gGameRunning = 0;
+            }
 
-			AEGfxSetBackgroundColor(0.5f, 0.5f, 0.5f);
-			AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            // Exit if the OS window is closed
+            if (!AESysDoesWindowExist())
+                gGameRunning = 0;
 
-			sm.State()->Update();
-			sm.State()->Draw();
+            // Default render state (overridden per frame by each state)
+            AEGfxSetBackgroundColor(0.5f, 0.5f, 0.5f);
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
-			AESysFrameEnd();
-		}
+            sm.State()->Update();
+            sm.State()->Draw();
 
-		sm.State()->Free();
+            AESysFrameEnd();
+        }
 
-		// Check NEXT (not current) to decide whether to Unload
-		// At this point current = old state, next = requested new state
-		if (sm.GetNext() != STATE_RESTART)
-		{
-			sm.State()->Unload();
-		}
+        // --- State exit ---
+        sm.State()->Free();
 
-		// Advance: previous = current; current = next
-		sm.Advance();
-	}
+        // Only Unload on a full state exit; skip on restart to reuse resources
+        if (sm.GetNext() != STATE_RESTART)
+            sm.State()->Unload();
 
-	AESysExit();
+        // Advance: previous = current, current = next
+        sm.Advance();
+    }
+    sm.FreeManager();
+
+    // --- Engine shutdown ---
+    AESysExit();
+
+    printf("[Main] Engine shut down cleanly.\n");
+    return 0;
 }

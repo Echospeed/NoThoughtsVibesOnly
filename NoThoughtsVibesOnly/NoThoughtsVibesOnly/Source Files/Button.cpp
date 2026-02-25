@@ -1,63 +1,100 @@
+// ============================================================================
+// Button.cpp - Clickable UI Button Implementation
+// ============================================================================
+// See Button.hpp for full documentation and usage examples.
+// ============================================================================
+
 #include "pch.hpp"
 #include "Button.hpp"
 #include "Transform.hpp"
 
-Button::Button(s8 font, AEVec2 pos, AEVec2 size, ButtonFunction function, Colour colour, std::string text)
+// ============================================================================
+// Constructor
+// ============================================================================
+// Initialises the button's transform, sprite, collider, text, and colours.
+// The tint colour is auto-computed as 80% of the base colour for hover effect.
+// ============================================================================
+Button::Button(s8 font, AEVec2 pos, AEVec2 size,
+    ButtonFunction function, Colour colour, std::string text)
     : GameObject(pos, size, 0.0f, nullptr, size.x, size.y, STATE_MENU)
 {
-    this->textRenderer.font = font;
-	this->textRenderer.position = pos;
-	this->textRenderer.scale = size;
-	this->textRenderer.SetText(text);
+    // --- Text setup ---
+    textRenderer.font = font;
+    textRenderer.position = pos;
+    textRenderer.scale = size;
+    textRenderer.SetText(text);
 
-    this->spriteRenderer.width = this->transform.scale.x;
-    this->spriteRenderer.height = this->transform.scale.y;
-	this->spriteRenderer.colour = colour;
-	this->ogColour = colour;
-	this->tintColour.r = colour.r * 0.8f;
-	this->tintColour.g = colour.g * 0.8f;
-	this->tintColour.b = colour.b * 0.8f;
+    // --- Sprite setup ---
+    spriteRenderer.width = transform.scale.x;
+    spriteRenderer.height = transform.scale.y;
+    spriteRenderer.colour = colour;
 
-    this->collider.position = this->transform.position;
-    this->collider.scale = this->transform.scale;
-    this->onClick = function;
+    // --- Colour state ---
+    ogColour = colour;
+    tintColour = {
+        colour.r * 0.8f,
+        colour.g * 0.8f,
+        colour.b * 0.8f,
+        colour.a           // Keep full alpha on hover
+    };
+
+    // --- Collider (AABB for mouse-over detection) ---
+    collider.position = transform.position;
+    collider.scale = transform.scale;
+
+    // --- Callback ---
+    onClick = function;
 }
 
+// ============================================================================
+// Update
+// ============================================================================
+// Each frame:
+//   1. Skips logic entirely if the button is inactive.
+//   2. Gets current mouse world position.
+//   3. Applies hover tint if the mouse overlaps the collider.
+//   4. Fires onClick callback on left-click while hovered.
+//   5. Draws the text label.
+// ============================================================================
 void Button::Update(f32 deltaTime)
 {
-    if (!isActive)
-    {
-        return;
-    }
+    if (!isActive) return;
 
+    // Let base class run any common update logic (draws sprite)
     GameObject::Update(deltaTime);
 
+    // Suppress unused parameter warning (deltaTime not used directly here)
     static_cast<void>(deltaTime);
 
-	Mouse mouse;
+    // Get current mouse position in world space
+    Mouse mouse;
+    GetMouseWorldPosition(mouse.position.x, mouse.position.y);
 
-	GetMouseWorldPosition(mouse.position.x, mouse.position.y);
-
-    if (isOverlapping(this->collider, mouse))
+    if (isOverlapping(collider, mouse))
     {
-        // Tint the button when hovered
-        this->spriteRenderer.colour = this->tintColour;
+        // Apply hover tint
+        spriteRenderer.colour = tintColour;
 
-        if (AEInputCheckTriggered(AEVK_LBUTTON))
+        // Trigger callback on left-click
+        if (AEInputCheckTriggered(AEVK_LBUTTON) && onClick)
         {
-            if (this->onClick)
-				this->onClick();
+            onClick();
         }
     }
     else
     {
-        // Reset tint when not hovered
-        this->spriteRenderer.colour = this->ogColour;
+        // Restore normal colour when not hovered
+        spriteRenderer.colour = ogColour;
     }
-    this->textRenderer.Draw();
+
+    // Draw text label on top of the button background
+    textRenderer.Draw();
 }
 
+// ============================================================================
+// Destructor
+// ============================================================================
 Button::~Button()
 {
-    FreeTextRenderer(this->textRenderer);
+    FreeTextRenderer(textRenderer);
 }

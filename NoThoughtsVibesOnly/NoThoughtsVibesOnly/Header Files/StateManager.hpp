@@ -48,10 +48,10 @@ public:
     void Init(GameState startState);
     void ChangeState(GameState newState);
 
-    void LoadCurrentState();    // delete old + create + Load() new state
-    void RevertToPrevious();    // RESTART: skip Load/Unload, reuse object
-    void Advance();             // previous = current; current = next
-	void FreeManager();         // Call Free() on current state, but do not delete object (for RESTART)
+    void LoadCurrentState();   // delete old + create + Load() new state
+    void RevertToPrevious();   // RESTART: skip Load/Unload, reuse object
+    void Advance();            // previous = current; current = next
+	void FreeManager();           // Clean up current state (called on quit)
 
     GameState GetCurrent()  const { return current; }
     GameState GetPrevious() const { return previous; }

@@ -1,3 +1,9 @@
+// ============================================================================
+// Bullet.cpp - Projectile Object Implementation
+// ============================================================================
+// See Bullet.hpp for full documentation, pool setup, and firing examples.
+// ============================================================================
+
 #include "pch.hpp"
 #include "Bullet.hpp"
 #include "GamePage.hpp"
@@ -6,18 +12,22 @@
 #include "GameObjectType.hpp"
 #include <math.h>
 
+// Global player pointer - declared in GamePage.cpp, used for enemy hit detection
 extern GameObject* pPlayer;
 
+// ============================================================================
+// Start
+// ============================================================================
+// Initialises bullet state after construction.
+// Pooled bullets start with startPos == nullptr and are positioned offscreen
+// until they are assigned and fired via Activate() or manual fire logic.
+// ============================================================================
 void Bullet::Start()
 {
-    // FIX: Don't return early - initialize even if startPos is null
-    // Pooled bullets start with null startPos and get assigned later
-    if (startPos) {
-        transform.position = startPos->transform.position;
-    } else {
-        transform.position = { -1000.0f, -1000.0f }; // offscreen
-    }
-    
+    // Position at shooter if available, otherwise park offscreen
+    transform.position = startPos ? startPos->transform.position
+        : AEVec2{ -1000.0f, -1000.0f };
+
     transform.scale = { 10.0f, 10.0f };
     transform.rotation = 0.0f;
 
@@ -27,45 +37,56 @@ void Bullet::Start()
     spriteRenderer.meshType = MESH_CIRCLE;
 
     ObjectType = ObjectType::SHOT;
-    
-    // Pooled bullets should start inactive
-    // They will be activated when fired
-    if (!startPos) {
+
+    // Pooled bullets without an assigned shooter start hidden
+    if (!startPos)
+    {
         isActive = false;
         spriteRenderer.colour.a = 0.0f;
     }
 }
 
+// ============================================================================
+// Update
+// ============================================================================
+// Per-frame bullet logic. Only runs if the bullet is active.
+//
+// Order of operations:
+//   1. Move bullet along dir * speed
+//   2. Count down lifetime - despawn if expired
+//   3. Clamp to world boundaries - despawn if out of bounds
+//   4. Check collision with target (NPC for player bullets, Player for enemy)
+// ============================================================================
 void Bullet::Update(f32 deltaTime)
 {
     if (!isActive) return;
 
-    // Move bullet
+    // --- Movement ---
     transform.position.x += dir.x * speed * deltaTime;
     transform.position.y += dir.y * speed * deltaTime;
 
-    // Lifetime countdown
+    // --- Lifetime countdown ---
     lifeTime -= deltaTime;
-    if (lifeTime <= 0.0f) 
-    { 
-        HideBullet(); 
-        return; 
-    }
-
-    // Deactivate if outside world boundaries
-    f32 halfWorldWidth = WORLD_WIDTH / 2.0f;
-    f32 halfWorldHeight = WORLD_HEIGHT / 2.0f;
-    
-    if (transform.position.x > halfWorldWidth || transform.position.x < -halfWorldWidth ||
-        transform.position.y > halfWorldHeight || transform.position.y < -halfWorldHeight)
+    if (lifeTime <= 0.0f)
     {
         HideBullet();
         return;
     }
 
+    // --- World boundary check ---
+    const f32 halfW = WORLD_WIDTH / 2.0f;
+    const f32 halfH = WORLD_HEIGHT / 2.0f;
+    if (transform.position.x > halfW || transform.position.x < -halfW ||
+        transform.position.y >  halfH || transform.position.y < -halfH)
+    {
+        HideBullet();
+        return;
+    }
+
+    // --- Collision detection ---
     if (owner == BulletOwner::PLAYER)
     {
-        // Interact with NPCs
+        // Player bullets damage any visible, active NPC
         for (auto& obj : gamePageObj)
         {
             if (!obj || !obj->isActive || obj->ObjectType != NP) continue;
@@ -73,19 +94,19 @@ void Bullet::Update(f32 deltaTime)
             NPC* npc = dynamic_cast<NPC*>(obj);
             if (!npc || !npc->isVisibleToPlayer) continue;
 
-            AEVec2 toNPC = { npc->transform.position.x - transform.position.x,
-                             npc->transform.position.y - transform.position.y };
-            f32 dist = sqrtf(toNPC.x * toNPC.x + toNPC.y * toNPC.y);
+            const AEVec2 toNPC = {
+                npc->transform.position.x - transform.position.x,
+                npc->transform.position.y - transform.position.y
+            };
+            const f32 distSq = toNPC.x * toNPC.x + toNPC.y * toNPC.y;
 
-            if (dist < 30.0f)
+            if (distSq < 30.0f * 30.0f) // 30 unit hit radius
             {
-                // Get upgraded damage from player
+                // Apply upgraded damage from the firing player
                 Player* player = dynamic_cast<Player*>(startPos);
-                f32 damage = player ? player->GetBulletDamage() : 100.0f;
-                
-                npc->health -= damage;
+                npc->health -= player ? player->GetBulletDamage() : 100.0f;
                 HideBullet();
-                break;
+                break; // One bullet hits one NPC
             }
         }
     }
@@ -93,26 +114,27 @@ void Bullet::Update(f32 deltaTime)
     {
         if (!pPlayer) return;
 
-        AEVec2 toPlayer = { pPlayer->transform.position.x - transform.position.x,
-                            pPlayer->transform.position.y - transform.position.y };
-        f32 dist = sqrtf(toPlayer.x * toPlayer.x + toPlayer.y * toPlayer.y);
+        const AEVec2 toPlayer = {
+            pPlayer->transform.position.x - transform.position.x,
+            pPlayer->transform.position.y - transform.position.y
+        };
+        const f32 distSq = toPlayer.x * toPlayer.x + toPlayer.y * toPlayer.y;
 
-        if (dist < 30.0f)
+        if (distSq < 30.0f * 30.0f)
         {
             Player* player = dynamic_cast<Player*>(pPlayer);
-            player->health -= 25.0f; // enemy bullet does 25 damage
+            if (player) player->health -= 25.0f; // Enemy bullet deals 25 damage
             HideBullet();
         }
     }
 }
 
-void Bullet::HideBullet()
-{
-    isActive = false;
-    spriteRenderer.colour.a = 0.0f;
-    transform.position = { -1000.0f, -1000.0f };
-}
-
+// ============================================================================
+// Activate
+// ============================================================================
+// Sets up and fires this bullet from a given shooter toward a direction.
+// Use this as the clean way to fire a pooled bullet.
+// ============================================================================
 void Bullet::Activate(GameObject* shooter, AEVec2 direction, BulletOwner newOwner)
 {
     startPos = shooter;
@@ -121,15 +143,25 @@ void Bullet::Activate(GameObject* shooter, AEVec2 direction, BulletOwner newOwne
     isActive = true;
     lifeTime = maxLifeTime;
     spriteRenderer.colour.a = 1.0f;
-    
-    // Set position to shooter's position
-    if (shooter) {
-        transform.position = shooter->transform.position;
-    }
-    
-    // Set color based on owner
-    if (owner == BulletOwner::PLAYER)
-        spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 1.0f }; // yellow
-    else
-        spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f }; // red for enemy
+
+    // Spawn at shooter's current position
+    if (shooter) transform.position = shooter->transform.position;
+
+    // Colour-code by owner for easy visual debugging
+    spriteRenderer.colour = (owner == BulletOwner::PLAYER)
+        ? Colour{ 1.0f, 1.0f, 0.0f, 1.0f }  // Yellow = player
+    : Colour{ 1.0f, 0.0f, 0.0f, 1.0f }; // Red    = enemy
+}
+
+// ============================================================================
+// HideBullet (private)
+// ============================================================================
+// Deactivates the bullet and moves it offscreen so it is invisible and
+// available for reuse by the pool. Called internally on hit/expiry/bounds.
+// ============================================================================
+void Bullet::HideBullet()
+{
+    isActive = false;
+    spriteRenderer.colour.a = 0.0f;
+    transform.position = { -1000.0f, -1000.0f };
 }

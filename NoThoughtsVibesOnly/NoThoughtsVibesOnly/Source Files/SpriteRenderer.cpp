@@ -1,10 +1,20 @@
 // ============================================================================
-// SpriteRenderer.cpp - IMPROVED VERSION
+// SpriteRenderer.cpp - Sprite and Shape Rendering
 // ============================================================================
-// Handles rendering of sprites and colored shapes in the game.
-// Supports textures, colors, and different mesh types (square, triangle, circle)
-// 
-// CRITICAL BUG FIX: Fixed inverted texture/color rendering logic
+// Handles per-frame rendering of game entities using Alpha Engine's graphics API.
+//
+// TWO RENDERING MODES:
+// ----------------------------------------------------------------------------
+//   TEXTURE mode : Used when spriteRenderer.texture != nullptr.
+//                  The texture is drawn as-is with the colour.a as alpha.
+//   COLOR mode   : Used when no texture is set (most game objects).
+//                  The colour RGBA is applied via SetColorToAdd.
+//
+// MESH TYPES:
+// ----------------------------------------------------------------------------
+//   MESH_SQUARE   -> Meshes::pSquareCOriMesh  (center-origin square)
+//   MESH_TRIANGLE -> Meshes::pTriangleMesh
+//   MESH_CIRCLE   -> Meshes::pCircleMesh
 // ============================================================================
 
 #include "pch.hpp"
@@ -12,111 +22,81 @@
 #include "Util.hpp"
 #include "SpriteRenderer.hpp"
 
-// Global mesh pointer used for rendering
-// This is set based on the meshType of the sprite being drawn
-AEGfxVertexList* list{ nullptr };
-
 // ============================================================================
 // InitSpriteRenderer
 // ============================================================================
-// Initializes a sprite renderer with texture, dimensions, and mesh type
-// 
-// Parameters:
-//   spriteRenderer - The sprite renderer to initialize
-//   texturePath    - Path to texture file (can be nullptr for colored shapes)
-//   width          - Width of the sprite
-//   height         - Height of the sprite  
-//   mesh           - Type of mesh to use (MESH_SQUARE, MESH_TRIANGLE, MESH_CIRCLE)
+// Loads a texture (or sets nullptr for colour-only rendering) and stores
+// the mesh type and dimensions in the renderer struct.
 // ============================================================================
-void InitSpriteRenderer(SpriteRenderer& spriteRenderer, const char* texturePath, f32 width, f32 height, MeshType mesh)
+void InitSpriteRenderer(SpriteRenderer& sr, const char* texturePath,
+    f32 width, f32 height, MeshType mesh)
 {
-    // Load texture if path is provided, otherwise set to nullptr for colored rendering
-    spriteRenderer.texture = (texturePath != nullptr) ? AEGfxTextureLoad(texturePath) : nullptr;
-    spriteRenderer.width = width;
-    spriteRenderer.height = height;
-    spriteRenderer.meshType = mesh;
+    sr.texture = (texturePath != nullptr) ? AEGfxTextureLoad(texturePath) : nullptr;
+    sr.width = width;
+    sr.height = height;
+    sr.meshType = mesh;
 }
 
 // ============================================================================
-// DrawSpriteRenderer - BUG FIX APPLIED
+// DrawSpriteRenderer
 // ============================================================================
-// Renders the sprite using its transform, texture, color, and mesh type
-// 
-// CRITICAL FIX: The original code had inverted logic:
-//   OLD: texture EXISTS → set COLOR mode (WRONG)
-//   OLD: texture is NULL → set TEXTURE mode (WRONG)
-// NEW: texture EXISTS → set TEXTURE mode (CORRECT)
-// NEW: texture is NULL → set COLOR mode (CORRECT)
+// Applies the transform, sets render mode, and draws the appropriate mesh.
+//
+// COLOUR RENDERING (no texture):
+//   SetColorToMultiply is zeroed out so it doesn't tint the black base.
+//   SetColorToAdd provides the actual RGBA colour.
+//
+// TEXTURE RENDERING:
+//   SetColorToMultiply is white (1,1,1,a) to preserve texture colour.
+//   colour.a controls transparency.
 // ============================================================================
-void DrawSpriteRenderer(const SpriteRenderer& spriteRenderer, Transform& transform)
+void DrawSpriteRenderer(const SpriteRenderer& sr, Transform& transform)
 {
-    // ========================================================================
-    // CRITICAL FIX: Corrected render mode logic
-    // ========================================================================
-    if (spriteRenderer.texture != nullptr)
+    if (sr.texture != nullptr)
     {
-        // We have a texture - use TEXTURE rendering mode
+        // Texture mode: draw the image with optional alpha fade
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-        AEGfxTextureSet(spriteRenderer.texture, 0, 0);
-        
-        // For textured sprites, multiply keeps the texture as-is
-        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, spriteRenderer.colour.a);
+        AEGfxTextureSet(sr.texture, 0, 0);
+        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, sr.colour.a);
         AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
     }
     else
     {
-        // No texture - use pure COLOR rendering mode
+        // Colour mode: draw a flat-coloured shape
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-        
-        // Color mode uses ColorToAdd for the actual color
         AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.0f);
-        AEGfxSetColorToAdd(spriteRenderer.colour.r, spriteRenderer.colour.g, 
-                           spriteRenderer.colour.b, spriteRenderer.colour.a);
+        AEGfxSetColorToAdd(sr.colour.r, sr.colour.g, sr.colour.b, sr.colour.a);
     }
-    
-    // Set transparency and blend mode for proper alpha rendering
+
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(1.0f);
-    
-    // Apply the transform (position, rotation, scale) to the rendering matrix
-    TransformMovement(transform);
-    
-    // Select the appropriate mesh based on the sprite's mesh type
-    switch (spriteRenderer.meshType)
+
+    // Build and apply the SRT matrix
+    transform.Apply();
+
+    // Select mesh based on type
+    AEGfxVertexList* mesh = nullptr;
+    switch (sr.meshType)
     {
-        case MESH_SQUARE:
-            list = Meshes::pSquareCOriMesh;
-            break;
-        case MESH_TRIANGLE:
-            list = Meshes::pTriangleMesh;
-            break;
-        case MESH_CIRCLE:
-            list = Meshes::pCircleMesh;
-            break;
-        default:
-            list = Meshes::pSquareCOriMesh; // Default to square if unknown
-            break;
+    case MESH_TRIANGLE: mesh = Meshes::pTriangleMesh;    break;
+    case MESH_CIRCLE:   mesh = Meshes::pCircleMesh;      break;
+    case MESH_SQUARE:   // fall-through
+    default:            mesh = Meshes::pSquareCOriMesh;  break;
     }
-    
-    // Draw the mesh with triangles
-    AEGfxMeshDraw(list, AE_GFX_MDM_TRIANGLES);
+
+    AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
 }
 
 // ============================================================================
 // FreeSpriteRenderer
 // ============================================================================
-// Cleans up sprite renderer resources
-// Unloads texture if one was loaded
+// Unloads the texture if one was loaded. Safe to call multiple times.
 // ============================================================================
-void FreeSpriteRenderer(SpriteRenderer& spriteRenderer)
+void FreeSpriteRenderer(SpriteRenderer& sr)
 {
-    // Only unload texture if one exists
-    if(spriteRenderer.texture != nullptr)
+    if (sr.texture != nullptr)
     {
-        AEGfxTextureUnload(spriteRenderer.texture);
-        spriteRenderer.texture = nullptr;
+        AEGfxTextureUnload(sr.texture);
+        sr.texture = nullptr;
     }
-    
-    // Clear the mesh list pointer
-    list = nullptr;
 }

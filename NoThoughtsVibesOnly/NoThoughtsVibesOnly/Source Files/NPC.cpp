@@ -1,3 +1,24 @@
+﻿// ============================================================================
+// NPC.cpp - Enemy AI Implementation
+// ============================================================================
+// Four enemy types, each with distinct movement and attack behaviour:
+//
+//   NPC_WALK   (Yellow Circle)  : Wanders randomly. No shooting.
+//   NPC_MELEE  (Blue Triangle)  : Charges directly at the player. No shooting.
+//   NPC_RANGER (Cyan Square)    : Keeps distance; fires single bullets.
+//   NPC_BOSS   (Magenta Circle) : Orbits the player; fires 8-way bullet volleys.
+//
+// INTERACTION WITH WAVESYSTEM:
+// ----------------------------------------------------------------------------
+//   WaveSystem::SpawnWave() creates NPC instances with new NPC() and calls
+//   NPC::Start() to randomise position and set type-specific stats.
+//   Enemy bullets from the pool are assigned to Ranger/Boss in WaveSystem.
+//
+// INTERACTION WITH POWERSYSTEM:
+// ----------------------------------------------------------------------------
+//   On death, the NPC awards XP via powerUpSystem.AddExperience().
+// ============================================================================
+
 #include "pch.hpp"
 #include "NPC.hpp"
 #include "NPCType.hpp"
@@ -8,396 +29,357 @@
 #include "Bullet.hpp"
 #include "PowerUpSystem.hpp"
 
-extern PowerUpSystem powerUpSystem;
+extern PowerUpSystem powerUpSystem; // Owned by GamePage.cpp
+extern Audio* shootSFX;      // TODO: play on enemy attack
 
-void NPC::Start() //Initialize enemy properties
+// ============================================================================
+// Start
+// ============================================================================
+// Spawns the NPC at a random world position that is at least 100 units from
+// the player. Sets appearance and stats based on NPC type.
+// ============================================================================
+void NPC::Start()
 {
-	f32 rX = ((f32)rand() / RAND_MAX) * WORLD_WIDTH - WORLD_WIDTH / 2.0f;
-	f32 rY = ((f32)rand() / RAND_MAX) * WORLD_HEIGHT - WORLD_HEIGHT / 2.0f;
+    // --- Random spawn point, guaranteed away from the player ---
+    f32    rX, rY;
+    AEVec2 spawnPos{};
+    do
+    {
+        rX = ((f32)rand() / RAND_MAX) * WORLD_WIDTH - WORLD_WIDTH / 2.0f;
+        rY = ((f32)rand() / RAND_MAX) * WORLD_HEIGHT - WORLD_HEIGHT / 2.0f;
+        spawnPos = { rX, rY };
+    } while (AEVec2Distance(&spawnPos, &target->transform.position) < 100.0f);
 
+    transform.position = { rX, rY };
+    transform.scale = { 30.0f, 30.0f };
+    transform.rotation = 0.0f;
 
-	while (sqrt((rX - target->transform.position.x) * (rX - target->transform.position.x)
-		+ (rY - target->transform.position.y) * (rY - target->transform.position.y)) < 100.0f)
-	{
-		rX = ((f32)rand() / RAND_MAX) * WORLD_WIDTH - WORLD_WIDTH / 2.0f;
-		rY = ((f32)rand() / RAND_MAX) * WORLD_HEIGHT - WORLD_HEIGHT / 2.0f;
-	}
+    // --- Type-specific appearance and stats ---
+    switch (type)
+    {
+    case NPC_WALK:
+        spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 1.0f }; // Yellow
+        spriteRenderer.meshType = MESH_CIRCLE;
+        baseColour = { 1.0f, 1.0f, 0.0f, 1.0f };
+        break;
 
+    case NPC_MELEE:
+        spriteRenderer.colour = { 0.0f, 0.0f, 1.0f, 1.0f }; // Blue
+        spriteRenderer.meshType = MESH_TRIANGLE;
+        baseColour = { 0.0f, 0.0f, 1.0f, 1.0f };
+        break;
 
-	transform.position = { rX, rY };
-	transform.scale = { 30.0f, 30.0f };
-	transform.rotation = 0.0f;
+    case NPC_RANGER:
+        spriteRenderer.colour = { 0.0f, 1.0f, 1.0f, 1.0f }; // Cyan
+        spriteRenderer.meshType = MESH_SQUARE;
+        baseColour = { 0.0f, 1.0f, 1.0f, 1.0f };
+        std::cout << "[NPC] Ranger spawned at ("
+            << transform.position.x << ", " << transform.position.y << ")\n";
+        break;
 
-	if (this->type == NPC_WALK)
-	{
-		spriteRenderer.colour.r = 1.0f;
-		spriteRenderer.colour.g = 1.0f;
-		spriteRenderer.colour.b = 0.0f;
-		spriteRenderer.meshType = MESH_CIRCLE;
-		this->baseColour.r = 1.0f;
-		this->baseColour.g = 1.0f;
-		this->baseColour.b = 0.0f;
-	}
-	else if (this->type == NPC_MELEE)
-	{
-		spriteRenderer.colour.r = 0.0f;
-		spriteRenderer.colour.g = 0.0f;
-		spriteRenderer.colour.b = 1.0f;
-		spriteRenderer.meshType = MESH_TRIANGLE;
-		this->baseColour.r = 0.0f;
-		this->baseColour.g = 0.0f;
-		this->baseColour.b = 1.0f;
-	}
-	else if(this->type == NPC_RANGER)
-	{
-		spriteRenderer.colour.r = 0.0f;
-		spriteRenderer.colour.g = 1.0f;
-		spriteRenderer.colour.b = 1.0f;
-		spriteRenderer.meshType = MESH_SQUARE;
-		this->baseColour.r = 0.0f;
-		this->baseColour.g = 1.0f;
-		this->baseColour.b = 1.0f;
-		
-		std::cout << "[NPC] Ranger spawned at (" << transform.position.x << ", " << transform.position.y << ")\n";
-	}
-	else if(this->type == NPC_BOSS)
-	{
-		// 🔥 BOSS APPEARANCE - Large, intimidating, purple/magenta
-		transform.scale = { 100.0f, 100.0f }; // 3x bigger than normal enemies
-		spriteRenderer.colour.r = 1.0f;
-		spriteRenderer.colour.g = 0.0f;
-		spriteRenderer.colour.b = 1.0f; // Magenta/Purple
-		spriteRenderer.meshType = MESH_CIRCLE;
-		this->baseColour.r = 1.0f;
-		this->baseColour.g = 0.0f;
-		this->baseColour.b = 1.0f;
-		
-		// Boss stats
-		health = 1000.0f; // 10x more health
-		speed = 150.0f;   // Slightly slower
-		fireRate = 0.5f;  // Shoots twice per second
-		
-		std::cout << "🔥🔥🔥 BOSS SPAWNED! 🔥🔥🔥 at (" << transform.position.x << ", " << transform.position.y << ")\n";
-	}
-
-	//std::cout << "NPC - Start: NPC Initialized at Position (" << this->transform.position.x << ',' << this->transform.position.y << ")\n";
-}
-
-void NPC::Update(f32 deltaTime) //Update enemy each frame
-{
-	if (!isVisibleToPlayer)
-		return;
-
-	if (health <= 0.0f)
-	{
-		isVisibleToPlayer = false;
-		// Award XP to player
-		f32 xpReward = 25.0f;  // You can vary this based on enemy type
-		powerUpSystem.AddExperience(xpReward);
-		isActive = false;
-		spriteRenderer.colour.a = 0.0f;
-		
-		if (this->type == NPC_BOSS)
-		{
-			std::cout << "💀💀💀 BOSS DEFEATED! 💀💀💀\n";
-		}
-		return;
-	}
-
-
-	if (!isVisibleToPlayer) return; // skip all logic
-
-
-	if (this->type == NPC_WALK)
-	{
-		WalkNPCs(deltaTime);
-	}
-	else if (this->type == NPC_MELEE)
-	{
-		BomberNPCs(deltaTime);
-	}
-	else if (this->type == NPC_RANGER)
-	{
-		RangerNPCs(deltaTime);
-	}
-	else if (this->type == NPC_BOSS)
-	{
-		BossNPCs(deltaTime);
-	}
-	//std::cout << "NPC - Update: NPC Position (" << this->transform.position.x << ',' << this->transform.position.y << ")\n";
-}
-
-void NPC::BomberNPCs(f32 deltaTime)
-{
-	if (!target || health <= 0.0f) return;
-
-	AEVec2 direction {};
-	AEVec2 displacement = {target->transform.position.x - transform.position.x, target->transform.position.y - transform.position.y };
-	AEVec2Normalize(&direction, &displacement);
-	this->transform.position.x += direction.x * speed * deltaTime;
-	this->transform.position.y += direction.y * speed * deltaTime;
-
-	// Wall bounce
-	f32 halfWorldWidth = WORLD_WIDTH / 2.0f;
-	f32 halfWorldHeight = WORLD_HEIGHT / 2.0f;
-	f32 halfWidth = transform.scale.x / 2.0f;
-	f32 halfHeight = transform.scale.y / 2.0f;
-
-	if (transform.position.x > halfWorldWidth - halfWidth) { transform.position.x = halfWorldWidth - halfWidth; velocity.x = -velocity.x; }
-	if (transform.position.x < -halfWorldWidth + halfWidth) { transform.position.x = -halfWorldWidth + halfWidth; velocity.x = -velocity.x; }
-	if (transform.position.y > halfWorldHeight - halfHeight) { transform.position.y = halfWorldHeight - halfHeight; velocity.y = -velocity.y; }
-	if (transform.position.y < -halfWorldHeight + halfHeight) { transform.position.y = -halfWorldHeight + halfHeight; velocity.y = -velocity.y; }
-	//std::cout << "NPC - MeleeNPC: Is running\n";
-	if (!isVisibleToPlayer) return; // skip all logic
-
-}
-
-void NPC::RangerNPCs(f32 deltaTime)
-{
-	if (!target || health <= 0.0f) return;
-
-	// 1. Timer Logic: Pick a new direction every 2.0 seconds
-	changeDirTimer -= deltaTime;
-	if (changeDirTimer <= 0.0f)
-	{
-		// Generate random direction between -1 and 1
-		float randX = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
-		float randY = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
-
-		// Normalize so diagonal isn't faster
-		f32 len = sqrtf(randX * randX + randY * randY);
-		if (len > 0) {
-			velocity.x = (randX / len) * speed; // Set velocity, not position
-			velocity.y = (randY / len) * speed;
-		}
-		changeDirTimer = 2.0f; // Reset timer
-	}
-
-	// 2. Apply Movement
-	transform.position.x += velocity.x * deltaTime;
-	transform.position.y += velocity.y * deltaTime;
-	
-	// Move like before
-	AEVec2 dirVec = { target->transform.position.x - transform.position.x,
-					  target->transform.position.y - transform.position.y };
-	f32 dist = sqrtf(dirVec.x * dirVec.x + dirVec.y * dirVec.y);
-
-	if (dist < 250.0f)
-	{
-		velocity.x = -(dirVec.x / dist) * speed;
-		velocity.y = -(dirVec.y / dist) * speed;
-	}
-	else
-	{
-		velocity.x *= 0.95f;
-		velocity.y *= 0.95f;
-	}
-
-	transform.position.x += velocity.x * deltaTime;
-	transform.position.y += velocity.y * deltaTime;
-
-	// Wall bounce
-	f32 halfW = WORLD_WIDTH / 2.0f, halfH = WORLD_HEIGHT / 2.0f;
-	f32 hw = transform.scale.x / 2.0f, hh = transform.scale.y / 2.0f;
-
-	if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw; velocity.x = -velocity.x; }
-	if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw; velocity.x = -velocity.x; }
-	if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh; velocity.y = -velocity.y; }
-	if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh; velocity.y = -velocity.y; }
-
-	// Ranger shooting - WITH DEBUG OUTPUT
-	fireCooldown -= deltaTime;
-	if (fireCooldown <= 0.0f)
-	{
-		int totalBullets = 0;
-		int enemyBullets = 0;
-		int inactiveBullets = 0;
-		int myBullets = 0;
-		
-		for (auto& obj : gamePageObj)
-		{
-			if (obj->ObjectType == SHOT) {
-				totalBullets++;
-				Bullet* b = dynamic_cast<Bullet*>(obj);
-				if (b && b->owner == BulletOwner::ENEMY) {
-					enemyBullets++;
-					if (!b->isActive) {
-						inactiveBullets++;
-						if (b->startPos == this) {
-							myBullets++;
-							
-							// FIRE THE BULLET
-							b->transform.position = transform.position;
-
-							AEVec2 dir = { target->transform.position.x - transform.position.x,
-										   target->transform.position.y - transform.position.y };
-							f32 mag = sqrtf(dir.x * dir.x + dir.y * dir.y);
-							if (mag > 0) {
-								b->dir.x = dir.x / mag;
-								b->dir.y = dir.y / mag;
-							}
-
-							b->isActive = true;
-							b->lifeTime = b->maxLifeTime;
-							b->spriteRenderer.colour.a = 1.0f;
-							b->spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f }; // Red bullet
-							
-							std::cout << "✓ RANGER FIRED! Total bullets: " << totalBullets 
-									  << " | Enemy: " << enemyBullets 
-									  << " | Inactive: " << inactiveBullets 
-									  << " | Mine: " << myBullets << "\n";
-							break;
-						}
-					}
-				}
-			}
-		}
-		
-		if (myBullets == 0) {
-			std::cout << "✗ RANGER CAN'T FIRE! No bullets assigned. (Total: " 
-					  << totalBullets << ", Enemy: " << enemyBullets 
-					  << ", Inactive: " << inactiveBullets << ")\n";
-		}
-		
-		fireCooldown = fireRate;
-	}
-}
-
-void NPC::WalkNPCs(f32 deltaTime)
-{
-	if (!target || health <= 0.0f) return;
-
-	// 1. Timer Logic: Pick a new direction every 2.0 seconds
-	changeDirTimer -= deltaTime;
-	if (changeDirTimer <= 0.0f)
-	{
-		// Generate random direction between -1 and 1
-		float randX = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
-		float randY = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
-
-		// Normalize so diagonal isn't faster
-		f32 len = sqrtf(randX * randX + randY * randY);
-		if (len > 0) {
-			velocity.x = (randX / len) * speed; // Set velocity, not position
-			velocity.y = (randY / len) * speed;
-		}
-		changeDirTimer = 2.0f; // Reset timer
-	}
-
-	// 2. Apply Movement
-	transform.position.x += velocity.x * deltaTime;
-	transform.position.y += velocity.y * deltaTime;
-
-	// Wall bounce
-	f32 halfWorldWidth = WORLD_WIDTH / 2.0f;
-	f32 halfWorldHeight = WORLD_HEIGHT / 2.0f;
-	f32 halfWidth = transform.scale.x / 2.0f;
-	f32 halfHeight = transform.scale.y / 2.0f;
-
-	if (transform.position.x > halfWorldWidth - halfWidth) { transform.position.x = halfWorldWidth - halfWidth; velocity.x = -velocity.x; }
-	if (transform.position.x < -halfWorldWidth + halfWidth) { transform.position.x = -halfWorldWidth + halfWidth; velocity.x = -velocity.x; }
-	if (transform.position.y > halfWorldHeight - halfHeight) { transform.position.y = halfWorldHeight - halfHeight; velocity.y = -velocity.y; }
-	if (transform.position.y < -halfWorldHeight + halfHeight) { transform.position.y = -halfWorldHeight + halfHeight; velocity.y = -velocity.y; }
-	//std::cout << "NPC - WalkNPC: Is running\n";
+    case NPC_BOSS:
+        transform.scale = { 100.0f, 100.0f };         // 3x normal size
+        spriteRenderer.colour = { 1.0f, 0.0f, 1.0f, 1.0f }; // Magenta
+        spriteRenderer.meshType = MESH_CIRCLE;
+        baseColour = { 1.0f, 0.0f, 1.0f, 1.0f };
+        health = 1000.0f; // 10x normal health
+        speed = 150.0f;  // Slightly slower than normal
+        fireRate = 0.5f;    // Fires twice per second
+        std::cout << "[BOSS] Boss spawned at ("
+            << transform.position.x << ", " << transform.position.y << ")\n";
+        break;
+    }
 }
 
 // ============================================================================
-// 🔥 BOSS AI - Advanced behavior with multiple attack patterns
+// Update
+// ============================================================================
+// Called each frame from GamePage Game_Update().
+// Skips logic if invisible to player (not yet discovered / dead).
+// On death: awards XP, hides the NPC, and deactivates it.
+// ============================================================================
+void NPC::Update(f32 deltaTime)
+{
+    if (!isVisibleToPlayer) return;
+
+    // --- Death check ---
+    if (health <= 0.0f)
+    {
+        isVisibleToPlayer = false;
+        isActive = false;
+        spriteRenderer.colour.a = 0.0f;
+        powerUpSystem.AddExperience(25.0f); // Award XP to player
+
+        if (type == NPC_BOSS)
+            std::cout << "[BOSS] Boss defeated!\n";
+
+        return;
+    }
+
+    // --- Dispatch to type-specific AI ---
+    switch (type)
+    {
+    case NPC_WALK:   WalkNPCs(deltaTime);   break;
+    case NPC_MELEE:  BomberNPCs(deltaTime); break;
+    case NPC_RANGER: RangerNPCs(deltaTime); break;
+    case NPC_BOSS:   BossNPCs(deltaTime);   break;
+    }
+}
+
+// ============================================================================
+// BomberNPCs (NPC_MELEE)
+// ============================================================================
+// Charges directly toward the player at full speed.
+// Bounces off world boundaries.
+// ============================================================================
+void NPC::BomberNPCs(f32 deltaTime)
+{
+    if (!target || health <= 0.0f) return;
+
+    // Move straight toward the player
+    AEVec2 dir{};
+    AEVec2 disp = {
+        target->transform.position.x - transform.position.x,
+        target->transform.position.y - transform.position.y
+    };
+    AEVec2Normalize(&dir, &disp);
+
+    transform.position.x += dir.x * speed * deltaTime;
+    transform.position.y += dir.y * speed * deltaTime;
+
+    // --- Wall bounce ---
+    const f32 halfW = WORLD_WIDTH / 2.0f;
+    const f32 halfH = WORLD_HEIGHT / 2.0f;
+    const f32 hw = transform.scale.x / 2.0f;
+    const f32 hh = transform.scale.y / 2.0f;
+
+    if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw; velocity.x = -velocity.x; }
+    if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw; velocity.x = -velocity.x; }
+    if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh; velocity.y = -velocity.y; }
+    if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh; velocity.y = -velocity.y; }
+}
+
+// ============================================================================
+// RangerNPCs (NPC_RANGER)
+// ============================================================================
+// Maintains distance from the player (retreats when closer than 250 units).
+// Changes random wander direction every 2 seconds.
+// Fires one bullet from its assigned pool at the player on fireCooldown.
+// ============================================================================
+void NPC::RangerNPCs(f32 deltaTime)
+{
+    if (!target || health <= 0.0f) return;
+
+    // --- Periodic random direction change ---
+    changeDirTimer -= deltaTime;
+    if (changeDirTimer <= 0.0f)
+    {
+        f32 randX = ((f32)rand() / RAND_MAX) * 2.0f - 1.0f;
+        f32 randY = ((f32)rand() / RAND_MAX) * 2.0f - 1.0f;
+        f32 len = sqrtf(randX * randX + randY * randY);
+
+        if (len > 0.0f)
+        {
+            velocity.x = (randX / len) * speed;
+            velocity.y = (randY / len) * speed;
+        }
+        changeDirTimer = 2.0f;
+    }
+
+    // --- Movement: apply velocity, then override if too close to player ---
+    transform.position.x += velocity.x * deltaTime;
+    transform.position.y += velocity.y * deltaTime;
+
+    AEVec2 toPlayer = {
+        target->transform.position.x - transform.position.x,
+        target->transform.position.y - transform.position.y
+    };
+    const f32 dist = sqrtf(toPlayer.x * toPlayer.x + toPlayer.y * toPlayer.y);
+
+    if (dist < 250.0f)
+    {
+        // Too close - retreat
+        velocity.x = -(toPlayer.x / dist) * speed;
+        velocity.y = -(toPlayer.y / dist) * speed;
+    }
+    else
+    {
+        // Gradually slow random wander
+        velocity.x *= 0.95f;
+        velocity.y *= 0.95f;
+    }
+
+    transform.position.x += velocity.x * deltaTime;
+    transform.position.y += velocity.y * deltaTime;
+
+    // --- Wall bounce ---
+    const f32 halfW = WORLD_WIDTH / 2.0f;
+    const f32 halfH = WORLD_HEIGHT / 2.0f;
+    const f32 hw = transform.scale.x / 2.0f;
+    const f32 hh = transform.scale.y / 2.0f;
+
+    if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw; velocity.x = -velocity.x; }
+    if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw; velocity.x = -velocity.x; }
+    if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh; velocity.y = -velocity.y; }
+    if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh; velocity.y = -velocity.y; }
+
+    // --- Shooting: find an inactive bullet assigned to this NPC ---
+    fireCooldown -= deltaTime;
+    if (fireCooldown <= 0.0f)
+    {
+        for (auto& obj : gamePageObj)
+        {
+            if (obj->ObjectType != SHOT) continue;
+
+            Bullet* b = dynamic_cast<Bullet*>(obj);
+            if (!b || b->owner != BulletOwner::ENEMY) continue;
+            if (b->isActive || b->startPos != this)   continue;
+
+            // Aim directly at the player
+            AEVec2 dir = toPlayer;
+            const f32 mag = sqrtf(dir.x * dir.x + dir.y * dir.y);
+            if (mag > 0.0f) { dir.x /= mag; dir.y /= mag; }
+
+            b->Activate(this, dir, BulletOwner::ENEMY);
+            b->spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f }; // Red
+
+            std::cout << "[Ranger] Fired!\n";
+            break;
+        }
+        fireCooldown = fireRate;
+    }
+}
+
+// ============================================================================
+// WalkNPCs (NPC_WALK)
+// ============================================================================
+// Wanders randomly by picking a new velocity direction every 2 seconds.
+// Bounces off world boundaries.
+// ============================================================================
+void NPC::WalkNPCs(f32 deltaTime)
+{
+    if (!target || health <= 0.0f) return;
+
+    changeDirTimer -= deltaTime;
+    if (changeDirTimer <= 0.0f)
+    {
+        f32 randX = ((f32)rand() / RAND_MAX) * 2.0f - 1.0f;
+        f32 randY = ((f32)rand() / RAND_MAX) * 2.0f - 1.0f;
+        f32 len = sqrtf(randX * randX + randY * randY);
+
+        if (len > 0.0f)
+        {
+            velocity.x = (randX / len) * speed;
+            velocity.y = (randY / len) * speed;
+        }
+        changeDirTimer = 2.0f;
+    }
+
+    transform.position.x += velocity.x * deltaTime;
+    transform.position.y += velocity.y * deltaTime;
+
+    // --- Wall bounce ---
+    const f32 halfW = WORLD_WIDTH / 2.0f;
+    const f32 halfH = WORLD_HEIGHT / 2.0f;
+    const f32 hw = transform.scale.x / 2.0f;
+    const f32 hh = transform.scale.y / 2.0f;
+
+    if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw; velocity.x = -velocity.x; }
+    if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw; velocity.x = -velocity.x; }
+    if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh; velocity.y = -velocity.y; }
+    if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh; velocity.y = -velocity.y; }
+}
+
+// ============================================================================
+// BossNPCs (NPC_BOSS)
+// ============================================================================
+// Orbits the player at ~300 units, adjusting velocity to maintain distance:
+//   - Too far  : Moves straight toward player.
+//   - Too close: Backs away.
+//   - In range : Moves perpendicular (orbits).
+//
+// Fires 8 bullets in a ring pattern every fireRate seconds.
 // ============================================================================
 void NPC::BossNPCs(f32 deltaTime)
 {
-	if (!target || health <= 0.0f) return;
+    if (!target || health <= 0.0f) return;
 
-	// === BOSS MOVEMENT PATTERN ===
-	// Boss orbits around player at medium distance
-	
-	AEVec2 toPlayer = { 
-		target->transform.position.x - transform.position.x,
-		target->transform.position.y - transform.position.y 
-	};
-	f32 distToPlayer = sqrtf(toPlayer.x * toPlayer.x + toPlayer.y * toPlayer.y);
-	
-	// Desired orbit distance
-	const f32 orbitDistance = 300.0f;
-	
-	if (distToPlayer > 0.0f)
-	{
-		// Normalize direction
-		toPlayer.x /= distToPlayer;
-		toPlayer.y /= distToPlayer;
-		
-		// If too far, move closer
-		if (distToPlayer > orbitDistance + 50.0f)
-		{
-			velocity.x = toPlayer.x * speed;
-			velocity.y = toPlayer.y * speed;
-		}
-		// If too close, back away
-		else if (distToPlayer < orbitDistance - 50.0f)
-		{
-			velocity.x = -toPlayer.x * speed;
-			velocity.y = -toPlayer.y * speed;
-		}
-		// At good distance - orbit (perpendicular movement)
-		else
-		{
-			// Perpendicular vector for orbiting
-			velocity.x = -toPlayer.y * speed;
-			velocity.y = toPlayer.x * speed;
-		}
-	}
-	
-	// Apply movement
-	transform.position.x += velocity.x * deltaTime;
-	transform.position.y += velocity.y * deltaTime;
+    // --- Orbit movement ---
+    AEVec2 toPlayer = {
+        target->transform.position.x - transform.position.x,
+        target->transform.position.y - transform.position.y
+    };
+    const f32 dist = sqrtf(toPlayer.x * toPlayer.x + toPlayer.y * toPlayer.y);
+    const f32 orbitDist = 300.0f;
+    const f32 orbitMargin = 50.0f;
 
-	// Wall bounce
-	f32 halfW = WORLD_WIDTH / 2.0f, halfH = WORLD_HEIGHT / 2.0f;
-	f32 hw = transform.scale.x / 2.0f, hh = transform.scale.y / 2.0f;
+    if (dist > 0.0f)
+    {
+        toPlayer.x /= dist; // Normalise
+        toPlayer.y /= dist;
 
-	if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw; velocity.x = -velocity.x; }
-	if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw; velocity.x = -velocity.x; }
-	if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh; velocity.y = -velocity.y; }
-	if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh; velocity.y = -velocity.y; }
+        if (dist > orbitDist + orbitMargin)
+        {
+            // Too far - close in
+            velocity.x = toPlayer.x * speed;
+            velocity.y = toPlayer.y * speed;
+        }
+        else if (dist < orbitDist - orbitMargin)
+        {
+            // Too close - back off
+            velocity.x = -toPlayer.x * speed;
+            velocity.y = -toPlayer.y * speed;
+        }
+        else
+        {
+            // In orbit range - move perpendicular for circular motion
+            velocity.x = -toPlayer.y * speed;
+            velocity.y = toPlayer.x * speed;
+        }
+    }
 
-	// === BOSS ATTACK PATTERN ===
-	// Shoots in 8 directions simultaneously (bullet hell pattern)
-	
-	fireCooldown -= deltaTime;
-	if (fireCooldown <= 0.0f)
-	{
-		int bulletsFired = 0;
-		
-		// Fire 8 bullets in all directions
-		for (auto& obj : gamePageObj)
-		{
-			if (obj->ObjectType == SHOT) {
-				Bullet* b = dynamic_cast<Bullet*>(obj);
-				if (b && b->owner == BulletOwner::ENEMY && !b->isActive && b->startPos == this) {
-					
-					// Calculate direction for this bullet
-					// Spread bullets in a circle pattern
-					f32 angle = (bulletsFired * (2.0f * 3.14159f / 8.0f)); // 8 directions
-					
-					b->transform.position = transform.position;
-					b->dir.x = cosf(angle);
-					b->dir.y = sinf(angle);
-					
-					b->isActive = true;
-					b->lifeTime = b->maxLifeTime;
-					b->spriteRenderer.colour.a = 1.0f;
-					b->spriteRenderer.colour = { 1.0f, 0.0f, 1.0f, 1.0f }; // Magenta bullets
-					
-					bulletsFired++;
-					if (bulletsFired >= 8) break; // 8 bullets per volley
-				}
-			}
-		}
-		
-		if (bulletsFired > 0) {
-			std::cout << "💥 BOSS FIRED " << bulletsFired << " BULLETS IN ALL DIRECTIONS!\n";
-		}
-		
-		fireCooldown = fireRate;
-	}
+    transform.position.x += velocity.x * deltaTime;
+    transform.position.y += velocity.y * deltaTime;
+
+    // --- Wall bounce ---
+    const f32 halfW = WORLD_WIDTH / 2.0f;
+    const f32 halfH = WORLD_HEIGHT / 2.0f;
+    const f32 hw = transform.scale.x / 2.0f;
+    const f32 hh = transform.scale.y / 2.0f;
+
+    if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw; velocity.x = -velocity.x; }
+    if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw; velocity.x = -velocity.x; }
+    if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh; velocity.y = -velocity.y; }
+    if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh; velocity.y = -velocity.y; }
+
+    // --- 8-way bullet volley ---
+    fireCooldown -= deltaTime;
+    if (fireCooldown <= 0.0f)
+    {
+        int bulletsFired = 0;
+
+        for (auto& obj : gamePageObj)
+        {
+            if (obj->ObjectType != SHOT) continue;
+
+            Bullet* b = dynamic_cast<Bullet*>(obj);
+            if (!b || b->owner != BulletOwner::ENEMY) continue;
+            if (b->isActive || b->startPos != this)   continue;
+
+            // Evenly distribute 8 bullets around a full circle
+            const f32 angle = bulletsFired * (2.0f * 3.14159f / 8.0f);
+            const AEVec2 dir = { cosf(angle), sinf(angle) };
+
+            b->Activate(this, dir, BulletOwner::ENEMY);
+            b->spriteRenderer.colour = { 1.0f, 0.0f, 1.0f, 1.0f }; // Magenta
+
+            ++bulletsFired;
+            if (bulletsFired >= 8) break;
+        }
+
+        if (bulletsFired > 0)
+            std::cout << "[BOSS] Fired " << bulletsFired << " bullets!\n";
+
+        fireCooldown = fireRate;
+    }
 }

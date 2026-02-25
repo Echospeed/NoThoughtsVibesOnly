@@ -1,55 +1,106 @@
 #pragma once
-#include "AEEngine.h" // Assuming this is the Alpha Engine header
+// ============================================================================
+// Audio.hpp - Audio Playback Wrapper
+// ============================================================================
+// Wraps Alpha Engine's audio API into a clean, safe class.
+// Supports two audio types: SOUND (one-shot SFX) and MUSIC (looping BGM).
+//
+// USAGE EXAMPLE:
+// ----------------------------------------------------------------------------
+//   // In Game_Load():
+//   Audio* bgMusic  = new Audio("Assets/music.mp3",  -1,  0.5f, 1.0f, AudioType::MUSIC);
+//   Audio* shootSFX = new Audio("Assets/shoot.mp3",   0,  1.0f, 1.0f, AudioType::SOUND);
+//
+//   // In Game_Init() or whenever needed:
+//   bgMusic->Play();          // Start looping music
+//   shootSFX->Play();         // Fire a one-shot sound
+//
+//   // While paused:
+//   bgMusic->Pause();
+//   bgMusic->Resume();
+//
+//   // On state exit:
+//   bgMusic->Stop();
+//
+//   // In Game_Unload():
+//   delete bgMusic;
+//   delete shootSFX;
+// ============================================================================
+
+#include "AEEngine.h"
 #include <string>
 
-// Enum to handle the two types of Alpha Engine audio
+// ----------------------------------------------------------------------------
+// AudioType - Determines how the audio resource is loaded and managed.
+//   SOUND : Loaded as a one-shot sound effect via AEAudioLoadSound().
+//   MUSIC : Loaded as a streaming music file via AEAudioLoadMusic().
+// ----------------------------------------------------------------------------
 enum class AudioType
 {
     SOUND,
     MUSIC
 };
 
+// ============================================================================
+// class Audio
+// ============================================================================
+// Manages a single audio resource (sound effect or background music).
+// Each instance owns one AEAudio resource and one AEAudioGroup.
+//
+// Copying is disabled to prevent double-free crashes - always use pointers.
+// ============================================================================
 class Audio
 {
 public:
-    // Constructor: Takes the filepath and the type (Sound vs Music)
+    // ------------------------------------------------------------------------
+    // Constructor
+    // filepath : Path to the audio file (e.g. "Assets/shoot.mp3")
+    // loop     : Number of times to loop. -1 = infinite, 0 = play once.
+    // volume   : Playback volume [0.0 - 1.0]
+    // pitch    : Playback pitch multiplier (1.0 = normal)
+    // type     : AudioType::SOUND or AudioType::MUSIC
+    // ------------------------------------------------------------------------
     Audio(const std::string& filepath, s8 loop, f32 volume, f32 pitch, AudioType type);
 
-    // Destructor: Automatically cleans up the memory
+    // Destructor - calls Free() automatically
     ~Audio();
 
-    // Disable copying to prevent double-free memory crashes
+    // Disable copy semantics to prevent double-free on the audio resource
     Audio(const Audio&) = delete;
     Audio& operator=(const Audio&) = delete;
 
-    // Play function requires knowing which group to play on, plus volume and pitch
+    // ------------------------------------------------------------------------
+    // Play - Plays the audio using the stored volume, pitch, and loop settings.
+    // Safe to call even if loading failed (guarded by isLoaded).
+    // ------------------------------------------------------------------------
     void Play();
 
-	// Set volume for a specific group (useful for music vs sound effects)
-	void SetVolume(f32 volume, f32 pitch, s8 loop);
+    // ------------------------------------------------------------------------
+    // SetVolume - Updates the volume, pitch, and loop count at runtime.
+    // Also immediately applies the new volume/pitch to the audio group.
+    // ------------------------------------------------------------------------
+    void SetVolume(f32 volume, f32 pitch, s8 loop);
 
-	// Pause function for music or sound effects (pauses the entire group to which the audio belongs)
-	void Pause();
-
-	// Resume function for music or sound effects (resumes the entire group to which the audio belongs)
+    // ------------------------------------------------------------------------
+    // Pause / Resume / Stop - Group-level playback control.
+    // Pause() and Resume() are useful for pausing the game without unloading.
+    // Stop() halts all playback in the group (use before state transitions).
+    // ------------------------------------------------------------------------
+    void Pause();
     void Resume();
-
-	// Set stopping audio for a specific group
-	void Stop();
-
-	// Lower volume of the music group
-	void LowerMusicVolume(f32 volume);
-
-	// Increase volume of the music group
-	void IncreaseMusicVolume(f32 volume);
+    void Stop();
 
 private:
-    bool isLoaded{false};       // Safety check
-    s8 loop{-1};                // Store loop count for potential future use
-    f32 volume{1};              // Store volume for potential future use
-    f32 pitch{1};               // Store pitch for potential future use
-    AEAudio audioResource;      // The actual loaded audio
-    AudioType audioType;        // Keeps track of what type it is
-	AEAudioGroup group;         // Store group for potential future use
+    bool         isLoaded{ false };   // Guards all playback calls against unloaded state
+    s8           loop{ -1 };          // Loop count: -1 = infinite, 0 = once
+    f32          volume{ 1.0f };      // Playback volume [0.0 - 1.0]
+    f32          pitch{ 1.0f };       // Pitch multiplier (1.0 = unchanged)
+    AEAudio      audioResource{};   // Handle to the loaded AEAudio resource
+    AudioType    audioType;         // Determines which AE loader to use
+    AEAudioGroup group{};           // AE audio group used for pause/resume/stop
+
+    // ------------------------------------------------------------------------
+    // Free - Unloads the audio resource and group. Called by destructor.
+    // ------------------------------------------------------------------------
     void Free();
 };

@@ -3,6 +3,7 @@
 #include "GameObject.hpp"
 #include "NPCType.hpp"
 #include "Player.hpp"
+#include "Particles.hpp"
 
 class NPC : public GameObject
 {
@@ -16,6 +17,8 @@ public:
 	bool isVisibleToPlayer = true;
 	f32 fireCooldown{ 0.01f }; // time until next shot
 	f32 fireRate{ 1.0f };     // seconds per shot
+	ParticleSystem explosionParticles; // For explosion effect on death
+	bool hasExploded = false; // To ensure explosion happens only once
 
 private:
 	AEVec2 velocity{ 0.0f, 0.0f };
@@ -24,5 +27,5 @@ private:
 	void BomberNPCs(f32 deltaTime);
 	void RangerNPCs(f32 deltaTime);
 	void WalkNPCs(f32 deltaTime);
-	void BossNPCs(f32 deltaTime); // 🔥 BOSS AI FUNCTION
+	void BossNPCs(f32 deltaTime); //BOSS AI FUNCTION
 };

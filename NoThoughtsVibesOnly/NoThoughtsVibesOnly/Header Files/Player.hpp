@@ -1,5 +1,7 @@
 #pragma once
 #include "GameObject.hpp"
+#include "Particles.hpp"
+
 
 // Forward declaration
 class PowerUpSystem;
@@ -22,6 +24,8 @@ public:
     f32 GetAoeDamage() const;
     f32 GetAoeRadius() const;
     f32 GetSpeed() const;
+
+    ParticleSystem smokePS;
 
 private:
     f32 shootCooldown = 0.0f;

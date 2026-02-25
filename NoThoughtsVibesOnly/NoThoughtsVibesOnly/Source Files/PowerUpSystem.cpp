@@ -1,7 +1,24 @@
 // ============================================================================
-// PowerUpSystem.cpp - Power-Up System Implementation
+// PowerUpSystem.cpp - Player Progression and Power-Up Implementation
 // ============================================================================
-// Handles experience, leveling, and stat upgrades
+// See PowerUpSystem.hpp for class declaration and stat structure.
+//
+// FLOW:
+// ----------------------------------------------------------------------------
+//   1. Enemy dies -> NPC::Update() calls powerUpSystem.AddExperience(25).
+//   2. AddExperience() checks for level-up via CheckLevelUp().
+//   3. On level-up: GeneratePowerUpChoices() creates 3 options.
+//   4. waitingForUpgrade = true  -> Game_Update() blocks gameplay.
+//   5. Player presses 1/2/3  -> ApplyPowerUp() applies the chosen stat.
+//   6. waitingForUpgrade = false -> gameplay resumes.
+//
+// SCALING:
+// ----------------------------------------------------------------------------
+//   Speed        : +200 flat per upgrade
+//   Bullet damage: +25  flat per upgrade
+//   AoE radius   : +20  per upgrade
+//   AoE damage   : +25/sec per upgrade
+//   XP threshold : x1.3 per level-up
 // ============================================================================
 
 #include "pch.hpp"
@@ -9,170 +26,167 @@
 #include "Player.hpp"
 #include "NPC.hpp"
 #include <iostream>
-#include <cstdlib>
 
 // ============================================================================
-// Init - Initialize Power-Up System
+// Init
+// ============================================================================
+// Resets all stats to defaults and clears any pending upgrade state.
+// Call once in Game_Init() after the player is created.
 // ============================================================================
 void PowerUpSystem::Init()
 {
-    stats = PlayerStats{}; // Reset to defaults
+    stats = PlayerStats{};  // Reset to default values
     waitingForUpgrade = false;
-    
-    std::cout << "[POWERUP] System initialized. Level 1, 0/" 
-              << stats.expToNextLevel << " XP\n";
+
+    std::cout << "[PowerUp] Initialised. Level 1, 0/"
+        << stats.expToNextLevel << " XP needed.\n";
 }
 
 // ============================================================================
-// AddExperience - Award XP to Player
+// AddExperience
+// ============================================================================
+// Awards XP and triggers a level-up check.
+// If the player levels up, power-up choices are generated and gameplay
+// is paused (waitingForUpgrade = true).
 // ============================================================================
 void PowerUpSystem::AddExperience(f32 amount)
 {
     stats.currentExp += amount;
-    
-    std::cout << "[XP] Gained " << amount << " exp! (" 
-              << stats.currentExp << "/" << stats.expToNextLevel << ")\n";
-    
-    // Check for level up
+
+    std::cout << "[XP] +" << amount << " XP  ("
+        << stats.currentExp << " / " << stats.expToNextLevel << ")\n";
+
     if (CheckLevelUp())
     {
         GeneratePowerUpChoices();
-        waitingForUpgrade = true; // Pause game for upgrade
+        waitingForUpgrade = true;
     }
 }
 
 // ============================================================================
-// CheckLevelUp - Check if Player Should Level Up
+// CheckLevelUp
+// ============================================================================
+// Returns true if the current XP meets or exceeds the threshold.
+// On level-up: increments level, carries over excess XP, and scales threshold.
 // ============================================================================
 bool PowerUpSystem::CheckLevelUp()
 {
-    if (stats.currentExp >= stats.expToNextLevel)
-    {
-        // Level up!
-        stats.level++;
-        stats.currentExp -= stats.expToNextLevel;   // Carry over excess
-        stats.expToNextLevel *= 1.3f;                // Scale requirement
-        
-        std::cout << "\n========================================\n";
-        std::cout << "       ⭐ LEVEL UP! ⭐\n";
-        std::cout << "       Level " << stats.level << "\n";
-        std::cout << "       Choose your power-up!\n";
-        std::cout << "========================================\n\n";
-        
-        return true;
-    }
-    
-    return false;
+    if (stats.currentExp < stats.expToNextLevel) return false;
+
+    // Carry over surplus XP so it isn't wasted
+    stats.currentExp -= stats.expToNextLevel;
+    stats.expToNextLevel *= 1.3f;    // Each level requires 30% more XP
+    ++stats.level;
+
+    std::cout << "\n============================================\n"
+        << "           LEVEL UP! -> Level " << stats.level << "\n"
+        << "       Choose your power-up!\n"
+        << "============================================\n\n";
+
+    return true;
 }
 
 // ============================================================================
-// GeneratePowerUpChoices - Create 3 Random Upgrade Options
+// GeneratePowerUpChoices
+// ============================================================================
+// Always offers all 3 core upgrades in a fixed order.
+// (Can be randomised later by shuffling the array if desired.)
 // ============================================================================
 void PowerUpSystem::GeneratePowerUpChoices()
 {
-    // Always offer all 3 core options
     powerUpChoices[0] = CreatePowerUp(POWERUP_SPEED);
     powerUpChoices[1] = CreatePowerUp(POWERUP_BULLET_DAMAGE);
     powerUpChoices[2] = CreatePowerUp(POWERUP_AOE_DAMAGE);
 }
 
 // ============================================================================
-// CreatePowerUp - Generate Power-Up Data
+// CreatePowerUp
+// ============================================================================
+// Builds a PowerUp descriptor for the given type.
+// The 'value' field is informational - actual stat changes happen in ApplyPowerUp.
 // ============================================================================
 PowerUp PowerUpSystem::CreatePowerUp(PowerUpType type)
 {
-    PowerUp powerUp{};
-    powerUp.type = type;
-    
+    PowerUp p{};
+    p.type = type;
+
     switch (type)
     {
-        case POWERUP_SPEED:
-            powerUp.name = "SPEED BOOST";
-            powerUp.description = "+200 Movement Speed";
-            powerUp.value = 200.0f;
-            break;
-            
-        case POWERUP_BULLET_DAMAGE:
-            powerUp.name = "BULLET POWER";
-            powerUp.description = "+25 Bullet Damage";
-            powerUp.value = 25.0f;
-            break;
-            
-        case POWERUP_AOE_DAMAGE:
-            powerUp.name = "AoE MASTERY";
-            powerUp.description = "+20 AoE Radius +25 Damage/sec";
-            powerUp.value = 20.0f; // Radius bonus
-            break;
+    case POWERUP_SPEED:
+        p.name = "SPEED BOOST";
+        p.description = "+200 Movement Speed";
+        p.value = 200.0f;
+        break;
+
+    case POWERUP_BULLET_DAMAGE:
+        p.name = "BULLET POWER";
+        p.description = "+25 Bullet Damage";
+        p.value = 25.0f;
+        break;
+
+    case POWERUP_AOE_DAMAGE:
+        p.name = "AoE MASTERY";
+        p.description = "+20 AoE Radius  +25 Damage/sec";
+        p.value = 20.0f;
+        break;
     }
-    
-    return powerUp;
+
+    return p;
 }
 
 // ============================================================================
-// ApplyPowerUp - Apply Chosen Upgrade to Player
+// ApplyPowerUp
+// ============================================================================
+// Applies the chosen upgrade to the player's stats.
+// Resumes gameplay by setting waitingForUpgrade = false.
 // ============================================================================
 void PowerUpSystem::ApplyPowerUp(PowerUpType type, Player* player)
 {
     if (!player) return;
-    
+
     switch (type)
     {
-        case POWERUP_SPEED:
-            stats.speedBonus += 200.0f;
-            stats.speedUpgrades++;
-            std::cout << "[UPGRADE] Speed increased! Total: " 
-                      << stats.GetTotalSpeed() << "\n";
-            break;
-            
-        case POWERUP_BULLET_DAMAGE:
-            stats.bulletDamageBonus += 25.0f;
-            stats.bulletDamageUpgrades++;
-            std::cout << "[UPGRADE] Bullet damage increased! Total: " 
-                      << stats.GetTotalBulletDamage() << "\n";
-            break;
-            
-        case POWERUP_AOE_DAMAGE:
-            stats.aoeRadiusBonus += 20.0f;
-            stats.aoeDamageBonus += 25.0f;
-            stats.aoeUpgrades++;
-            std::cout << "[UPGRADE] AoE upgraded! Radius: " 
-                      << stats.GetTotalAoeRadius() 
-                      << ", Damage: " << stats.GetTotalAoeDamage() << "/sec\n";
-            break;
+    case POWERUP_SPEED:
+        stats.speedBonus += 200.0f;
+        ++stats.speedUpgrades;
+        std::cout << "[Upgrade] Speed -> " << stats.GetTotalSpeed() << "\n";
+        break;
+
+    case POWERUP_BULLET_DAMAGE:
+        stats.bulletDamageBonus += 25.0f;
+        ++stats.bulletDamageUpgrades;
+        std::cout << "[Upgrade] Bullet damage -> " << stats.GetTotalBulletDamage() << "\n";
+        break;
+
+    case POWERUP_AOE_DAMAGE:
+        stats.aoeRadiusBonus += 20.0f;
+        stats.aoeDamageBonus += 25.0f;
+        ++stats.aoeUpgrades;
+        std::cout << "[Upgrade] AoE radius -> " << stats.GetTotalAoeRadius()
+            << "  damage -> " << stats.GetTotalAoeDamage() << "/sec\n";
+        break;
     }
-    
-    waitingForUpgrade = false; // Resume game
+
+    waitingForUpgrade = false; // Resume gameplay
 }
 
 // ============================================================================
-// Enemy Scaling Functions
+// Enemy Scaling Helpers
 // ============================================================================
+// These are used by WaveSystem / NPC logic to scale enemy stats per round.
 
-// Ranger bullet damage scales with round number
 f32 PowerUpSystem::GetRangerDamageForRound(u32 round) const
 {
-    f32 baseDamage = 25.0f;
-    f32 damagePerRound = 5.0f;  // +5 damage per round
-    
-    return baseDamage + (round * damagePerRound);
+    return 25.0f + (round * 5.0f); // +5 damage per round
 }
 
-// Melee speed scales with round number
 f32 PowerUpSystem::GetMeleeSpeedForRound(u32 round) const
 {
-    f32 baseSpeed = 250.0f;
-    f32 speedPerRound = 10.0f;  // +10 speed per round
-    f32 maxSpeed = 400.0f;      // Cap at 400
-    
-    f32 speed = baseSpeed + (round * speedPerRound);
-    return speed > maxSpeed ? maxSpeed : speed;
+    const f32 speed = 250.0f + (round * 10.0f);
+    return speed > 400.0f ? 400.0f : speed; // Capped at 400
 }
 
-// Melee damage scales with round number
 f32 PowerUpSystem::GetMeleeDamageForRound(u32 round) const
 {
-    f32 baseDamage = 50.0f;
-    f32 damagePerRound = 5.0f;  // +5 damage per round
-    
-    return baseDamage + (round * damagePerRound);
+    return 50.0f + (round * 5.0f); // +5 damage per round
 }

@@ -1,3 +1,32 @@
+// ============================================================================
+// StateManager.cpp - Game State Machine Implementation
+// ============================================================================
+// Manages the game's page/state lifecycle using the IState interface.
+// Each page (Splash, Menu, Game, Pause, Finish, Win) is wrapped in a
+// concrete IState subclass that delegates to the page's free functions.
+//
+// STATE LIFECYCLE (per IState):
+// ----------------------------------------------------------------------------
+//   Load()   : Allocate GPU resources (textures, meshes, fonts). Called once.
+//   Init()   : Initialise runtime data.   Called each entry (inc. restart).
+//   Update() : Per-frame logic.
+//   Draw()   : Per-frame rendering.
+//   Free()   : Destroy runtime data.      Called each exit.
+//   Unload() : Release GPU resources.     NOT called on STATE_RESTART.
+//
+// STATE TRANSITIONS:
+// ----------------------------------------------------------------------------
+//   Normal    : Free -> Unload -> new state -> Load -> Init
+//   Restart   : Free -> (skip Unload) -> (reuse state object) -> Init
+//   Quit      : Exits the main loop.
+//
+// TO ADD A NEW STATE:
+// ----------------------------------------------------------------------------
+//   1. Add an enum value to GameState (StateManager.hpp).
+//   2. Create a concrete IState subclass here.
+//   3. Add a case to CreateState().
+// ============================================================================
+
 #include "pch.hpp"
 #include "MenuPage.hpp"
 #include "GamePage.hpp"
@@ -7,14 +36,17 @@
 #include "WinPage.hpp"
 
 // ============================================================================
-// Screen dimensions
+// Screen dimensions (defined here, declared extern in StateManager.hpp)
 // ============================================================================
 const f32 SCREEN_W = 1600.0f;
 const f32 SCREEN_H = 900.0f;
 
 // ============================================================================
-// Concrete IState wrappers - delegate to each page's free functions
+// Concrete IState wrappers
 // ============================================================================
+// Each class delegates all lifecycle calls to the corresponding page's
+// free functions, keeping the state machine decoupled from page logic.
+
 class SplashState final : public IState
 {
 public:
@@ -82,25 +114,43 @@ public:
 };
 
 // ============================================================================
-// StateManager - Singleton
+// StateManager - Singleton Implementation
 // ============================================================================
+
 StateManager& StateManager::Get()
 {
     static StateManager instance;
     return instance;
 }
 
+// ============================================================================
+// Init
+// ============================================================================
+// Sets the initial state. Call once in main() before the game loop.
+// ============================================================================
 void StateManager::Init(GameState startState)
 {
     current = previous = next = startState;
     currentState = nullptr;
 }
 
+// ============================================================================
+// ChangeState
+// ============================================================================
+// Requests a transition to newState. The transition happens at the start
+// of the next outer game loop iteration.
+// ============================================================================
 void StateManager::ChangeState(GameState newState)
 {
     next = newState;
 }
 
+// ============================================================================
+// CreateState (private static)
+// ============================================================================
+// Factory: returns a new heap-allocated IState for the given GameState.
+// Returns nullptr for unknown or terminal states (STATE_QUIT, STATE_RESTART).
+// ============================================================================
 IState* StateManager::CreateState(GameState state)
 {
     switch (state)
@@ -115,21 +165,39 @@ IState* StateManager::CreateState(GameState state)
     }
 }
 
+// ============================================================================
+// LoadCurrentState
+// ============================================================================
+// Destroys the current state object, creates and loads the new one.
+// Called for normal (non-restart) transitions.
+// ============================================================================
 void StateManager::LoadCurrentState()
 {
-    printf("StateManager::LoadCurrentState: State = %d\n", current);
+    printf("[StateManager] Loading state %d\n", current);
+
     delete currentState;
     currentState = CreateState(current);
-    if (currentState)
-        currentState->Load();
+
+    if (currentState) currentState->Load();
 }
 
+// ============================================================================
+// RevertToPrevious
+// ============================================================================
+// For RESTART: skips Load/Unload and reuses the existing state object.
+// Sets next = previous = current so the state machine re-enters the inner loop.
+// ============================================================================
 void StateManager::RevertToPrevious()
 {
     next = previous;
     current = next;
 }
 
+// ============================================================================
+// Advance
+// ============================================================================
+// Called after Free()/Unload() to move to the next state.
+// ============================================================================
 void StateManager::Advance()
 {
     previous = current;
@@ -138,7 +206,6 @@ void StateManager::Advance()
 
 void StateManager::FreeManager()
 {
-    // Delete the final hanging state wrapper!
     delete currentState;
     currentState = nullptr;
 }

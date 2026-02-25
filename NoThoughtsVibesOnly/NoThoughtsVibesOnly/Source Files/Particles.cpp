@@ -1,95 +1,149 @@
+// ============================================================================
+// Particles.cpp - Particle System Implementation
+// ============================================================================
+// Object-pooled particle system with configurable velocity, lifetime, and size.
+// Uses a free-list pattern: freeParticles holds available indices;
+// activeParticles holds indices of currently live particles.
+//
+// USAGE:
+// ----------------------------------------------------------------------------
+//   ParticleSystem ps;
+//
+//   // In Load():
+//   ps.Load();
+//
+//   // In Init():
+//   ps.Init(
+//       50,         // maxParticles
+//       -100, 100,  // minVelX, maxVelX
+//       -100, 100,  // minVelY, maxVelY
+//       1.5f,       // maxLifetime (seconds)
+//       8.0f        // size (world units)
+//   );
+//
+//   // In Update():
+//   ps.Update(deltaTime);
+//   // Emit at a position:
+//   ps.Emit(someWorldPosition);
+//
+//   // In Draw() (call Render per active particle):
+//   for (u8 idx : activeParticles) ps.Render(&particles[idx]);
+//   // NOTE: activeParticles is private - expose via getter if needed.
+//
+//   // In Unload():
+//   ps.Free();
+// ============================================================================
+
 #include "pch.hpp"
 #include "Particles.hpp"
 
+// ============================================================================
+// Constructor / Destructor
+// ============================================================================
 ParticleSystem::ParticleSystem()
+    : particleMesh(nullptr)
+    , texture(nullptr)
 {
-    particleMesh = nullptr;
-    texture = nullptr;
-    printf("Particle System Created\n");
+    printf("[Particles] System created.\n");
 }
 
 ParticleSystem::~ParticleSystem()
 {
     Free();
-    printf("Particle System Destroyed\n");
+    printf("[Particles] System destroyed.\n");
 }
 
+// ============================================================================
+// Load
+// ============================================================================
+// Builds the circle mesh used to draw each particle.
+// A 20-segment fan gives a smooth circle at particle sizes.
+// ============================================================================
 void ParticleSystem::Load()
 {
-    /* --- Load Particle Mesh --- */
-    const u8 segments = 20;
-    const f32 steps = (PI * 2.0f) / segments;
+    const u8  segments = 20;
+    const f32 step = (PI * 2.0f) / segments;
 
-    for (u16 i = 0; i < segments; i++)
+    AEGfxMeshStart();
+
+    for (u8 i = 0; i < segments; ++i)
     {
-        f32 theta1 = i * steps;
-        f32 theta2 = (i + 1) * steps;
+        const f32 t1 = i * step;
+        const f32 t2 = (i + 1) * step;
 
         AEGfxTriAdd(
             0.0f, 0.0f, 0xFFFFFFFF, 0.5f, 0.5f,
-            cosf(theta1) * 0.5f, sinf(theta1) * 0.5f, 0xFFFFFFFF, (cosf(theta1) + 1.0f) * 0.5f, (sinf(theta1) + 1.0f) * 0.5f,
-            cosf(theta2) * 0.5f, sinf(theta2) * 0.5f, 0xFFFFFFFF, (cosf(theta2) + 1.0f) * 0.5f, (sinf(theta2) + 1.0f) * 0.5f
+            cosf(t1) * 0.5f, sinf(t1) * 0.5f, 0xFFFFFFFF, (cosf(t1) + 1.0f) * 0.5f, (sinf(t1) + 1.0f) * 0.5f,
+            cosf(t2) * 0.5f, sinf(t2) * 0.5f, 0xFFFFFFFF, (cosf(t2) + 1.0f) * 0.5f, (sinf(t2) + 1.0f) * 0.5f
         );
     }
 
     particleMesh = AEGfxMeshEnd();
 }
 
-void ParticleSystem::Init(u8 _maxParticles, f32 _minVelX, f32 _maxVelX, f32 _minVelY, f32 _maxVelY, f32 _maxLifetime, f32 _size)
+// ============================================================================
+// Init
+// ============================================================================
+// Sets particle system parameters and pre-allocates the particle pool.
+// All indices start in freeParticles (available for emission).
+// ============================================================================
+void ParticleSystem::Init(u8 _maxParticles,
+    f32 _minVelX, f32 _maxVelX,
+    f32 _minVelY, f32 _maxVelY,
+    f32 _maxLifetime, f32 _size)
 {
-    /* --- Initialize Particle System Parameters --- */
-    this->maxParticles = _maxParticles;
-    this->maxLifetime = _maxLifetime;
-    this->minVelX = _minVelX;
-    this->maxVelX = _maxVelX;
-    this->minVelY = _minVelY;
-    this->maxVelY = _maxVelY;
-    this->size = _size;
-    this->isActive = false;
+    maxParticles = _maxParticles;
+    maxLifetime = _maxLifetime;
+    minVelX = _minVelX;
+    maxVelX = _maxVelX;
+    minVelY = _minVelY;
+    maxVelY = _maxVelY;
+    size = _size;
+    isActive = false;
 
     particles.resize(maxParticles);
-    activeParticles.resize(maxParticles);
+    activeParticles.resize(0);
     freeParticles.resize(maxParticles);
 
-    /* --- Initialize Particle Texture --- */
+    // Optionally load a texture; fall back to colour rendering if missing
     texture = AEGfxTextureLoad("particle.png");
-    if (texture == nullptr)
-    {
-        printf("Failed to load particle texture, switching to Graphics\n");
-    }
-    else
-    {
-        printf("Particle texture loaded successfully\n");
-    }
+    if (!texture)
+        printf("[Particles] No texture found - using colour mode.\n");
 
-    for (u8 i = 0; i < maxParticles; i++)
+    // Initialise all particles to their default state and mark as free
+    for (u8 i = 0; i < maxParticles; ++i)
     {
-        particles[i].velocity = {this->minVelX, this->minVelY};
-        particles[i].lifetime = this->maxLifetime;
-        particles[i].size = this->size;
-        particles[i].isActive = this->isActive;
-		freeParticles[i] = i;
+        particles[i].velocity = { minVelX, minVelY };
+        particles[i].lifetime = maxLifetime;
+        particles[i].size = size;
+        particles[i].isActive = false;
+        freeParticles[i] = i;
     }
 }
 
-void ParticleSystem::Render(Particles* particle)
+// ============================================================================
+// Render
+// ============================================================================
+// Draws a single particle at its current position and size.
+// ============================================================================
+void ParticleSystem::Render(Particles* p)
 {
-    AEMtx33 rotation{}, scale{}, translation{}, transform{};
+    AEMtx33 rot, sc, tr, transform;
 
-    AEMtx33Rot(&rotation, 0.0f);
-    AEMtx33Scale(&scale, particle->size, particle->size);
-    AEMtx33Trans(&translation, particle->position.x, particle->position.y);
-    AEMtx33Concat(&transform, &scale, &rotation);
-    AEMtx33Concat(&transform, &translation, &transform);
+    AEMtx33Rot(&rot, 0.0f);
+    AEMtx33Scale(&sc, p->size, p->size);
+    AEMtx33Trans(&tr, p->position.x, p->position.y);
+    AEMtx33Concat(&transform, &sc, &rot);
+    AEMtx33Concat(&transform, &tr, &transform);
 
-    if (texture == nullptr)
-    {
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    }
-    else
+    if (texture)
     {
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxTextureSet(texture, 0, 0);
+    }
+    else
+    {
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     }
 
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
@@ -97,73 +151,76 @@ void ParticleSystem::Render(Particles* particle)
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(1.0f);
     AEGfxSetTransform(transform.m);
-
     AEGfxMeshDraw(particleMesh, AE_GFX_MDM_TRIANGLES);
 }
 
-void ParticleSystem::Emit(const AEVec2& position) 
-{ 
-    if(freeParticles.empty()) 
-    { 
-		printf("Particles.cpp - Emit: There's no more free particles to emit!\n");
-        return; 
-	}
+// ============================================================================
+// Emit
+// ============================================================================
+// Activates one particle from the free list at the given world position.
+// No-ops if all particles are in use.
+// ============================================================================
+void ParticleSystem::Emit(const AEVec2& position)
+{
+    if (freeParticles.empty())
+    {
+        printf("[Particles] Pool exhausted - cannot emit.\n");
+        return;
+    }
 
-	u8 index = freeParticles.back();
+    const u8 index = freeParticles.back();
     freeParticles.pop_back();
 
     Particles& p = particles[index];
-	p.position = position;
-	p.lifetime = this->maxLifetime;
-	p.isActive = true;
+    p.position = position;
+    p.lifetime = maxLifetime;
+    p.isActive = true;
 
-	activeParticles.push_back(index);
+    activeParticles.push_back(index);
 }
 
+// ============================================================================
+// Update
+// ============================================================================
+// Moves all active particles and removes those whose lifetime has expired.
+// Uses reverse iteration so removal from activeParticles is safe.
+// ============================================================================
 void ParticleSystem::Update(f32 deltaTime)
 {
-	s8 activeP = static_cast<s8>(activeParticles.size());
-    for(s8 i = activeP - 1; i >= 0; i--) 
+    for (s8 i = static_cast<s8>(activeParticles.size()) - 1; i >= 0; --i)
     {
-		u8 index = activeParticles[i];
-		Particles& p = particles[index];
+        const u8 index = activeParticles[i];
+        Particles& p = particles[index];
 
-        // Update position 
+        // Move particle
         p.position.x += p.velocity.x * deltaTime;
         p.position.y += p.velocity.y * deltaTime;
 
-        // Decrease lifetime 
+        // Count down lifetime
         p.lifetime -= deltaTime;
 
-        // Deactivate if lifetime is over 
         if (p.lifetime <= 0.0f)
         {
+            // Return index to free list via swap-and-pop (O(1) removal)
             p.isActive = false;
-
-			// Remove from active list and add to free list
-			activeParticles[i] = activeParticles.back();
-			activeParticles.pop_back();
-
-			freeParticles.push_back(index);
+            activeParticles[i] = activeParticles.back();
+            activeParticles.pop_back();
+            freeParticles.push_back(index);
         }
     }
 }
 
+// ============================================================================
+// Free
+// ============================================================================
+// Unloads GPU resources and clears all particle data.
+// ============================================================================
 void ParticleSystem::Free()
 {
-    if (texture)
-    {
-        AEGfxTextureUnload(texture);
-        texture = nullptr;
-    }
+    if (texture) { AEGfxTextureUnload(texture);      texture = nullptr; }
+    if (particleMesh) { AEGfxMeshFree(particleMesh);      particleMesh = nullptr; }
 
-    if (particleMesh)
-    {
-        AEGfxMeshFree(particleMesh);
-        particleMesh = nullptr;
-    }
-
-	activeParticles.clear();
-	freeParticles.clear();
+    activeParticles.clear();
+    freeParticles.clear();
     particles.clear();
 }
