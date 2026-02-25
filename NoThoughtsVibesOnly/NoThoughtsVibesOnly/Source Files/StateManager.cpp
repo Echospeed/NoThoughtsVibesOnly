@@ -136,6 +136,13 @@ void StateManager::Advance()
     current = next;
 }
 
+void StateManager::FreeManager()
+{
+    // Delete the final hanging state wrapper!
+    delete currentState;
+    currentState = nullptr;
+}
+
 // ============================================================================
 // Free function wrappers
 // ============================================================================

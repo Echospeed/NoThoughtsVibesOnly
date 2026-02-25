@@ -12,7 +12,6 @@ class Button : public GameObject
 {
 public:
     // Public Class
-    //bool isHovered{ false };
 	Colour ogColour{};
     Colour tintColour{};
     ButtonFunction onClick{ nullptr };
@@ -26,7 +25,5 @@ public:
 
     void Update(f32 deltaTime) override;
 
-	void Draw();
-
-    ~Button();
+    ~Button() override;
 };
