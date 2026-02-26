@@ -14,6 +14,7 @@ enum GameState
 {
     STATE_SPLASH = 0,
     STATE_MENU,
+    STATE_LEVEL_SELECT,
     STATE_PLAYING,
     STATE_PAUSE,
     STATE_FINISH,

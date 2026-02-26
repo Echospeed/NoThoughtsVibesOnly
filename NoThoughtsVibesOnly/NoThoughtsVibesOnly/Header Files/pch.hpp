@@ -48,6 +48,7 @@
 #include "SplashPage.hpp"
 #include "GamePage.hpp"
 #include "WinPage.hpp"
+#include "LevelSelectPage.hpp"
 
 
 #endif //PCH_H

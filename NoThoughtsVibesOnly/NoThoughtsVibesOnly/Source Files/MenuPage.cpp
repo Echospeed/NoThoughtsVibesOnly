@@ -75,7 +75,7 @@ TextRenderer infoText;      // Body text for info pages
 // ============================================================================
 // Audio (constructed at file scope - loads on game start)
 // ============================================================================
-Audio MenuAudio{ "Assets/bouken.mp3", -1, 1.0f, 1.0f, AudioType::MUSIC };
+//Audio MenuAudio{ "Assets/bouken.mp3", -1, 1.0f, 1.0f, AudioType::MUSIC };
 
 // ============================================================================
 // Sub-view navigation callbacks
@@ -83,6 +83,7 @@ Audio MenuAudio{ "Assets/bouken.mp3", -1, 1.0f, 1.0f, AudioType::MUSIC };
 void GoToControls() { currentMenuState = MENU_CONTROLS; }
 void GoToCredits() { currentMenuState = MENU_CREDITS; }
 void GoToMain() { currentMenuState = MENU_MAIN; }
+void GoToLevelSelect() { StateManagerChangeState(STATE_LEVEL_SELECT); }
 
 // ============================================================================
 // Main_Load
@@ -116,7 +117,7 @@ void Main_Init()
     mainText.SetText("HUIN!!!!!!!!");
 
     // --- Main menu buttons ---
-    startButton = new Button(fontPath, { 0.0f,  100.0f }, { 300.0f, 75.0f }, StateManagerGamePage, { 0.0f, 0.6f, 0.0f, 1.0f }, "START");
+    startButton = new Button(fontPath, { 0.0f,  100.0f }, { 300.0f, 75.0f }, GoToLevelSelect, { 0.0f, 0.6f, 0.0f, 1.0f }, "START");
     controlsButton = new Button(fontPath, { 0.0f,    0.0f }, { 300.0f, 75.0f }, GoToControls, { 0.0f, 0.3f, 0.7f, 1.0f }, "CONTROLS");
     creditsButton = new Button(fontPath, { 0.0f, -100.0f }, { 300.0f, 75.0f }, GoToCredits, { 0.5f, 0.0f, 0.5f, 1.0f }, "CREDITS");
     quitButton = new Button(fontPath, { 0.0f, -200.0f }, { 300.0f, 75.0f }, StateManagerQuit, { 0.7f, 0.0f, 0.0f, 1.0f }, "QUIT");
@@ -159,8 +160,6 @@ void Main_Update()
 // ============================================================================
 void Main_Draw()
 {
-    // Press 0 to test menu audio
-    if (AEInputCheckTriggered(AEVK_0)) MenuAudio.Play();
 
     if (currentMenuState == MENU_MAIN)
     {

@@ -34,6 +34,7 @@
 #include "FinishPage.hpp"
 #include "PausePage.hpp"
 #include "WinPage.hpp"
+#include "LevelSelectPage.hpp"
 
 // ============================================================================
 // Screen dimensions (defined here, declared extern in StateManager.hpp)
@@ -113,6 +114,17 @@ public:
     void Unload() override { WinPage_Unload(); }
 };
 
+class LevelSelectState final : public IState
+{
+public:
+    void Load()   override { LevelSelect_Load(); }
+    void Init()   override { LevelSelect_Init(); }
+    void Update() override { LevelSelect_Update(); }
+    void Draw()   override { LevelSelect_Draw(); }
+    void Free()   override { LevelSelect_Free(); }
+    void Unload() override { LevelSelect_Unload(); }
+};
+
 // ============================================================================
 // StateManager - Singleton Implementation
 // ============================================================================
@@ -155,13 +167,14 @@ IState* StateManager::CreateState(GameState state)
 {
     switch (state)
     {
-    case STATE_SPLASH:  return new SplashState();
-    case STATE_MENU:    return new MenuState();
-    case STATE_PLAYING: return new PlayingState();
-    case STATE_PAUSE:   return new PauseState();
-    case STATE_FINISH:  return new FinishState();
-    case STATE_WIN:     return new WinState();
-    default:            return nullptr;
+    case STATE_SPLASH:       return new SplashState();
+    case STATE_MENU:         return new MenuState();
+    case STATE_LEVEL_SELECT: return new LevelSelectState();
+    case STATE_PLAYING:      return new PlayingState();
+    case STATE_PAUSE:        return new PauseState();
+    case STATE_FINISH:       return new FinishState();
+    case STATE_WIN:          return new WinState();
+    default:                 return nullptr;
     }
 }
 

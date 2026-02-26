@@ -22,6 +22,7 @@
     <ClInclude Include="Header Files\GamePage.hpp" />
     <ClInclude Include="Header Files\GameUI.hpp" />
     <ClInclude Include="Header Files\Input.hpp" />
+    <ClInclude Include="Header Files\LevelSelectPage.hpp" />
     <ClInclude Include="Header Files\MenuPage.hpp" />
     <ClInclude Include="Header Files\MiniMap.hpp" />
     <ClInclude Include="Header Files\NPC.hpp" />
@@ -51,6 +52,7 @@
     <ClCompile Include="Source Files\GamePage.cpp" />
     <ClCompile Include="Source Files\GameUI.cpp" />
     <ClCompile Include="Source Files\Input.cpp" />
+    <ClCompile Include="Source Files\LevelSelectPage.cpp" />
     <ClCompile Include="Source Files\Main.cpp" />
     <ClCompile Include="Source Files\MenuPage.cpp" />
     <ClCompile Include="Source Files\MiniMap.cpp" />
