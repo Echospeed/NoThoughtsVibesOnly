@@ -98,6 +98,8 @@ const  f32  CAM_SPEED = 5.0f;  // Camera lerp speed (higher = snappier)
 // ============================================================================
 Audio* bgMusic = nullptr;      // Background music (looping)
 Audio* shootSFX = nullptr;      // Shoot sound effect
+Audio* levelupSFX = nullptr;
+bool levelUpSFXFlag = true;
 
 // ============================================================================
 // Game_Load
@@ -116,8 +118,9 @@ void Game_Load()
     LoadTextRenderer(ammoText, gameFont);
 
     // Audio: music loops forever (-1), SFX plays once (0)
-    bgMusic = new Audio("Assets/bouken.mp3", -1, 0.5f, 1.0f, AudioType::MUSIC);
-    shootSFX = new Audio("Assets/ore.mp3", 0, 1.0f, 1.0f, AudioType::SOUND);
+    bgMusic = new Audio("Assets/Audio/BATTLE-MILITARY_GEN-HDF-03135.wav", -1, 0.5f, 1.0f, AudioType::MUSIC);
+    shootSFX = new Audio("Assets/Audio/SCI-FI-LASER_GEN-HDF-20715.wav", 0, 1.0f, 1.0f, AudioType::SOUND);
+    levelupSFX = new Audio("Assets/Audio/SCI-FI-POWER-UP_GEN-HDF-20769.wav", 0, 1.0f, 1.0f, AudioType::SOUND);
 }
 
 // ============================================================================
@@ -215,11 +218,14 @@ void Game_Update()
     {
         PowerUp* choices = powerUpSystem.GetPowerUpChoices();
         Player* player = dynamic_cast<Player*>(pPlayer);
-
+        if (levelupSFX && levelUpSFXFlag) { levelupSFX->Play(); levelUpSFXFlag = false; };
         if (AEInputCheckTriggered(AEVK_1)) powerUpSystem.ApplyPowerUp(choices[0].type, player);
         else if (AEInputCheckTriggered(AEVK_2)) powerUpSystem.ApplyPowerUp(choices[1].type, player);
         else if (AEInputCheckTriggered(AEVK_3)) powerUpSystem.ApplyPowerUp(choices[2].type, player);
         return;
+    }
+    else {
+        levelUpSFXFlag = true; // Reset level-up SFX trigger for next time
     }
 
     // ------------------------------------------------------------------
@@ -494,7 +500,7 @@ void Game_Unload()
 {
     Meshes::FreeMeshes();
     AEGfxDestroyFont(gameFont);
-
+    delete levelupSFX;  levelupSFX = nullptr;
     delete bgMusic;  bgMusic = nullptr;
     delete shootSFX; shootSFX = nullptr;
 }
