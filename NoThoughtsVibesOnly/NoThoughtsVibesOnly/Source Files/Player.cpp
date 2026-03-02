@@ -54,7 +54,7 @@ void Player::Start()
         -30, 30,      // minVelX, maxVelX — spreads slightly sideways
         20, 80,       // minVelY, maxVelY — drifts upward
         0.6f,         // maxLifetime — short-lived puff
-        12.0f          // size — smaller than the player itself
+        12.0f         // size — smaller than the player itself
     );
 }
 
@@ -135,8 +135,10 @@ void Player::Update(f32 deltaTime)
         };
         const f32 dist = sqrtf(toNPC.x * toNPC.x + toNPC.y * toNPC.y);
 
-        // --- AoE damage ring (shows red tint while in range) ---
-        if (dist < aoeRadius)
+        const f32 npcRadius = (np->transform.scale.x + np->transform.scale.y) / 4.0f;
+
+        // AoE damage ring (shows red tint while in range)
+        if (dist < (aoeRadius + npcRadius))
         {
             np->health -= aoeDamage * deltaTime;
             np->spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f };
@@ -146,11 +148,10 @@ void Player::Update(f32 deltaTime)
             np->spriteRenderer.colour = np->baseColour;
         }
 
-        // --- Contact collision damage + knockback ---
+        // Contact collision damage + knockback
         if (!np->isActive) continue;
 
         const f32 playerRadius = (transform.scale.x + transform.scale.y) / 4.0f;
-        const f32 npcRadius = (np->transform.scale.x + np->transform.scale.y) / 4.0f;
         const f32 collisionThresh = playerRadius + npcRadius;
 
         if (dist < collisionThresh)

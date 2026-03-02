@@ -386,11 +386,14 @@ void Game_Draw()
 
     // 4. AoE radius indicator (semi-transparent circle around player)
     {
-        const f32    aoeRadius = 30.0f;
+        // Cast the base GameObject pointer to Player to access specific stats
+        Player* player = dynamic_cast<Player*>(pPlayer);
+
+        const f32    aoeRadius = player ? player->GetAoeRadius() : 100.0f;
         const AEVec2 playerPos = pPlayer->transform.position;
 
         tf.SetPosition(playerPos.x, playerPos.y);
-        tf.SetUniformScale(aoeRadius * 2.0f);
+        tf.SetUniformScale(aoeRadius);
         AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.5f);
         tf.Apply();
         AEGfxMeshDraw(Meshes::pCircleMesh, AE_GFX_MDM_TRIANGLES);

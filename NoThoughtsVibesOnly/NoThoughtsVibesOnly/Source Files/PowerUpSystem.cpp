@@ -159,7 +159,7 @@ void PowerUpSystem::ApplyPowerUp(PowerUpType type, Player* player)
         break;
 
     case POWERUP_AOE_DAMAGE:
-        stats.aoeRadiusBonus += 20.0f;
+        stats.aoeRadiusBonus += 25.0f;
         stats.aoeDamageBonus += 25.0f;
         ++stats.aoeUpgrades;
         std::cout << "[Upgrade] AoE radius -> " << stats.GetTotalAoeRadius()
