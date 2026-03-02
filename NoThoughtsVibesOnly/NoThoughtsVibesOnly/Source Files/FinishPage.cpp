@@ -42,7 +42,8 @@ namespace
 
 // UI Elements
 TextRenderer GameOverText;            // Renders the "YOU LOSE!" message
-
+Button* restartButton;
+Button* menuButton;
 // ============================================================================
 // Button Callbacks
 // ============================================================================
@@ -50,7 +51,7 @@ TextRenderer GameOverText;            // Renders the "YOU LOSE!" message
 // Restart: Reloads the game from scratch
 void OnFinishRestartClicked()
 {
-    StateManagerChangeState(STATE_RESTART);
+    StateManagerChangeState(STATE_PLAYING);
 }
 
 // Main Menu: Returns to the main menu
@@ -85,13 +86,13 @@ void FinishPage_Init()
     timer = 0.0f;
 
     // "YOU LOSE!" in red
-    GameOverText = TextRenderer();
-	GameOverText << "YOU LOSE!";
+    GameOverText = TextRenderer(fontPath, InitialScale, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
+    GameOverText << "YOU LOSE!";
 
-    // To enable the restart button, uncomment:
-    // InitButton(RestartButton, "RESTART", nullptr,
-    //     { 0.0f, -200.0f }, { 300.0f, 75.0f },
-    //     OnFinishRestartClicked, 0.0f, 0.6f, 0.0f);
+    restartButton = new Button(fontPath, { -300.0f, -150.0f }, { 300.0f, 75.0f }, OnFinishRestartClicked, { 0.0f, 1.0f, 0.0f, 1.0f }, "Restart");
+
+    menuButton = new Button(fontPath, { 300.0f, -150.0f }, { 300.0f, 75.0f }, OnFinishMenuClicked, { 0.0f, 0.0f, 1.0f, 1.0f }, "Main Menu");
+
 }
 
 // ============================================================================
@@ -112,16 +113,15 @@ void FinishPage_Update()
     // Grow text toward FinalScale over 6 seconds using lerp-smoothing
     if (timer < 6.0f)
     {
-        InitialScale += (FinalScale - InitialScale) * 0.6f * dt;
+        GameOverText.SetScale(InitialScale += (FinalScale - InitialScale) * 0.6f * dt);
     }
 
     // --- Restart Button (uncomment to enable) ---
-    // RestartButton.isHovered = isOverlapping(RestartButton.collider, worldMouse);
-    // if (RestartButton.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
-    //     RestartButton.onClick();
+    menuButton->Update(dt);
+    restartButton->Update(dt);
 
     // --- Keyboard shortcut: press R to restart ---
-    // if (AEInputCheckTriggered(AEVK_R)) OnFinishRestartClicked();
+    if (AEInputCheckTriggered(AEVK_R)) OnFinishRestartClicked();
 }
 
 // ============================================================================
@@ -153,6 +153,8 @@ void FinishPage_Free()
 // ============================================================================
 void FinishPage_Unload()
 {
+    delete restartButton;
+    delete menuButton;
     AEGfxDestroyFont(fontPath);
     Meshes::FreeMeshes();
 }
