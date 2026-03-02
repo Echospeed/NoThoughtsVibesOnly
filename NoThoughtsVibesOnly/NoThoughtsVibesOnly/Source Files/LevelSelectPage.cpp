@@ -91,7 +91,6 @@ void GoToMainMenu()
 void LevelSelect_Load()
 {
     levelSelectFontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
-    LoadTextRenderer(levelSelectTitleText, levelSelectFontPath);
     Meshes::CreateSquareCenterOriginMesh();
 }
 
@@ -104,8 +103,6 @@ void LevelSelect_Init()
 {
     AEGfxSetCamPosition(0.0f, 0.0f);
     AEGfxSetBackgroundColor(0.1f, 0.1f, 0.15f);
-
-    levelSelectTitleText.SetText("SELECT LEVEL");
 
     // --- Level selection buttons ---
     level1Button = new Button(levelSelectFontPath, { 0.0f,  100.0f }, { 300.0f, 75.0f }, 
@@ -122,7 +119,8 @@ void LevelSelect_Init()
                                        GoToMainMenu, { 0.7f, 0.0f, 0.0f, 1.0f }, "BACK");
 
     // --- Title text ---
-    InitTextRenderer(levelSelectTitleText, "SELECT LEVEL", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
+	levelSelectTitleText = TextRenderer(levelSelectFontPath, { 1.0f, 1.0f }, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	levelSelectTitleText << ("SELECT LEVEL");
 }
 
 // ============================================================================
@@ -148,7 +146,7 @@ void LevelSelect_Update()
 // ============================================================================
 void LevelSelect_Draw()
 {
-    DrawTextRenderer(levelSelectTitleText, { 0.0f, 250.0f }, 1.5f);
+	levelSelectTitleText.Draw();
 }
 
 // ============================================================================
@@ -160,7 +158,6 @@ void LevelSelect_Draw()
 // ============================================================================
 void LevelSelect_Free()
 {
-    FreeTextRenderer(levelSelectTitleText);
 
     delete level1Button;           level1Button = nullptr;
     delete level2Button;           level2Button = nullptr;

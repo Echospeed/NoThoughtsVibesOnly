@@ -70,7 +70,7 @@ public:
     // textRenderer - Draws the button label text.
     // Initialised from the label string passed to the constructor.
     // ------------------------------------------------------------------------
-    TextRenderer textRenderer{};
+    TextRenderer textRenderer;
 
     // ------------------------------------------------------------------------
     // collider - AABB used for mouse-over detection (isOverlapping).

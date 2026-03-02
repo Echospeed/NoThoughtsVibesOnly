@@ -115,7 +115,6 @@ void Game_Load()
     Meshes::CreateCircleMesh();
 
     gameFont = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
-    LoadTextRenderer(ammoText, gameFont);
 
     // Audio: music loops forever (-1), SFX plays once (0)
     bgMusic = new Audio("Assets/Audio/BATTLE-MILITARY_GEN-HDF-03135.wav", -1, 0.5f, 1.0f, AudioType::MUSIC);
@@ -135,8 +134,8 @@ void Game_Init()
     pPlayer = new Player();
     sCamX = pPlayer->transform.position.x;
     sCamY = pPlayer->transform.position.y;
-
-    InitTextRenderer(ammoText, "Ammo: 100%", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
+	ammoText = TextRenderer(gameFont, { 1.0f, 1.0f }, { -500.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	ammoText << "Ammo: 0 / 500"; // Initial text - updated dynamically in Game_Update
 
     // --- Systems ---
     waveSystem.Init(dynamic_cast<Player*>(pPlayer));
@@ -312,7 +311,7 @@ void Game_Update()
     // ------------------------------------------------------------------
     // 8. HUD ammo text refresh
     // ------------------------------------------------------------------
-    ammoText.SetText("Ammo: ", availableBullets, " / 500");
+	ammoText << "Ammo: " << availableBullets << " / 500";
 
     // ------------------------------------------------------------------
     // 9. Debug hotkeys
@@ -416,7 +415,7 @@ void Game_Draw()
     if (player)
     {
         for (u8 idx : player->smokePS.GetActiveParticles())
-            player->smokePS.Render(&player->smokePS.GetParticles()[idx]);
+            player->smokePS.Render(player->smokePS.GetParticles()[idx]);
     }
     // 7. World-space health bars (drawn before camera reset)
     gameUI.DrawAllHealthBars();
@@ -427,7 +426,7 @@ void Game_Draw()
     AEGfxSetCamPosition(0.0f, 0.0f);
 
     // 8. HUD elements
-    DrawTextRenderer(ammoText, { -500.0f, 400.0f }, 1.0f);
+    ammoText.Draw();
     gameUI.DrawHealthText();
     gameUI.DrawXPBar();
     gameUI.DrawCurrentStats();
@@ -452,17 +451,14 @@ void Game_Draw()
 
         // "PAUSED" header
         TextRenderer pauseText;
-        LoadTextRenderer(pauseText, gameFont);
-        InitTextRenderer(pauseText, "PAUSED", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
-        DrawTextRenderer(pauseText, { 0.0f, 200.0f }, 3.0f);
-        FreeTextRenderer(pauseText);
+		pauseText = TextRenderer(gameFont, { 1.0f, 1.0f }, { 0.0f, 200.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+		pauseText << "PAUSED";
+
 
         // Key hint text
         TextRenderer hint;
-        LoadTextRenderer(hint, gameFont);
-        InitTextRenderer(hint, "ESC-Resume  R-Restart  Q-Menu", { 0.8f, 0.8f }, 0.8f, 0.8f, 1.0f);
-        DrawTextRenderer(hint, { 0.0f, -50.0f }, 1.2f);
-        FreeTextRenderer(hint);
+		hint = TextRenderer(gameFont, { 0.8f, 0.8f }, { 0.0f, -50.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+		hint << "ESC-Resume  R-Restart  Q-Menu";
     }
 
     // Restore world camera for next frame

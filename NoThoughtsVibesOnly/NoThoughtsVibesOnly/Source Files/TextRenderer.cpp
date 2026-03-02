@@ -29,6 +29,29 @@
 #include "TextRenderer.hpp"
 #include "StateManager.hpp"
 
+
+TextRenderer::TextRenderer()
+    : font(0)
+    , scale({ 1.0f, 1.0f })
+    , position({ 0.0f, 0.0f })
+    , colour({ 1.0f, 1.0f, 1.0f, 1.0f })
+    , text("")
+    , alignment(ALIGN_CENTER)
+{
+    // Default constructor - no special initialization needed
+}
+
+TextRenderer::TextRenderer(u8 font, AEVec2 scale, AEVec2 position, Colour colour, std::string, TextAlignment alignment)
+    : font(font)
+    , scale(scale)
+    , position(position)
+    , colour(colour)
+    , text(text)
+	, alignment(alignment)
+{
+    // Constructor - no special initialization needed
+}
+
 // ============================================================================
 // TextRenderer::Draw (member function)
 // ============================================================================
@@ -67,75 +90,29 @@ void TextRenderer::Draw()
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 }
 
-// ============================================================================
-// LoadTextRenderer
-// ============================================================================
-// Associates a font handle with the renderer. Must be called before Draw().
-// ============================================================================
-void LoadTextRenderer(TextRenderer& tr, s8 font)
+TextRenderer::~TextRenderer()
 {
-    tr.font = font;
+    text.clear();
 }
 
-// ============================================================================
-// InitTextRenderer
-// ============================================================================
-// Sets the text string and colour. Call in *_Init() or when text changes.
-// ============================================================================
-void InitTextRenderer(TextRenderer& tr, const char* text, AEVec2 scale,
-    f32 r, f32 g, f32 b)
+void TextRenderer::SetScale(AEVec2 newScale)
 {
-<<<<<<< Updated upstream
-    tr.SetText(text);
-    tr.colour = { r, g, b, 1.0f };
-    tr.scale = scale;
-=======
-	//textRenderer.SetText(text);
-	textRenderer.colour.r = r;
-	textRenderer.colour.g = g;
-	textRenderer.colour.b = b;
-	textRenderer.scale = scale;
->>>>>>> Stashed changes
+    scale = newScale;
 }
 
-// ============================================================================
-// DrawTextRenderer
-// ============================================================================
-// Draws text at a given world/screen position with a scale multiplier.
-// Uses ALIGN_CENTER by default (centered on the given position).
-// ============================================================================
-void DrawTextRenderer(const TextRenderer& tr, AEVec2 position, f32 scale)
+// Implementation for the SetPosition declared in your header
+AEVec2 TextRenderer::SetPosition(AEVec2 newPosition)
 {
-    f32 width, height;
-    AEGfxGetPrintSize(tr.font, tr.text.c_str(), scale, &width, &height);
-
-    const f32 normX = position.x / (SCREEN_W / 2.0f);
-    const f32 normY = position.y / (SCREEN_H / 2.0f);
-
-    f32 drawX = 0.0f, drawY = 0.0f;
-
-    if (tr.alignment == ALIGN_CENTER)
-    {
-        drawX = normX - (width / 2.0f);
-        drawY = normY - (height / 2.0f);
-    }
-    else if (tr.alignment == ALIGN_RIGHT)
-    {
-        drawX = normX - (width / 2.0f);
-        drawY = height / 2.0f;
-    }
-
-    AEGfxPrint(tr.font, tr.text.c_str(), drawX, drawY, scale,
-        tr.colour.r, tr.colour.g, tr.colour.b, 1.0f);
+    position = newPosition;
+    return position;
 }
 
-// ============================================================================
-// FreeTextRenderer
-// ============================================================================
-// Clears the stored text string. The font handle itself is destroyed separately
-// via AEGfxDestroyFont() in the state's Unload() function.
-// ============================================================================
-void FreeTextRenderer(TextRenderer& tr)
-{
-    tr.text.clear();
+void TextRenderer::SetAlignment(TextAlignment newAlignment) 
+{ 
+    alignment = newAlignment; 
+}
+
+void TextRenderer::SetColour(Colour newColour) 
+{ 
+    colour = newColour; 
 }

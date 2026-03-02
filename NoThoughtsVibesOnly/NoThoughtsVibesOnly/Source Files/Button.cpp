@@ -19,10 +19,8 @@ Button::Button(s8 font, AEVec2 pos, AEVec2 size,
     : GameObject(pos, size, 0.0f, nullptr, size.x, size.y, STATE_MENU)
 {
     // --- Text setup ---
-    textRenderer.font = font;
-    textRenderer.position = pos;
-    textRenderer.scale = size;
-    textRenderer.SetText(text);
+	textRenderer = TextRenderer(font, size, pos, { 1.0f, 1.0f, 1.0f, 1.0f });
+	textRenderer << text;
 
     // --- Sprite setup ---
     spriteRenderer.width = transform.scale.x;
@@ -96,5 +94,5 @@ void Button::Update(f32 deltaTime)
 // ============================================================================
 Button::~Button()
 {
-    FreeTextRenderer(textRenderer);
+    
 }

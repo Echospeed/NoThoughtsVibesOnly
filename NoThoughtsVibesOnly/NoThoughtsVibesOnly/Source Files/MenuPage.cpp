@@ -94,11 +94,6 @@ void Main_Load()
 {
     fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
 
-    LoadTextRenderer(mainText, fontPath);
-    LoadTextRenderer(controlsText, fontPath);
-    LoadTextRenderer(creditsText, fontPath);
-    LoadTextRenderer(infoText, fontPath);
-
     Meshes::CreateSquareCenterOriginMesh();
 }
 
@@ -114,7 +109,8 @@ void Main_Init()
 
     AEGfxSetBackgroundColor(0.1f, 0.1f, 0.15f);
 
-    mainText.SetText("HUIN!!!!!!!!");
+	mainText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    mainText << "HUIN!!!!!!!!";
 
     // --- Main menu buttons ---
     startButton = new Button(fontPath, { 0.0f,  100.0f }, { 300.0f, 75.0f }, GoToLevelSelect, { 0.0f, 0.6f, 0.0f, 1.0f }, "START");
@@ -126,8 +122,11 @@ void Main_Init()
     backButton = new Button(fontPath, { 0.0f, -350.0f }, { 200.0f, 75.0f }, GoToMain, { 0.7f, 0.0f, 0.0f, 1.0f }, "BACK");
 
     // --- Static text for info pages ---
-    InitTextRenderer(controlsText, "CONTROLS", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
-    InitTextRenderer(creditsText, "CREDITS", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
+	controlsText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	controlsText << "CONTROLS";
+
+	creditsText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	creditsText << "CREDITS";
 }
 
 // ============================================================================
@@ -160,36 +159,42 @@ void Main_Update()
 // ============================================================================
 void Main_Draw()
 {
-
     if (currentMenuState == MENU_MAIN)
     {
-        DrawTextRenderer(mainText, { 0.0f, 250.0f }, 1.5f);
+		mainText.Draw();
     }
     else if (currentMenuState == MENU_CONTROLS)
     {
-        DrawTextRenderer(controlsText, { 0.0f, 250.0f }, 1.5f);
+		controlsText.Draw();
 
-        InitTextRenderer(infoText, "W, A, S, D  -  Move", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
-        DrawTextRenderer(infoText, { 0.0f,  100.0f }, 1.0f);
+        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 100.0f }, {1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
+        infoText << "W, A, S, D  -  Move";
+		infoText.Draw();
 
-        InitTextRenderer(infoText, "Left Click  -  Shoot", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
-        DrawTextRenderer(infoText, { 0.0f,    0.0f }, 1.0f);
+        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText << "Left Click  -  Shoot";
+		infoText.Draw();
 
-        InitTextRenderer(infoText, "ESC  -  Pause  |  R  -  Restart  |  Q  -  Menu", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
-        DrawTextRenderer(infoText, { 0.0f, -100.0f }, 1.0f);
+        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, -100.0f }, { 1.0f, 1.0f, 1.0f });
+		infoText << "ESC  -  Pause  |  R  -  Restart  |  Q  -  Menu";
+		infoText.Draw();
     }
     else if (currentMenuState == MENU_CREDITS)
     {
-        DrawTextRenderer(creditsText, { 0.0f, 250.0f }, 1.5f);
+		creditsText.Draw();
 
-        InitTextRenderer(infoText, "Created By:", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
-        DrawTextRenderer(infoText, { 0.0f,  100.0f }, 1.0f);
+		infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
+        infoText << "Created By:\n\n"
+			<< "   - Huin Lee\n   - Justin Lee\n   - Kevin Lin\n   - Daniel Kim\n   - Eric Lee";
+		infoText.Draw();
 
-        InitTextRenderer(infoText, "No Thoughts, Vibes Only", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
-        DrawTextRenderer(infoText, { 0.0f,    0.0f }, 1.0f);
+        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText << "No Thoughts, Vibes Only";
+		infoText.Draw();
 
-        InitTextRenderer(infoText, "DigiPen Institute of Technology", { 1.0f, 1.0f }, 0.7f, 0.7f, 1.0f);
-        DrawTextRenderer(infoText, { 0.0f, -100.0f }, 0.8f);
+        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, -100.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText << "DigiPen Institute of Technology";
+		infoText.Draw();
     }
 }
 
@@ -200,10 +205,6 @@ void Main_Draw()
 // ============================================================================
 void Main_Free()
 {
-    FreeTextRenderer(mainText);
-    FreeTextRenderer(controlsText);
-    FreeTextRenderer(creditsText);
-    FreeTextRenderer(infoText);
 
     delete startButton;    startButton = nullptr;
     delete controlsButton; controlsButton = nullptr;

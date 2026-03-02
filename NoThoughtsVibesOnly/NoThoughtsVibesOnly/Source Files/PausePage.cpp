@@ -58,8 +58,6 @@ void OnMainMenuClicked() { StateManagerChangeState(STATE_MENU); }
 void PausePage_Load()
 {
     fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
-    LoadTextRenderer(pauseText, fontPath);
-    LoadTextRenderer(escHintText, fontPath);
 
     Meshes::CreateSquareCenterOriginMesh();
 }
@@ -71,8 +69,11 @@ void PausePage_Init()
 {
     AEGfxSetCamPosition(0.0f, 0.0f);
 
-    InitTextRenderer(pauseText, "PAUSED", { 1.0f, 1.0f }, 1.0f, 1.0f, 1.0f);
-    InitTextRenderer(escHintText, "Press ESC to Resume", { 0.8f, 0.8f }, 0.7f, 0.7f, 0.7f);
+	pauseText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 300.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	pauseText << "PAUSED";
+
+	escHintText = TextRenderer(fontPath, { 0.8f, 0.8f }, { 0.0f, -250.0f }, { 0.7f, 0.7f, 0.7f, 1.0f });
+	escHintText << "Press ESC to Resume";
 }
 
 // ============================================================================
@@ -121,11 +122,10 @@ void PausePage_Draw()
     AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
 
     // "PAUSED" header
-    DrawTextRenderer(pauseText, { 0.0f,   300.0f }, 2.5f);
+    pauseText.Draw();
 
     // Keyboard hint
-    DrawTextRenderer(escHintText, { 0.0f,  -250.0f }, 0.8f);
-
+	escHintText.Draw();
     // DrawButton(resumeButton);   // Uncomment to enable buttons
     // DrawButton(restartButton);
     // DrawButton(mainMenuButton);
@@ -136,8 +136,7 @@ void PausePage_Draw()
 // ============================================================================
 void PausePage_Free()
 {
-    FreeTextRenderer(pauseText);
-    FreeTextRenderer(escHintText);
+
 }
 
 // ============================================================================

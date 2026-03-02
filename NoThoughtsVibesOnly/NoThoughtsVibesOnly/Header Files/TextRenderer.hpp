@@ -13,14 +13,18 @@ enum TextAlignment
 
 class TextRenderer
 {
-
-public:
+private:
 	s8 font{};
 	AEVec2 scale{};
-	Colour colour{};
 	AEVec2 position{};
+	Colour colour{};
 	std::string text{}; // Shift to private once done
 	TextAlignment alignment{ ALIGN_CENTER };
+
+public:
+	TextRenderer();
+
+	TextRenderer(u8 font, AEVec2 scale, AEVec2 position, Colour colour, std::string = "", TextAlignment alignment = ALIGN_CENTER);
 
 	template <typename T>
 	TextRenderer& operator<<(const T& value)
@@ -35,13 +39,34 @@ public:
 		return *this;
 	}
 
+	AEVec2 SetPosition(AEVec2 newPosition);
+
+	AEVec2 GetPosition() const { return position; }
+
+	AEVec2 GetScale() const { return scale; }
+
+	void SetScale(AEVec2 newScale);
+
+	void SetColour(Colour newColour);
+
+	void SetAlignment(TextAlignment newAlignment);
+
+
+	~TextRenderer();
+
 	void Draw();
 };
 
-void LoadTextRenderer(TextRenderer& textRenderer, s8 font);
 
-void InitTextRenderer(TextRenderer& textRenderer, const char* text, AEVec2 scale, f32 r, f32 g, f32 b);
+/*==============================================================================*/
+// USAGE:
+// ----------------------------------------------------------------------------
+//   TextRenderer Operator Overloading Example:
 
-void DrawTextRenderer(const TextRenderer& textRenderer, AEVec2 position, f32 scale);
+//   TextRenderer tr;
+//   tr << "Score: " << playerScore; // Concatenates "Score: " and playerScore into tr.text
+//   If playerscore uses the special types such as u8, s8, f32, etc., 
+//	 the overloaded operator<< will not be able to handle the print. 
+//   Use static_change to convert to a compatible type (e.g., int or float) before streaming:
 
-void FreeTextRenderer(TextRenderer& textRenderer);
+/*==============================================================================*/

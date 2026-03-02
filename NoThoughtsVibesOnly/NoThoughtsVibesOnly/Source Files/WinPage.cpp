@@ -69,7 +69,6 @@ void OnWinRestartClicked()
 void WinPage_Load()
 {
     fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
-    LoadTextRenderer(WinText, fontPath);
     // LoadButton(WinButton, fontPath); // Uncomment to enable button
 
     Meshes::CreateSquareCenterOriginMesh();
@@ -89,7 +88,8 @@ void WinPage_Init()
     timer = 0.0f;
 
     // "YOU WIN!" in red (change colour values to customise)
-    InitTextRenderer(WinText, "YOU WIN!", { 1.0f, 1.0f }, 1.0f, 0.0f, 0.0f);
+    WinText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 250.0f }, {1.0f, 0.0f, 0.0f});
+	WinText << "YOU WIN!";
 
     // To enable the win button, uncomment:
     // InitButton(WinButton, "MAIN MENU", nullptr,
@@ -129,7 +129,7 @@ void WinPage_Update()
 // ============================================================================
 void WinPage_Draw()
 {
-    DrawTextRenderer(WinText, { 0.0f, 250.0f }, InitialScale);
+	WinText.Draw();
     // DrawButton(WinButton); // Uncomment to render the button
 }
 
@@ -138,7 +138,6 @@ void WinPage_Draw()
 // ============================================================================
 void WinPage_Free()
 {
-    FreeTextRenderer(WinText);
     // FreeButton(WinButton); // Uncomment if button is enabled
 }
 

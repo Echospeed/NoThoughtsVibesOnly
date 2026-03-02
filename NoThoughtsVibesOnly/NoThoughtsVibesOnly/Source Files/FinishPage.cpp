@@ -67,7 +67,6 @@ void OnFinishMenuClicked()
 void FinishPage_Load()
 {
     fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
-    LoadTextRenderer(GameOverText, fontPath);
 
     Meshes::CreateSquareCenterOriginMesh();
 }
@@ -86,7 +85,8 @@ void FinishPage_Init()
     timer = 0.0f;
 
     // "YOU LOSE!" in red
-    InitTextRenderer(GameOverText, "YOU LOSE!", { 1.0f, 1.0f }, 1.0f, 0.0f, 0.0f);
+    GameOverText = TextRenderer();
+	GameOverText << "YOU LOSE!";
 
     // To enable the restart button, uncomment:
     // InitButton(RestartButton, "RESTART", nullptr,
@@ -131,7 +131,7 @@ void FinishPage_Update()
 // ============================================================================
 void FinishPage_Draw()
 {
-    DrawTextRenderer(GameOverText, { 0.0f, 250.0f }, InitialScale);
+    GameOverText.Draw();
 
     // DrawButton(RestartButton); // Uncomment to render the button
 }
@@ -143,7 +143,6 @@ void FinishPage_Draw()
 // ============================================================================
 void FinishPage_Free()
 {
-    FreeTextRenderer(GameOverText);
     // FreeButton(RestartButton); // Uncomment if button is enabled
 }
 

@@ -68,10 +68,8 @@ void GameUI::DrawRect(f32 x, f32 y, f32 w, f32 h, f32 r, f32 g, f32 b, f32 a)
 void GameUI::DrawText(const char* text, f32 x, f32 y, f32 scale, f32 r, f32 g, f32 b)
 {
     TextRenderer t;
-    LoadTextRenderer(t, gameFont);
-    InitTextRenderer(t, text, { scale, scale }, r, g, b);
-    DrawTextRenderer(t, { x, y }, scale);
-    FreeTextRenderer(t);
+    t = TextRenderer(gameFont, { scale, scale }, { x, y }, {r, g ,b});
+	t << text;
 }
 
 // ============================================================================
