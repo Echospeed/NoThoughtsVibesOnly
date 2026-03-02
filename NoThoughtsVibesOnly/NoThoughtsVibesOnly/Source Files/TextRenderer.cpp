@@ -85,9 +85,17 @@ void LoadTextRenderer(TextRenderer& tr, s8 font)
 void InitTextRenderer(TextRenderer& tr, const char* text, AEVec2 scale,
     f32 r, f32 g, f32 b)
 {
+<<<<<<< Updated upstream
     tr.SetText(text);
     tr.colour = { r, g, b, 1.0f };
     tr.scale = scale;
+=======
+	//textRenderer.SetText(text);
+	textRenderer.colour.r = r;
+	textRenderer.colour.g = g;
+	textRenderer.colour.b = b;
+	textRenderer.scale = scale;
+>>>>>>> Stashed changes
 }
 
 // ============================================================================

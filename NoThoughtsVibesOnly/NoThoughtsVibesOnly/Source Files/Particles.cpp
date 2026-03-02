@@ -121,20 +121,32 @@ void ParticleSystem::Init(u8 _maxParticles,
     }
 }
 
+<<<<<<< Updated upstream
 // ============================================================================
 // Render
 // ============================================================================
 // Draws a single particle at its current position and size.
 // ============================================================================
 void ParticleSystem::Render(Particles* p)
+=======
+void ParticleSystem::Render(Particles& particle)
+>>>>>>> Stashed changes
 {
     AEMtx33 rot, sc, tr, transform;
 
+<<<<<<< Updated upstream
     AEMtx33Rot(&rot, 0.0f);
     AEMtx33Scale(&sc, p->size, p->size);
     AEMtx33Trans(&tr, p->position.x, p->position.y);
     AEMtx33Concat(&transform, &sc, &rot);
     AEMtx33Concat(&transform, &tr, &transform);
+=======
+    AEMtx33Rot(&rotation, 0.0f);
+    AEMtx33Scale(&scale, particle.size, particle.size);
+    AEMtx33Trans(&translation, particle.position.x, particle.position.y);
+    AEMtx33Concat(&transform, &scale, &rotation);
+    AEMtx33Concat(&transform, &translation, &transform);
+>>>>>>> Stashed changes
 
     if (texture)
     {

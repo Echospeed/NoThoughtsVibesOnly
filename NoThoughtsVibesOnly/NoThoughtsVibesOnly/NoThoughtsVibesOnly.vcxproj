@@ -132,7 +132,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)Src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -22,16 +22,17 @@ public:
 	std::string text{}; // Shift to private once done
 	TextAlignment alignment{ ALIGN_CENTER };
 
-	template <typename... Args>
-	void SetText(const Args&... args)
+	template <typename T>
+	TextRenderer& operator<<(const T& value)
 	{
-		std::ostringstream stream;
+		std::ostringstream stream;	
 
-		// This "folds" all arguments (int, float, string) into the stream
-		(stream << ... << args);
+		stream << value;
 
 		// Update the struct's text variable directly
-		text = stream.str();
+		this->text += stream.str();
+
+		return *this;
 	}
 
 	void Draw();
