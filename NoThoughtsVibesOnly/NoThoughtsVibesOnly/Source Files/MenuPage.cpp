@@ -183,18 +183,26 @@ void Main_Draw()
     {
 		creditsText.Draw();
 
-		infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
-        infoText << "Created By:\n\n"
-			<< "   - Huin Lee\n   - Justin Lee\n   - Kevin Lin\n   - Daniel Kim\n   - Eric Lee";
+		infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 150.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
+        infoText << "Created By:"; 
 		infoText.Draw();
 
-        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText << "DigiPen Institute of Technology";
+		infoText.Draw();
+
+		infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 50.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
+        infoText << "- WenJie Chia   - John Chiow";
+		infoText.Draw();
+
+		infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
+        infoText << "- Yan Bin Liu   - Stanely Lu";
+		infoText.Draw();
+
+        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, -50.0f }, { 1.0f, 1.0f, 1.0f });
         infoText << "No Thoughts, Vibes Only";
 		infoText.Draw();
 
-        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, -100.0f }, { 1.0f, 1.0f, 1.0f });
-        infoText << "DigiPen Institute of Technology";
-		infoText.Draw();
     }
 }
 
