@@ -43,45 +43,50 @@ void DrawMinimap(const std::vector<GameObject*>& objs, f32 camX, f32 camY)
 
     AEMtx33 scale, trans, rot, transform;
 
-    // --- Minimap background (semi-transparent black) ---
+    // Minimap background (semi-transparent black)
     AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.5f);
     CreateSquare(Meshes::pSquareCOriMesh, &transform, &scale, &rot, &trans,
         mapWorldX, mapWorldY,
         MINI_SIZE, MINI_SIZE, 0.0f,
         0.0f, 0.0f, 0.0f, 0.5f);
 
-    // --- Draw each object onto the minimap ---
+    // Draw each object onto the minimap
     for (size_t i = 0; i < objs.size(); ++i)
     {
         const GameObject* entity = objs[i];
         if (!entity || !entity->isActive) continue;
 
-        // Player is assumed to be the first object in the list (index 0)
         if (i == 0)
         {
             const f32 px = mapWorldX + entity->transform.position.x * MINI_SCALE;
             const f32 py = mapWorldY + entity->transform.position.y * MINI_SCALE;
 
-            // Red dot for the player
+            // Dynamically pull the player's current color
             CreateSquare(Meshes::pSquareCOriMesh, &transform, &scale, &rot, &trans,
                 px, py, 8.0f, 8.0f, 0.0f,
-                1.0f, 0.0f, 0.0f, 1.0f);
+                entity->spriteRenderer.colour.r,
+                entity->spriteRenderer.colour.g,
+                entity->spriteRenderer.colour.b,
+                1.0f);
             continue;
         }
 
-        // Only show NPCs that the player can see
-        if (entity->ObjectType == NP)
-        {
-            const NPC* npc = dynamic_cast<const NPC*>(entity);
-            if (!npc || !npc->isVisibleToPlayer) continue;
-        }
+        // Filter out everything that isn't an NPC
+        if (entity->ObjectType != NP) continue;
 
-        // Small yellow dot for all other visible entities
+        // Only show NPCs that the player can see
+        const NPC* npc = dynamic_cast<const NPC*>(entity);
+        if (!npc || !npc->isVisibleToPlayer) continue;
+
+        // Small dot for visible NPCs, matching their specific type color
         const f32 ex = mapWorldX + entity->transform.position.x * MINI_SCALE;
         const f32 ey = mapWorldY + entity->transform.position.y * MINI_SCALE;
 
         CreateSquare(Meshes::pCircleMesh, &transform, &scale, &rot, &trans,
             ex, ey, 2.0f, 2.0f, 0.0f,
-            1.0f, 1.0f, 0.0f, 1.0f);
+            npc->baseColour.r,
+            npc->baseColour.g,
+            npc->baseColour.b,
+            1.0f);
     }
 }
