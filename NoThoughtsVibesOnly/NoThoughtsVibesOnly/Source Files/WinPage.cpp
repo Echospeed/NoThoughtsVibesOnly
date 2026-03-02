@@ -88,7 +88,7 @@ void WinPage_Init()
     timer = 0.0f;
 
     // "YOU WIN!" in red (change colour values to customise)
-    WinText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 250.0f }, {1.0f, 0.0f, 0.0f});
+    WinText = TextRenderer(fontPath, 1.0f, { 0.0f, 250.0f }, {1.0f, 0.0f, 0.0f});
 	WinText << "YOU WIN!";
 
     // To enable the win button, uncomment:

@@ -119,7 +119,7 @@ void LevelSelect_Init()
                                        GoToMainMenu, { 0.7f, 0.0f, 0.0f, 1.0f }, "BACK");
 
     // --- Title text ---
-	levelSelectTitleText = TextRenderer(levelSelectFontPath, { 1.0f, 1.0f }, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	levelSelectTitleText = TextRenderer(levelSelectFontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
 	levelSelectTitleText << ("SELECT LEVEL");
 }
 

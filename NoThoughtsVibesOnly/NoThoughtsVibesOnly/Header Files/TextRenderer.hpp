@@ -15,7 +15,8 @@ class TextRenderer
 {
 private:
 	s8 font{};
-	AEVec2 scale{};
+	f32 scale{};
+	f32 maxPixelWidth{ 0.0f }; // Optional max width for auto-scaling  
 	AEVec2 position{};
 	Colour colour{};
 	std::string text{}; // Shift to private once done
@@ -24,7 +25,7 @@ private:
 public:
 	TextRenderer();
 
-	TextRenderer(u8 font, AEVec2 scale, AEVec2 position, Colour colour, std::string = "", TextAlignment alignment = ALIGN_CENTER);
+	TextRenderer(s8 font, f32 scale, AEVec2 position, Colour colour, std::string = "", TextAlignment alignment = ALIGN_CENTER);
 
 	template <typename T>
 	TextRenderer& operator<<(const T& value)
@@ -41,16 +42,17 @@ public:
 
 	AEVec2 SetPosition(AEVec2 newPosition);
 
-	AEVec2 GetPosition() const { return position; }
+	AEVec2 GetPosition() const;
 
-	AEVec2 GetScale() const { return scale; }
+	f32 GetScale() const;
 
-	void SetScale(AEVec2 newScale);
+	void SetScale(f32 newScale);
 
 	void SetColour(Colour newColour);
 
 	void SetAlignment(TextAlignment newAlignment);
 
+	void SetMaxPixelWidth(f32 maxWidth);
 
 	~TextRenderer();
 

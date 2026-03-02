@@ -118,6 +118,30 @@ void Audio::Stop()
 }
 
 // ============================================================================
+// Decrease Volume
+// ============================================================================
+// Decreases the game volume.
+// ============================================================================
+void Audio::DecreaseVolume(f32 amount)
+{
+    if (!isLoaded) return;
+    volume = (volume >= 1.0f) ? 1.0f : volume - amount;
+    AEAudioSetGroupVolume(group, volume);
+}
+
+// ============================================================================
+// Increase Volume
+// ============================================================================
+// Increases the game volume.
+// ============================================================================
+void Audio::IncreaseVolume(f32 amount)
+{
+    if (!isLoaded) return;
+    volume = (volume <= 0.0f) ? 0.0f : volume + amount;
+    AEAudioSetGroupVolume(group, volume);
+}
+
+// ============================================================================
 // Free (private)
 // ============================================================================
 // Unloads the audio resource and destroys the group.

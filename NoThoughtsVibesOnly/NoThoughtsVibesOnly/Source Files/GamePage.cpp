@@ -82,8 +82,10 @@ GameUI        gameUI;           // All HUD rendering
 // ============================================================================
 // Font / HUD text
 // ============================================================================
-TextRenderer ammoText;          // "Ammo: X / 500" display
 s8           gameFont = 0;      // Font handle reused across all HUD text
+TextRenderer pauseText;
+TextRenderer hint;
+TextRenderer ammoText;          // "Ammo: X / 500" display
 char         ammoBuffer[500];   // Scratch buffer for ammo string formatting
 
 // ============================================================================
@@ -134,7 +136,7 @@ void Game_Init()
     pPlayer = new Player();
     sCamX = pPlayer->transform.position.x;
     sCamY = pPlayer->transform.position.y;
-	ammoText = TextRenderer(gameFont, { 1.0f, 1.0f }, { -500.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	ammoText = TextRenderer(gameFont, 1.0f, { -500.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
 	ammoText << "Ammo: 0 / 500"; // Initial text - updated dynamically in Game_Update
 
     // --- Systems ---
@@ -311,7 +313,7 @@ void Game_Update()
     // ------------------------------------------------------------------
     // 8. HUD ammo text refresh
     // ------------------------------------------------------------------
-	ammoText << "Ammo: " << availableBullets << " / 500";
+	//ammoText << "Ammo: " << availableBullets << " / 500";
 
     // ------------------------------------------------------------------
     // 9. Debug hotkeys
@@ -439,6 +441,9 @@ void Game_Draw()
     // 9. Power-up overlay (blocks gameplay while active)
     if (powerUpSystem.IsWaitingForUpgrade())
         gameUI.DrawPowerUpScreen();
+    
+    if(AEInputCheckTriggered(AEVK_U))
+		powerUpSystem.AddExperience(100.0f);
 
     // -----------------------------------------------------------------------
     // PAUSE OVERLAY (drawn in screen space so it covers everything)
@@ -453,15 +458,14 @@ void Game_Draw()
         AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
 
         // "PAUSED" header
-        TextRenderer pauseText;
-		pauseText = TextRenderer(gameFont, { 1.0f, 1.0f }, { 0.0f, 200.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+		pauseText = TextRenderer(gameFont, 1.0f, { 0.0f, 200.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
 		pauseText << "PAUSED";
-
+		pauseText.Draw();
 
         // Key hint text
-        TextRenderer hint;
-		hint = TextRenderer(gameFont, { 0.8f, 0.8f }, { 0.0f, -50.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+		hint = TextRenderer(gameFont, 0.8f, { 0.0f, -50.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
 		hint << "ESC-Resume  R-Restart  Q-Menu";
+		hint.Draw();
     }
 
     // Restore world camera for next frame
@@ -486,7 +490,9 @@ void Game_Free()
     gamePageObj.clear();
     gamePageObj.shrink_to_fit();
 
-    if (bgMusic) bgMusic->Stop();
+    if (bgMusic) bgMusic->Free();
+	if (levelupSFX) levelupSFX->Free();
+	if (shootSFX) shootSFX->Free();
 }
 
 // ============================================================================
@@ -499,7 +505,7 @@ void Game_Unload()
 {
     Meshes::FreeMeshes();
     AEGfxDestroyFont(gameFont);
-    delete levelupSFX;  levelupSFX = nullptr;
-    delete bgMusic;  bgMusic = nullptr;
-    delete shootSFX; shootSFX = nullptr;
+    levelupSFX = nullptr;
+    bgMusic = nullptr;
+    shootSFX = nullptr;
 }

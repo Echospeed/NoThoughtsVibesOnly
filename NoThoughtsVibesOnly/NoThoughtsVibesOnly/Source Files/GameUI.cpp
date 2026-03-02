@@ -27,9 +27,25 @@
 #include "GamePage.hpp"
 #include "TextRenderer.hpp"
 #include "Transform.hpp"
+#include <iomanip>
+#include <functional>
 
+
+bool isOverlayActive = false;
 extern GameObject* pPlayer; // Declared in GamePage.cpp
 
+TextRenderer playerHealth;
+TextRenderer playerXP;
+TextRenderer playerStats;
+TextRenderer waveInfo;
+TextRenderer waveRound;
+TextRenderer waveTimer;
+TextRenderer activeEnemyCount;
+TextRenderer powerUpTitle;
+TextRenderer statBuffText;
+TextRenderer descriptionText;
+
+//Button powerUpButtons[3]; // 3 buttons for power-up choices
 // ============================================================================
 // Init
 // ============================================================================
@@ -57,19 +73,6 @@ void GameUI::DrawRect(f32 x, f32 y, f32 w, f32 h, f32 r, f32 g, f32 b, f32 a)
     tf.Apply();
 
     AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
-}
-
-// ============================================================================
-// DrawText (private helper)
-// ============================================================================
-// Draws a temporary text string at (x, y) with the given scale and colour.
-// Constructs and frees a TextRenderer each call (suitable for HUD text).
-// ============================================================================
-void GameUI::DrawText(const char* text, f32 x, f32 y, f32 scale, f32 r, f32 g, f32 b)
-{
-    TextRenderer t;
-    t = TextRenderer(gameFont, { scale, scale }, { x, y }, {r, g ,b});
-	t << text;
 }
 
 // ============================================================================
@@ -187,9 +190,10 @@ void GameUI::DrawHealthText()
     const Player* player = dynamic_cast<Player*>(pPlayer);
     if (!player) return;
 
-    char buf[64];
-    sprintf_s(buf, "HP: %.0f / %.0f", player->health, player->maxHealth);
-    DrawText(buf, -500.0f, -400.0f, 1.2f, 1.0f, 1.0f, 1.0f);
+	playerHealth = TextRenderer(gameFont, 1.0f, { -500.0f, -400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	playerHealth << "HP: " << player->health << " / " << player->maxHealth;
+    playerHealth.Draw();
+    
 }
 
 // ============================================================================
@@ -223,10 +227,9 @@ void GameUI::DrawXPBar()
     }
 
     // Level and XP text
-    char buf[64];
-    sprintf_s(buf, "LVL %u   %d / %d XP",
-        stats.level, (int)stats.currentExp, (int)stats.expToNextLevel);
-    DrawText(buf, barX, barY + 28.0f, 0.9f, 1.0f, 1.0f, 0.3f);
+	playerXP = TextRenderer(gameFont, 1.0f, { barX, barY + 28.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    playerXP << "LVL " << stats.level << "   " << (int)stats.currentExp << " / " << (int)stats.expToNextLevel << " XP";
+	playerXP.Draw();
 }
 
 // ============================================================================
@@ -248,17 +251,17 @@ void GameUI::DrawCurrentStats()
     const f32 panelH = 120.0f;
 
     DrawRect(panelX, panelY, panelW, panelH, 0.1f, 0.1f, 0.15f, 0.85f);
-    DrawText("CURRENT STATS", panelX, panelY + 38.0f, 0.6f, 0.8f, 0.8f, 0.8f);
 
-    char spd[32]; sprintf_s(spd, "SPD: %.0f", stats.GetTotalSpeed());
-    DrawText(spd, panelX - 100.0f, panelY + 8.0f, 0.5f, 0.4f, 0.8f, 1.0f);
+    playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY + (panelH * 0.4f)}, {0.6f, 0.8f, 0.8f, 0.8f});
+	playerStats << "CURRENT STATS";
+    playerStats.Draw();
 
-    char dmg[32]; sprintf_s(dmg, "DMG: %.0f", stats.GetTotalBulletDamage());
-    DrawText(dmg, panelX + 100.0f, panelY + 8.0f, 0.5f, 1.0f, 0.5f, 0.2f);
-
-    char aoe[48]; sprintf_s(aoe, "AOE: r=%.0f  d=%.0f/s",
-        stats.GetTotalAoeRadius(), stats.GetTotalAoeDamage());
-    DrawText(aoe, panelX, panelY - 22.0f, 0.5f, 0.4f, 1.0f, 0.4f);
+    playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY}, {1.0f, 1.0f, 1.0f, 1.0f});
+    playerStats << "SPD: " << (int)stats.GetTotalSpeed() << "   DMG: " << (int)stats.GetTotalBulletDamage();
+	playerStats.Draw();
+    playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY -30.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    playerStats << "AOE: r=" << (int)stats.GetTotalAoeRadius() << "  d=" << (int)stats.GetTotalAoeDamage() << "/s";
+    playerStats.Draw();
 }
 
 // ============================================================================
@@ -273,13 +276,13 @@ void GameUI::DrawWaveInfo()
     const f32 infoX = 400.0f;
     const f32 infoY = 400.0f;
 
-    char waveBuf[64];
-    sprintf_s(waveBuf, "WAVE %u", waveSystem->GetCurrentWave());
-    DrawText(waveBuf, infoX, infoY, 1.3f, 1.0f, 0.3f, 0.3f);
+	waveInfo = TextRenderer(gameFont,  1.0f, { infoX, infoY }, { 1.0f, 0.3f, 0.3f, 1.0f });
+	waveInfo << "WAVE " << waveSystem->GetCurrentWave();
+	waveInfo.Draw();
 
-    char roundBuf[64];
-    sprintf_s(roundBuf, "Round %u", waveSystem->GetCurrentRound());
-    DrawText(roundBuf, infoX, infoY - 35.0f, 0.9f, 0.7f, 0.7f, 0.7f);
+	waveRound = TextRenderer(gameFont,  1.0f, { infoX, infoY - 35.0f }, { 0.7f, 0.7f, 0.7f, 1.0f });
+	waveRound << "Round " << waveSystem->GetCurrentRound();
+	waveRound.Draw();
 
     // Count active NPCs for the enemy counter display
     int activeEnemies = 0;
@@ -287,9 +290,9 @@ void GameUI::DrawWaveInfo()
         if (obj && obj->isActive && obj->ObjectType == NP)
             ++activeEnemies;
 
-    char enemyBuf[64];
-    sprintf_s(enemyBuf, "%d Enemies", activeEnemies);
-    DrawText(enemyBuf, infoX, infoY - 70.0f, 0.9f, 1.0f, 1.0f, 0.3f);
+	activeEnemyCount = TextRenderer(gameFont, 1.0f, { infoX, infoY - 70.0f }, { 1.0f, 1.0f, 0.3f, 1.0f });
+	activeEnemyCount << activeEnemies << " Enemies";
+	activeEnemyCount.Draw();
 }
 
 // ============================================================================
@@ -307,13 +310,17 @@ void GameUI::DrawWaveTimer()
     const f32 timerY = 400.0f;
 
     DrawRect(timerX, timerY, 395.0f, 120.0f, 0.1f, 0.1f, 0.15f, 0.85f);
-    DrawText("NEXT WAVE IN:", timerX, timerY + 25.0f, 1.0f, 1.0f, 0.8f, 0.8f);
+
+	waveTimer = TextRenderer(gameFont, 1.0f, { timerX, timerY + 25.0f }, { 1.0f, 1.0f, 0.8f, 0.8f });
+	waveTimer << " NEXT WAVE IN";
+    waveTimer.Draw();
 
     // Countdown digits turn orange when time is short
-    char timerBuf[32];
-    sprintf_s(timerBuf, "%.1f", timeRemaining);
     const f32 g = (timeRemaining > 2.0f) ? 1.0f : 0.3f;
-    DrawText(timerBuf, timerX, timerY - 35.0f, 2.0f, 1.0f, g, 0.0f);
+	waveTimer = TextRenderer(gameFont, 1.0f, { timerX, timerY - 35.0f }, { 1.0f, g, 0.0f, 0.8f });
+    waveTimer.SetMaxPixelWidth(395.0f);
+    waveTimer << std::fixed << std::setprecision(1) << timeRemaining;
+    waveTimer.Draw();
 }
 
 // ============================================================================
@@ -324,64 +331,82 @@ void GameUI::DrawWaveTimer()
 // ============================================================================
 void GameUI::DrawPowerUpScreen()
 {
-    if (!powerUpSystem) return;
+    if (!powerUpSystem)
+        return;
 
-    PowerUp* choices = powerUpSystem->GetPowerUpChoices();
-    const PlayerStats& stats = powerUpSystem->GetStats();
-
-    // Semi-transparent full-screen dark overlay
-    DrawRect(0.0f, 0.0f, 3000.0f, 3000.0f, 0.0f, 0.0f, 0.0f, 0.85f);
-    DrawText("LEVEL UP!  Choose a Power-Up", 0.0f, 320.0f, 1.5f, 1.0f, 1.0f, 0.2f);
-
-    // Three card positions
-    const f32 boxX[3] = { -370.0f, 0.0f, 370.0f };
-    const char* keys[3] = { "[1]", "[2]", "[3]" };
-    const f32 boxW = 280.0f;
-    const f32 boxH = 220.0f;
-
-    const bool mouseClicked = AEInputCheckTriggered(AEVK_LBUTTON);
-    Player* player = dynamic_cast<Player*>(pPlayer);
-
-    for (int i = 0; i < 3; ++i)
+    if (isOverlayActive = powerUpSystem->IsWaitingForUpgrade())
     {
-        const bool isHovered = IsMouseOverBox(boxX[i], 40.0f, boxW, boxH);
 
-        // Card background (brighter on hover)
-        const f32 bg = isHovered ? 0.18f : 0.12f;
-        DrawRect(boxX[i], 40.0f, boxW, boxH, bg, bg, isHovered ? 0.25f : 0.18f, 0.95f);
+        PowerUp* choices = powerUpSystem->GetPowerUpChoices();
+        const PlayerStats& stats = powerUpSystem->GetStats();
 
-        // Mouse-click selection
-        if (isHovered && mouseClicked && player)
+        // Semi-transparent full-screen dark overlay
+        DrawRect(0.0f, 0.0f, 3000.0f, 3000.0f, 0.0f, 0.0f, 0.0f, 0.85f);
+        powerUpTitle = TextRenderer(gameFont, 1.0f, { 0.0f, 320.0f }, { 1.0f, 1.0f, 0.2f, 1.0f });
+        powerUpTitle << "LEVEL UP!  Choose a Power-Up";
+        powerUpTitle.Draw();
+
+        // Three card positions
+        const f32 boxX[3] = { -370.0f, 0.0f, 370.0f };
+        const char* keys[3] = { "[1]", "[2]", "[3]" };
+        const f32 boxW = 280.0f;
+        const f32 boxH = 220.0f;
+        std::function<void()> powerUpCommands[3];
+        Player* player = dynamic_cast<Player*>(pPlayer);
+
+        for (int i = 0; i < 3; ++i)
         {
-            powerUpSystem->ApplyPowerUp(choices[i].type, player);
-            return;
+            const bool isHovered = IsMouseOverBox(boxX[i], 40.0f, boxW, boxH);
+            PowerUpType currentType = choices[i].type;
+
+            powerUpCommands[i] = [this, currentType, player]() {this->powerUpSystem->ApplyPowerUp(currentType, player);};
+            // Card background (brighter on hover)
+            const f32 bg = isHovered ? 0.18f : 0.12f;
+            //DrawRect(boxX[i], 40.0f, boxW, boxH, bg, bg, isHovered ? 0.25f : 0.18f, 0.95f);
+
+
+            //powerUpButtons[i] = Button(gameFont, { boxX[i], 40.0f }, { boxW, boxH }, nullptr, { bg, bg, isHovered ? 0.25f : 0.18f, 0.95f });
+            //powerUpButtons[i].onClick = powerUpCommands[i];
+            //powerUpButtons[i].textRenderer = TextRenderer(gameFont, 0.5f, { boxX[i], 120.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+            //powerUpButtons[i].textRenderer.SetMaxPixelWidth(boxW);
+            //powerUpButtons[i].textRenderer << keys[i] << " " << choices[i].name;
+            //powerUpButtons[i].Update(0.0f); // Manually trigger hover detection and text setup
+
+
+            descriptionText = TextRenderer(gameFont, 0.5f, { boxX[i], 50.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+            descriptionText.SetMaxPixelWidth(boxW);
+            descriptionText << choices[i].description;
+            descriptionText.Draw();
+
+            // Current stat value for context
+            if (choices[i].type == POWERUP_SPEED)
+            {
+                statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], -35.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+                statBuffText << "Current: " << stats.GetTotalSpeed() << "spd";
+                statBuffText.Draw();
+            }
+            else if (choices[i].type == POWERUP_BULLET_DAMAGE)
+            {
+                statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], -35.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+                statBuffText << "Current: " << stats.GetTotalBulletDamage() << "dmg";
+                statBuffText.Draw();
+            }
+            else if (choices[i].type == POWERUP_AOE_DAMAGE)
+            {
+                statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], -35.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+                statBuffText << "Current: ";
+                statBuffText.Draw();
+                statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], -55.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+                statBuffText << "r = " << stats.GetTotalAoeRadius();
+                statBuffText.Draw();
+                statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], -75.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+                statBuffText << "dmg = " << stats.GetTotalAoeDamage() << " / s";
+                statBuffText.Draw();
+            }
         }
 
-        // Card content
-        DrawText(keys[i], boxX[i], 140.0f, 1.0f, 1.0f, 0.7f, 0.0f);
-        DrawText(choices[i].name, boxX[i], 80.0f, 0.7f, 0.2f, 1.0f, 1.0f);
-        DrawText(choices[i].description, boxX[i], 30.0f, 0.5f, 0.9f, 0.9f, 0.9f);
-
-        // Current stat value for context
-        char statBuf[64] = "";
-        if (choices[i].type == POWERUP_SPEED)
-        {
-            sprintf_s(statBuf, "Current: %.0f spd", stats.GetTotalSpeed());
-            DrawText(statBuf, boxX[i], -35.0f, 0.7f, 0.55f, 0.55f, 0.55f);
-        }
-        else if (choices[i].type == POWERUP_BULLET_DAMAGE)
-        {
-            sprintf_s(statBuf, "Current: %.0f dmg", stats.GetTotalBulletDamage());
-            DrawText(statBuf, boxX[i], -35.0f, 0.7f, 0.55f, 0.55f, 0.55f);
-        }
-        else if (choices[i].type == POWERUP_AOE_DAMAGE)
-        {
-            char rBuf[32]; sprintf_s(rBuf, "r=%.0f", stats.GetTotalAoeRadius());
-            char dBuf[32]; sprintf_s(dBuf, "dmg=%.0f/s", stats.GetTotalAoeDamage());
-            DrawText(rBuf, boxX[i], -35.0f, 0.7f, 0.55f, 0.55f, 0.55f);
-            DrawText(dBuf, boxX[i], -60.0f, 0.7f, 0.55f, 0.55f, 0.55f);
-        }
+        powerUpTitle = TextRenderer(gameFont, 1.0f, { 0.0f, -200.0f }, { 0.65f, 0.65f, 0.65f, 1.0f });
+        powerUpTitle << "Press 1, 2 or 3 to pick";
+        powerUpTitle.Draw();
     }
-
-    DrawText("Press 1, 2 or 3 to pick", 0.0f, -200.0f, 1.1f, 0.65f, 0.65f, 0.65f);
 }

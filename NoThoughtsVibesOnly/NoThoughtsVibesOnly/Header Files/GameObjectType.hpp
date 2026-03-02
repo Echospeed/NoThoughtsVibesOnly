@@ -4,7 +4,7 @@ enum ObjectType
 	NONE,
 	PLAYER,
 	NP,
-	SHOT
+	SHOT,
 };
 
 enum class BulletOwner

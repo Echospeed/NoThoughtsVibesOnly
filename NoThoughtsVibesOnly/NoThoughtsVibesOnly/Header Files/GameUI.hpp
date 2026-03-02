@@ -7,7 +7,8 @@ class WaveSystem;
 class PowerUpSystem;
 
 // ============================================================================
-// GameUI - All in-game UI drawing
+// 
+// - All in-game UI drawing
 // Call Init() once, then call the draw functions from Game_Draw()
 // ============================================================================
 class GameUI
@@ -34,8 +35,6 @@ private:
 
     // Helpers
     void DrawRect(f32 x, f32 y, f32 w, f32 h, f32 r, f32 g, f32 b, f32 a);
-    void DrawText(const char* text, f32 x, f32 y, f32 scale, f32 r, f32 g, f32 b);
 
     bool IsMouseOverBox(f32 boxX, f32 boxY, f32 boxW, f32 boxH);
-
 };

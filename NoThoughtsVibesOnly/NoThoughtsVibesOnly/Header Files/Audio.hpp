@@ -89,6 +89,13 @@ public:
     void Pause();
     void Resume();
     void Stop();
+	void DecreaseVolume(f32 amount); // Reduces volume by a percentage (e.g., 0.5 for 50% reduction)
+	void IncreaseVolume(f32 amount); // Increases volume by a percentage (e.g., 0.5 for 50% increase)
+
+    // ------------------------------------------------------------------------
+    // Free - Unloads the audio resource and group. Called by destructor.
+    // ------------------------------------------------------------------------
+    void Free();
 
 private:
     bool         isLoaded{ false };   // Guards all playback calls against unloaded state
@@ -99,8 +106,4 @@ private:
     AudioType    audioType;         // Determines which AE loader to use
     AEAudioGroup group{};           // AE audio group used for pause/resume/stop
 
-    // ------------------------------------------------------------------------
-    // Free - Unloads the audio resource and group. Called by destructor.
-    // ------------------------------------------------------------------------
-    void Free();
 };

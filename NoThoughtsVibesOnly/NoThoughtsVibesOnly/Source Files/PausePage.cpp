@@ -69,11 +69,11 @@ void PausePage_Init()
 {
     AEGfxSetCamPosition(0.0f, 0.0f);
 
-	pauseText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 300.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	pauseText = TextRenderer(fontPath,  1.0f, { 0.0f, 300.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
 	pauseText << "PAUSED";
 
-	escHintText = TextRenderer(fontPath, { 0.8f, 0.8f }, { 0.0f, -250.0f }, { 0.7f, 0.7f, 0.7f, 1.0f });
-	escHintText << "Press ESC to Resume";
+    escHintText = TextRenderer(fontPath, 0.8f, { 0.0f, -250.0f }, { 0.7f, 0.7f, 0.7f, 1.0f });
+    escHintText << "Press ESC to Resume";
 }
 
 // ============================================================================
@@ -125,7 +125,7 @@ void PausePage_Draw()
     pauseText.Draw();
 
     // Keyboard hint
-	escHintText.Draw();
+	//escHintText.Draw();
     // DrawButton(resumeButton);   // Uncomment to enable buttons
     // DrawButton(restartButton);
     // DrawButton(mainMenuButton);

@@ -109,7 +109,7 @@ void Main_Init()
 
     AEGfxSetBackgroundColor(0.1f, 0.1f, 0.15f);
 
-	mainText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	mainText = TextRenderer(fontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     mainText << "HUIN!!!!!!!!";
 
     // --- Main menu buttons ---
@@ -122,10 +122,10 @@ void Main_Init()
     backButton = new Button(fontPath, { 0.0f, -350.0f }, { 200.0f, 75.0f }, GoToMain, { 0.7f, 0.0f, 0.0f, 1.0f }, "BACK");
 
     // --- Static text for info pages ---
-	controlsText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	controlsText = TextRenderer(fontPath,1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
 	controlsText << "CONTROLS";
 
-	creditsText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	creditsText = TextRenderer(fontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
 	creditsText << "CREDITS";
 }
 
@@ -167,15 +167,15 @@ void Main_Draw()
     {
 		controlsText.Draw();
 
-        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 100.0f }, {1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, {1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
         infoText << "W, A, S, D  -  Move";
 		infoText.Draw();
 
-        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath,  1.0f, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
         infoText << "Left Click  -  Shoot";
 		infoText.Draw();
 
-        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, -100.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -100.0f }, { 1.0f, 1.0f, 1.0f });
 		infoText << "ESC  -  Pause  |  R  -  Restart  |  Q  -  Menu";
 		infoText.Draw();
     }
@@ -183,23 +183,23 @@ void Main_Draw()
     {
 		creditsText.Draw();
 
-		infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 150.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
+		infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 150.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
         infoText << "Created By:"; 
 		infoText.Draw();
 
-        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
         infoText << "DigiPen Institute of Technology";
 		infoText.Draw();
 
-		infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 50.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
+		infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 50.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
         infoText << "- WenJie Chia   - John Chiow";
 		infoText.Draw();
 
-		infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
+		infoText = TextRenderer(fontPath,1.0f, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
         infoText << "- Yan Bin Liu   - Stanely Lu";
 		infoText.Draw();
 
-        infoText = TextRenderer(fontPath, { 1.0f, 1.0f }, { 0.0f, -50.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -50.0f }, { 1.0f, 1.0f, 1.0f });
         infoText << "No Thoughts, Vibes Only";
 		infoText.Draw();
 

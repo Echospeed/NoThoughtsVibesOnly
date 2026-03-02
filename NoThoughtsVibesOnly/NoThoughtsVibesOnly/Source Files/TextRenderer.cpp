@@ -32,7 +32,7 @@
 
 TextRenderer::TextRenderer()
     : font(0)
-    , scale({ 1.0f, 1.0f })
+    , scale( 1.0f )
     , position({ 0.0f, 0.0f })
     , colour({ 1.0f, 1.0f, 1.0f, 1.0f })
     , text("")
@@ -41,7 +41,7 @@ TextRenderer::TextRenderer()
     // Default constructor - no special initialization needed
 }
 
-TextRenderer::TextRenderer(u8 font, AEVec2 scale, AEVec2 position, Colour colour, std::string, TextAlignment alignment)
+TextRenderer::TextRenderer(s8 font, f32 scale, AEVec2 position, Colour colour, std::string, TextAlignment alignment)
     : font(font)
     , scale(scale)
     , position(position)
@@ -63,6 +63,23 @@ void TextRenderer::Draw()
     f32 width, height;
     AEGfxGetPrintSize(font, text.c_str(), 1.0f, &width, &height);
 
+    f32 activeScale = this->scale;
+
+    if (this->maxPixelWidth > 0.0f)
+    {
+		f32 currentPixelWidth = (width * (SCREEN_W / 2.0f)) * activeScale;
+
+		f32 paddedMaxWidth = maxPixelWidth - 40.0f; // Add some padding to prevent edge-clipping
+
+        if(currentPixelWidth > paddedMaxWidth)
+        {
+            activeScale = (paddedMaxWidth / ((width * (SCREEN_W / 2.0f))));
+		}
+    }
+
+    f32 finalNormWidth = width * activeScale;
+    f32 finalNormHeight = height * activeScale;
+
     // Convert world position to AEGfxPrint normalised coordinates [-1, 1]
     const f32 normX = position.x / (SCREEN_W / 2.0f);
     const f32 normY = position.y / (SCREEN_H / 2.0f);
@@ -71,17 +88,17 @@ void TextRenderer::Draw()
 
     if (alignment == ALIGN_CENTER)
     {
-        drawX = normX - (width / 2.0f);
-        drawY = normY - (height / 2.0f);
+        drawX = normX - (finalNormWidth / 2.0f);
+        drawY = normY - (finalNormHeight / 2.0f);
     }
     else if (alignment == ALIGN_RIGHT)
     {
         drawX = normX - (width / 2.0f);
         drawY = height / 2.0f;
     }
+   
 
-    AEGfxPrint(font, text.c_str(), drawX, drawY, 1.0f,
-        colour.r, colour.g, colour.b, 1.0f);
+    AEGfxPrint(font, text.c_str(), drawX, drawY, activeScale, colour.r, colour.g, colour.b, 1.0f);
 
     // Reset render state - AEGfxPrint leaves the GPU in an unknown state
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
@@ -95,7 +112,7 @@ TextRenderer::~TextRenderer()
     text.clear();
 }
 
-void TextRenderer::SetScale(AEVec2 newScale)
+void TextRenderer::SetScale(f32 newScale)
 {
     scale = newScale;
 }
@@ -115,4 +132,19 @@ void TextRenderer::SetAlignment(TextAlignment newAlignment)
 void TextRenderer::SetColour(Colour newColour) 
 { 
     colour = newColour; 
+}
+
+void TextRenderer::SetMaxPixelWidth(f32 maxWidth) 
+{ 
+    maxPixelWidth = maxWidth; 
+}
+
+f32 TextRenderer::GetScale() const 
+{ 
+    return scale;
+}
+
+AEVec2 TextRenderer::GetPosition() const 
+{ 
+    return position; 
 }

@@ -40,9 +40,10 @@
 #include "Collider.hpp"
 #include "SpriteRenderer.hpp"
 #include "TextRenderer.hpp"
+#include <functional>
 
 // Function pointer type for button click callbacks (void, no parameters)
-typedef void(*ButtonFunction)(void);
+using ButtonFunction = std::function<void()>;
 
 // ============================================================================
 // class Button : public GameObject
