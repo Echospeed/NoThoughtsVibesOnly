@@ -90,7 +90,7 @@ void Player::Update(f32 deltaTime)
     // ------------------------------------------------------------------
     // 3. Aim direction - from player toward mouse cursor
     // ------------------------------------------------------------------
-    Mouse  mousePos;
+    Mouse  mousePos{};
     AEVec2 mouseDir{ 0.0f, 0.0f };
 
     GetMouseWorldPosition(mousePos.position.x, mousePos.position.y);

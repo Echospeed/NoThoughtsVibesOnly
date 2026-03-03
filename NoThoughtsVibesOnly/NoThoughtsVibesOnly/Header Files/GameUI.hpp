@@ -33,8 +33,20 @@ private:
     WaveSystem* waveSystem{ nullptr };
     PowerUpSystem* powerUpSystem{ nullptr };
 
+    // Text renderers
+    TextRenderer playerHealth;
+    TextRenderer playerXP;
+    TextRenderer playerStats;
+    TextRenderer waveInfo;
+    TextRenderer waveRound;
+    TextRenderer waveTimer;
+    TextRenderer activeEnemyCount;
+    TextRenderer powerUpTitle;
+    TextRenderer statBuffText;
+    TextRenderer descriptionText;
+
     // Helpers
     void DrawRect(f32 x, f32 y, f32 w, f32 h, f32 r, f32 g, f32 b, f32 a);
 
-    bool IsMouseOverBox(f32 boxX, f32 boxY, f32 boxW, f32 boxH);
+    //bool IsMouseOverBox(f32 boxX, f32 boxY, f32 boxW, f32 boxH);
 };

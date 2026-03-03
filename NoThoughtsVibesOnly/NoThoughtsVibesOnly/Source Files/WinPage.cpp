@@ -43,22 +43,23 @@ namespace
 
 // UI elements
 TextRenderer WinText;                  // Renders the "YOU WIN!" message
-// Button WinButton;                   // Uncomment to re-enable button
+Button* rButton;
+Button* mButton;
 
 // ============================================================================
 // Button Callbacks
 // ============================================================================
 
 // Return to menu after winning
-void OnWinMenuClicked()
+void static OnWinMenuClicked()
 {
     StateManagerChangeState(STATE_MENU);
 }
 
 // Restart the game from the win screen
-void OnWinRestartClicked()
+void static OnWinRestartClicked()
 {
-    StateManagerChangeState(STATE_RESTART);
+    StateManagerChangeState(STATE_PLAYING);
 }
 
 // ============================================================================
@@ -69,7 +70,6 @@ void OnWinRestartClicked()
 void WinPage_Load()
 {
     fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
-    // LoadButton(WinButton, fontPath); // Uncomment to enable button
 
     Meshes::CreateSquareCenterOriginMesh();
 }
@@ -91,10 +91,9 @@ void WinPage_Init()
     WinText = TextRenderer(fontPath, 1.0f, { 0.0f, 250.0f }, {1.0f, 0.0f, 0.0f});
 	WinText << "YOU WIN!";
 
-    // To enable the win button, uncomment:
-    // InitButton(WinButton, "MAIN MENU", nullptr,
-    //     { 0.0f, -200.0f }, { 300.0f, 75.0f },
-    //     OnWinMenuClicked, 0.0f, 0.6f, 0.0f);
+    rButton = new Button(fontPath, { -300.0f, -150.0f }, { 300.0f, 75.0f }, OnWinRestartClicked, { 0.0f, 1.0f, 0.0f, 1.0f }, "Restart");
+
+    mButton = new Button(fontPath, { 300.0f, -150.0f }, { 300.0f, 75.0f }, OnWinMenuClicked, { 0.0f, 0.0f, 1.0f, 1.0f }, "Main Menu");
 }
 
 // ============================================================================
@@ -118,10 +117,12 @@ void WinPage_Update()
         InitialScale += (FinalScale - InitialScale) * 0.6f * dt;
     }
 
-    // --- Win Button (uncomment to enable) ---
-    // WinButton.isHovered = isOverlapping(WinButton.collider, worldMouse);
-    // if (WinButton.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
-    //     WinButton.onClick();
+    // --- Restart Button (uncomment to enable) ---
+    mButton->Update(dt);
+    rButton->Update(dt);
+
+    // --- Keyboard shortcut: press R to restart ---
+    if (AEInputCheckTriggered(AEVK_R)) OnWinRestartClicked();
 }
 
 // ============================================================================
@@ -130,7 +131,6 @@ void WinPage_Update()
 void WinPage_Draw()
 {
 	WinText.Draw();
-    // DrawButton(WinButton); // Uncomment to render the button
 }
 
 // ============================================================================
@@ -138,7 +138,11 @@ void WinPage_Draw()
 // ============================================================================
 void WinPage_Free()
 {
-    // FreeButton(WinButton); // Uncomment if button is enabled
+    mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(), rButton), mainPageObj.end());
+    mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(), mButton), mainPageObj.end());
+
+    delete rButton;  rButton = nullptr;
+    delete mButton;  mButton = nullptr;
 }
 
 // ============================================================================

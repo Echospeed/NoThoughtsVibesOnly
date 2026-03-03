@@ -49,13 +49,13 @@ Button* menuButton;
 // ============================================================================
 
 // Restart: Reloads the game from scratch
-void OnFinishRestartClicked()
+void static OnFinishRestartClicked()
 {
     StateManagerChangeState(STATE_PLAYING);
 }
 
 // Main Menu: Returns to the main menu
-void OnFinishMenuClicked()
+void static OnFinishMenuClicked()
 {
     StateManagerChangeState(STATE_MENU);
 }
@@ -143,7 +143,12 @@ void FinishPage_Draw()
 // ============================================================================
 void FinishPage_Free()
 {
-    // FreeButton(RestartButton); // Uncomment if button is enabled
+    //FreeButton(RestartButton); // Uncomment if button is enabled
+    mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(), restartButton), mainPageObj.end());
+    mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(), menuButton), mainPageObj.end());
+
+    delete restartButton;  restartButton = nullptr;
+    delete menuButton;     menuButton = nullptr;
 }
 
 // ============================================================================
@@ -153,8 +158,6 @@ void FinishPage_Free()
 // ============================================================================
 void FinishPage_Unload()
 {
-    delete restartButton;
-    delete menuButton;
     AEGfxDestroyFont(fontPath);
     Meshes::FreeMeshes();
 }

@@ -158,20 +158,20 @@ void LevelSelect_Draw()
 // ============================================================================
 void LevelSelect_Free()
 {
+    // Remove only the level select buttons from mainPageObj
+    mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(), level1Button), mainPageObj.end());
+    mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(), level2Button), mainPageObj.end());
+    mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(), endlessButton), mainPageObj.end());
+    mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(), levelSelectBackButton), mainPageObj.end());
 
     delete level1Button;           level1Button = nullptr;
     delete level2Button;           level2Button = nullptr;
     delete endlessButton;          endlessButton = nullptr;
     delete levelSelectBackButton;  levelSelectBackButton = nullptr;
 
-    // Buttons registered themselves to mainPageObj, so clear it to avoid dangling pointers
-    mainPageObj.clear();
-    mainPageObj.shrink_to_fit();
-
     levelSelectPageObj.clear();
     levelSelectPageObj.shrink_to_fit();
 }
-
 // ============================================================================
 // LevelSelect_Unload
 // ============================================================================

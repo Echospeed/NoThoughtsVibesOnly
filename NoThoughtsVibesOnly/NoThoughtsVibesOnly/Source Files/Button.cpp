@@ -65,7 +65,7 @@ void Button::Update(f32 deltaTime)
     static_cast<void>(deltaTime);
 
     // Get current mouse position in world space
-    Mouse mouse;
+    Mouse mouse{}; // value-initialize all members to 0
     GetMouseWorldPosition(mouse.position.x, mouse.position.y);
 
     if (isOverlapping(collider, mouse))

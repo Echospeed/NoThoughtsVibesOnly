@@ -390,16 +390,18 @@ void Game_Draw()
     {
         // Cast the base GameObject pointer to Player to access specific stats
         Player* player = dynamic_cast<Player*>(pPlayer);
+        if (player)
+        {
+            const f32    aoeRadius = player->GetAoeRadius();
+            const AEVec2 playerPos = player->transform.position;
 
-        const f32    aoeRadius = player ? player->GetAoeRadius() : 100.0f;
-        const AEVec2 playerPos = pPlayer->transform.position;
-
-        tf.SetPosition(playerPos.x, playerPos.y);
-        tf.SetUniformScale(aoeRadius);
-        AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.5f);
-        tf.Apply();
-        AEGfxMeshDraw(Meshes::pCircleMesh, AE_GFX_MDM_TRIANGLES);
-        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+            tf.SetPosition(playerPos.x, playerPos.y);
+            tf.SetUniformScale(aoeRadius);
+            AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.5f);
+            tf.Apply();
+            AEGfxMeshDraw(Meshes::pCircleMesh, AE_GFX_MDM_TRIANGLES);
+            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+        }
     }
 
     // 5. Minimap
@@ -490,9 +492,9 @@ void Game_Free()
     gamePageObj.clear();
     gamePageObj.shrink_to_fit();
 
-    if (bgMusic) bgMusic->Free();
-	if (levelupSFX) levelupSFX->Free();
-	if (shootSFX) shootSFX->Free();
+ //   if (bgMusic) bgMusic->Free();
+	//if (levelupSFX) levelupSFX->Free();
+	//if (shootSFX) shootSFX->Free();
 }
 
 // ============================================================================
@@ -505,7 +507,10 @@ void Game_Unload()
 {
     Meshes::FreeMeshes();
     AEGfxDestroyFont(gameFont);
-    levelupSFX = nullptr;
-    bgMusic = nullptr;
-    shootSFX = nullptr;
+    //levelupSFX = nullptr;
+    //bgMusic = nullptr;
+    //shootSFX = nullptr;
+    if (bgMusic) { bgMusic->Free();    delete bgMusic;    bgMusic = nullptr; }
+    if (levelupSFX) { levelupSFX->Free(); delete levelupSFX; levelupSFX = nullptr; }
+    if (shootSFX) { shootSFX->Free();   delete shootSFX;   shootSFX = nullptr; }
 }

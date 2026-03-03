@@ -213,15 +213,25 @@ void Main_Draw()
 // ============================================================================
 void Main_Free()
 {
-
-    delete startButton;    startButton = nullptr;
-    delete controlsButton; controlsButton = nullptr;
-    delete creditsButton;  creditsButton = nullptr;
-    delete quitButton;     quitButton = nullptr;
-    delete backButton;     backButton = nullptr;
-
+    for (auto* obj : mainPageObj)
+        delete obj;
     mainPageObj.clear();
     mainPageObj.shrink_to_fit();
+
+    startButton = nullptr;
+    controlsButton = nullptr;
+    creditsButton = nullptr;
+    quitButton = nullptr;
+    backButton = nullptr;
+
+    //delete startButton;    startButton = nullptr;
+    //delete controlsButton; controlsButton = nullptr;
+    //delete creditsButton;  creditsButton = nullptr;
+    //delete quitButton;     quitButton = nullptr;
+    //delete backButton;     backButton = nullptr;
+
+    //mainPageObj.clear();
+    //mainPageObj.shrink_to_fit();
 }
 
 // ============================================================================

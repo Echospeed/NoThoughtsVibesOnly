@@ -28,22 +28,23 @@
 #include "TextRenderer.hpp"
 #include "Transform.hpp"
 #include <iomanip>
+#include "Collider.hpp"
 #include <functional>
 
 
 bool isOverlayActive = false;
 extern GameObject* pPlayer; // Declared in GamePage.cpp
 
-TextRenderer playerHealth;
-TextRenderer playerXP;
-TextRenderer playerStats;
-TextRenderer waveInfo;
-TextRenderer waveRound;
-TextRenderer waveTimer;
-TextRenderer activeEnemyCount;
-TextRenderer powerUpTitle;
-TextRenderer statBuffText;
-TextRenderer descriptionText;
+//TextRenderer playerHealth;
+//TextRenderer playerXP;
+//TextRenderer playerStats;
+//TextRenderer waveInfo;
+//TextRenderer waveRound;
+//TextRenderer waveTimer;
+//TextRenderer activeEnemyCount;
+//TextRenderer powerUpTitle;
+//TextRenderer statBuffText;
+//TextRenderer descriptionText;
 
 //Button powerUpButtons[3]; // 3 buttons for power-up choices
 // ============================================================================
@@ -81,21 +82,21 @@ void GameUI::DrawRect(f32 x, f32 y, f32 w, f32 h, f32 r, f32 g, f32 b, f32 a)
 // Point-in-AABB test using raw pixel mouse position, converted to screen space.
 // Used for power-up card mouse-over in DrawPowerUpScreen().
 // ============================================================================
-bool GameUI::IsMouseOverBox(f32 boxX, f32 boxY, f32 boxW, f32 boxH)
-{
-    s32 mouseX, mouseY;
-    AEInputGetCursorPosition(&mouseX, &mouseY);
-
-    // Convert pixel -> screen-center-relative
-    const f32 worldX = static_cast<f32>(mouseX) - 800.0f;
-    const f32 worldY = 450.0f - static_cast<f32>(mouseY);
-
-    const f32 halfW = boxW / 2.0f;
-    const f32 halfH = boxH / 2.0f;
-
-    return (worldX >= boxX - halfW && worldX <= boxX + halfW &&
-        worldY >= boxY - halfH && worldY <= boxY + halfH);
-}
+//bool GameUI::IsMouseOverBox(f32 boxX, f32 boxY, f32 boxW, f32 boxH)
+//{
+//    s32 mouseX, mouseY;
+//    AEInputGetCursorPosition(&mouseX, &mouseY);
+//
+//    // Convert pixel -> screen-center-relative
+//    const f32 worldX = static_cast<f32>(mouseX) - 800.0f;
+//    const f32 worldY = 450.0f - static_cast<f32>(mouseY);
+//
+//    const f32 halfW = boxW / 2.0f;
+//    const f32 halfH = boxH / 2.0f;
+//
+//    return (worldX >= boxX - halfW && worldX <= boxX + halfW &&
+//        worldY >= boxY - halfH && worldY <= boxY + halfH);
+//}
 
 // ============================================================================
 // DrawAllHealthBars - WORLD SPACE
@@ -257,10 +258,10 @@ void GameUI::DrawCurrentStats()
     playerStats.Draw();
 
     playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY}, {1.0f, 1.0f, 1.0f, 1.0f});
-    playerStats << "SPD: " << (int)stats.GetTotalSpeed() << "   DMG: " << (int)stats.GetTotalBulletDamage();
+    playerStats << "SPD: " << (float)stats.GetTotalSpeed() << "   DMG: " << (float)stats.GetTotalBulletDamage();
 	playerStats.Draw();
     playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY -30.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-    playerStats << "AOE: r=" << (int)stats.GetTotalAoeRadius() << "  d=" << (int)stats.GetTotalAoeDamage() << "/s";
+    playerStats << "AOE: r=" << (float)stats.GetTotalAoeRadius() << "  d=" << (float)stats.GetTotalAoeDamage() << "/s";
     playerStats.Draw();
 }
 
@@ -326,87 +327,104 @@ void GameUI::DrawWaveTimer()
 // ============================================================================
 // DrawPowerUpScreen - SCREEN SPACE
 // ============================================================================
-// Full-screen overlay showing three power-up cards.
-// Cards highlight on hover; click or press 1/2/3 to choose.
+// Full-screen overlay showing three power-up cards using Buttons.
+// Buttons handle hover and click automatically.
 // ============================================================================
+
 void GameUI::DrawPowerUpScreen()
 {
-    if (!powerUpSystem)
+    if (!powerUpSystem || !powerUpSystem->IsWaitingForUpgrade())
         return;
 
-    if (isOverlayActive = powerUpSystem->IsWaitingForUpgrade())
+    isOverlayActive = true;
+
+    PowerUp* choices = powerUpSystem->GetPowerUpChoices();
+    const PlayerStats& stats = powerUpSystem->GetStats();
+    Player* player = dynamic_cast<Player*>(pPlayer);
+
+    // Dark overlay
+    DrawRect(0.0f, 0.0f, 3000.0f, 3000.0f, 0.0f, 0.0f, 0.0f, 0.85f);
+
+    powerUpTitle = TextRenderer(gameFont, 1.0f, { 0.0f, 320.0f }, { 1.0f, 1.0f, 0.2f, 1.0f });
+    powerUpTitle << "LEVEL UP!  Choose a Power-Up";
+    powerUpTitle.Draw();
+
+    const f32  boxX[3] = { -370.0f, 0.0f, 370.0f };
+    const char* keys[3] = { "[1]",   "[2]", "[3]" };
+    const f32  boxW = 280.0f;
+    const f32  boxH = 220.0f;
+    const f32  boxY = 40.0f;
+
+    const bool mouseClicked = AEInputCheckTriggered(AEVK_LBUTTON);
+
+    for (int i = 0; i < 3; ++i)
     {
+        SquareCollider cardCollider{}; // zero-initializes all members
+        cardCollider.position = { boxX[i], boxY };
+        cardCollider.scale = { boxW, boxH };
 
-        PowerUp* choices = powerUpSystem->GetPowerUpChoices();
-        const PlayerStats& stats = powerUpSystem->GetStats();
+        Mouse mouse{};
+        GetMouseWorldPosition(mouse.position.x, mouse.position.y);
 
-        // Semi-transparent full-screen dark overlay
-        DrawRect(0.0f, 0.0f, 3000.0f, 3000.0f, 0.0f, 0.0f, 0.0f, 0.85f);
-        powerUpTitle = TextRenderer(gameFont, 1.0f, { 0.0f, 320.0f }, { 1.0f, 1.0f, 0.2f, 1.0f });
-        powerUpTitle << "LEVEL UP!  Choose a Power-Up";
-        powerUpTitle.Draw();
+        const bool isHovered = isOverlapping(cardCollider, mouse);
 
-        // Three card positions
-        const f32 boxX[3] = { -370.0f, 0.0f, 370.0f };
-        const char* keys[3] = { "[1]", "[2]", "[3]" };
-        const f32 boxW = 280.0f;
-        const f32 boxH = 220.0f;
-        std::function<void()> powerUpCommands[3];
-        Player* player = dynamic_cast<Player*>(pPlayer);
+        // Draw card background 
+        const f32 bg = isHovered ? 0.22f : 0.12f;
+        const f32 bb = isHovered ? 0.30f : 0.18f;
+        DrawRect(boxX[i], boxY, boxW, boxH, bg, bg, bb, 0.95f);
 
-        for (int i = 0; i < 3; ++i)
+        // Highlight border on hover
+        if (isHovered)
+            DrawRect(boxX[i], boxY, boxW + 4.0f, boxH + 4.0f, 0.4f, 0.8f, 1.0f, 0.5f);
+
+        //Apply upgrade on mouse click (was never hooked up before)
+        if (isHovered && mouseClicked && player)
         {
-            const bool isHovered = IsMouseOverBox(boxX[i], 40.0f, boxW, boxH);
-            PowerUpType currentType = choices[i].type;
-
-            powerUpCommands[i] = [this, currentType, player]() {this->powerUpSystem->ApplyPowerUp(currentType, player);};
-            // Card background (brighter on hover)
-            const f32 bg = isHovered ? 0.18f : 0.12f;
-            //DrawRect(boxX[i], 40.0f, boxW, boxH, bg, bg, isHovered ? 0.25f : 0.18f, 0.95f);
-
-
-            //powerUpButtons[i] = Button(gameFont, { boxX[i], 40.0f }, { boxW, boxH }, nullptr, { bg, bg, isHovered ? 0.25f : 0.18f, 0.95f });
-            //powerUpButtons[i].onClick = powerUpCommands[i];
-            //powerUpButtons[i].textRenderer = TextRenderer(gameFont, 0.5f, { boxX[i], 120.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-            //powerUpButtons[i].textRenderer.SetMaxPixelWidth(boxW);
-            //powerUpButtons[i].textRenderer << keys[i] << " " << choices[i].name;
-            //powerUpButtons[i].Update(0.0f); // Manually trigger hover detection and text setup
-
-
-            descriptionText = TextRenderer(gameFont, 0.5f, { boxX[i], 50.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-            descriptionText.SetMaxPixelWidth(boxW);
-            descriptionText << choices[i].description;
-            descriptionText.Draw();
-
-            // Current stat value for context
-            if (choices[i].type == POWERUP_SPEED)
-            {
-                statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], -35.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
-                statBuffText << "Current: " << stats.GetTotalSpeed() << "spd";
-                statBuffText.Draw();
-            }
-            else if (choices[i].type == POWERUP_BULLET_DAMAGE)
-            {
-                statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], -35.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
-                statBuffText << "Current: " << stats.GetTotalBulletDamage() << "dmg";
-                statBuffText.Draw();
-            }
-            else if (choices[i].type == POWERUP_AOE_DAMAGE)
-            {
-                statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], -35.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
-                statBuffText << "Current: ";
-                statBuffText.Draw();
-                statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], -55.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
-                statBuffText << "r = " << stats.GetTotalAoeRadius();
-                statBuffText.Draw();
-                statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], -75.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
-                statBuffText << "dmg = " << stats.GetTotalAoeDamage() << " / s";
-                statBuffText.Draw();
-            }
+            powerUpSystem->ApplyPowerUp(choices[i].type, player);
+            isOverlayActive = false;
+            return; // overlay gone, stop drawing
         }
 
-        powerUpTitle = TextRenderer(gameFont, 1.0f, { 0.0f, -200.0f }, { 0.65f, 0.65f, 0.65f, 1.0f });
-        powerUpTitle << "Press 1, 2 or 3 to pick";
-        powerUpTitle.Draw();
+        // Card title: key + upgrade name
+        TextRenderer cardTitle = TextRenderer(gameFont, 0.65f, { boxX[i], boxY + 80.0f }, { 1.0f, 1.0f, 0.4f, 1.0f });
+        cardTitle.SetMaxPixelWidth(boxW);
+        cardTitle << keys[i] << " " << choices[i].name;
+        cardTitle.Draw();
+
+        // Description
+        descriptionText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY + 20.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+        descriptionText.SetMaxPixelWidth(boxW);
+        descriptionText << choices[i].description;
+        descriptionText.Draw();
+
+        // Current stat context
+        if (choices[i].type == POWERUP_SPEED)
+        {
+            statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 55.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+            statBuffText << "Current: " << (float)stats.GetTotalSpeed() << " spd";
+            statBuffText.Draw();
+        }
+        else if (choices[i].type == POWERUP_BULLET_DAMAGE)
+        {
+            statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 55.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+            statBuffText << "Current: " << (float)stats.GetTotalBulletDamage() << " dmg";
+            statBuffText.Draw();
+        }
+        else if (choices[i].type == POWERUP_AOE_DAMAGE)
+        {
+			statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 25.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+			statBuffText << "Current:";
+			statBuffText.Draw();
+            statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 45.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+            statBuffText << "r=" << (float)stats.GetTotalAoeRadius();
+            statBuffText.Draw();
+            statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 65.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+            statBuffText << "dmg=" << (float)stats.GetTotalAoeDamage() << "/s";
+            statBuffText.Draw();
+        }
     }
+
+    powerUpTitle = TextRenderer(gameFont, 0.8f, { 0.0f, -200.0f }, { 0.65f, 0.65f, 0.65f, 1.0f });
+    powerUpTitle << "Click a card  or  Press 1, 2, 3";
+    powerUpTitle.Draw();
 }
