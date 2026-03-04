@@ -1,7 +1,7 @@
 #pragma once
 #include "GameObject.hpp"
 #include "Particles.hpp"
-
+#include "Abilities.hpp"
 
 // Forward declaration
 class PowerUpSystem;
@@ -26,6 +26,8 @@ public:
     f32 GetSpeed() const;
 
     ParticleSystem smokePS;
+
+    InvulnerabilityAbility invulnAbility;
 
 private:
     f32 shootCooldown = 0.0f;

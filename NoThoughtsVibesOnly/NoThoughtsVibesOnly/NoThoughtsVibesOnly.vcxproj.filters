@@ -105,6 +105,9 @@
     <ClInclude Include="Header Files\LevelConfig.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Header Files\Abilities.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source Files\Bullet.cpp">

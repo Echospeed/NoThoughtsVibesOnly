@@ -40,6 +40,7 @@
 #include "GameObjectType.hpp"
 #include "GameObject.hpp"    
 #include "Collider.hpp"
+
 // ---------------------------------------------------------------------------
 // Game State Headers
 // ---------------------------------------------------------------------------
@@ -49,6 +50,5 @@
 #include "GamePage.hpp"
 #include "WinPage.hpp"
 #include "LevelSelectPage.hpp"
-
 
 #endif //PCH_H

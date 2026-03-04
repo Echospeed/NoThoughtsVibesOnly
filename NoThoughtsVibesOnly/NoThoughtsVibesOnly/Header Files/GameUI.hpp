@@ -27,9 +27,10 @@ public:
     void DrawWaveInfo();            // Wave / Round / Enemy count
     void DrawWaveTimer();           // Countdown between waves
     void DrawPowerUpScreen();       // Level-up overlay
+    void DrawAbilities();           // Abilities display
 
 private:
-    s8             gameFont{ 0 };
+    s8 gameFont{ 0 };
     WaveSystem* waveSystem{ nullptr };
     PowerUpSystem* powerUpSystem{ nullptr };
 
@@ -44,6 +45,8 @@ private:
     TextRenderer powerUpTitle;
     TextRenderer statBuffText;
     TextRenderer descriptionText;
+    TextRenderer abilityTimerText;
+    TextRenderer abilityKeyText;
 
     // Helpers
     void DrawRect(f32 x, f32 y, f32 w, f32 h, f32 r, f32 g, f32 b, f32 a);

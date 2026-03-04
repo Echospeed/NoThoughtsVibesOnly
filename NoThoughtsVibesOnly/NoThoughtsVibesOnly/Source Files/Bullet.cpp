@@ -123,7 +123,16 @@ void Bullet::Update(f32 deltaTime)
         if (distSq < 30.0f * 30.0f)
         {
             Player* player = dynamic_cast<Player*>(pPlayer);
-            if (player) player->health -= 25.0f; // Enemy bullet deals 25 damage
+            if (player)
+            {
+                // ONLY take damage if the invulnerability ability is NOT active
+                if (!player->invulnAbility.IsActive())
+                {
+                    player->health -= 25.0f; // Enemy bullet deals 25 damage
+                }
+            }
+
+            // Bullet still gets destroyed even if blocked
             HideBullet();
         }
     }

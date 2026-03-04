@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Header Files\Abilities.hpp" />
     <ClInclude Include="Header Files\Audio.hpp" />
     <ClInclude Include="Header Files\Bullet.hpp" />
     <ClInclude Include="Header Files\Button.hpp" />

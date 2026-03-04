@@ -440,6 +440,7 @@ void Game_Draw()
     gameUI.DrawCurrentStats();
     gameUI.DrawWaveInfo();
     gameUI.DrawWaveTimer();
+    gameUI.DrawAbilities();
 
     // 9. Power-up overlay (blocks gameplay while active)
     if (powerUpSystem.IsWaitingForUpgrade())

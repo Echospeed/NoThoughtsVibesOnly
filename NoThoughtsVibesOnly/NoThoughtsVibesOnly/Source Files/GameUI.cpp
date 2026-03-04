@@ -325,6 +325,50 @@ void GameUI::DrawWaveTimer()
 }
 
 // ============================================================================
+// DrawAbilities - SCREEN SPACE
+// ============================================================================
+void GameUI::DrawAbilities()
+{
+    Player* player = dynamic_cast<Player*>(pPlayer);
+    if (!player) return;
+
+    // Positioned at the bottom center-ish
+    const f32 boxX = 0.0f;
+    const f32 boxY = -350.0f;
+    const f32 boxW = 80.0f;
+    const f32 boxH = 80.0f;
+
+    const Ability& ability = player->invulnAbility;
+
+    // 1. Draw Background Box based on state
+    if (ability.IsActive())
+    {
+        // Gold / Yellow when active
+        DrawRect(boxX, boxY, boxW, boxH, 1.0f, 0.8f, 0.0f, 1.0f);
+    }
+    else if (ability.IsOnCooldown())
+    {
+        // Dark gray and faded when on cooldown
+        DrawRect(boxX, boxY, boxW, boxH, 0.3f, 0.3f, 0.3f, 0.8f);
+
+        // Draw the countdown timer
+        abilityTimerText = TextRenderer(gameFont, 0.8f, { boxX, boxY }, { 1.0f, 1.0f, 1.0f, 1.0f });
+        abilityTimerText << (int)ceil(ability.GetCooldownRemaining()) << "s";
+        abilityTimerText.Draw();
+    }
+    else
+    {
+        // Bright Blue when ready to use
+        DrawRect(boxX, boxY, boxW, boxH, 0.2f, 0.6f, 1.0f, 0.9f);
+    }
+
+    // 2. Draw Label
+    abilityKeyText = TextRenderer(gameFont, 0.5f, { boxX, boxY - 60.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    abilityKeyText << "[E] INVULN";
+    abilityKeyText.Draw();
+}
+
+// ============================================================================
 // DrawPowerUpScreen - SCREEN SPACE
 // ============================================================================
 // Full-screen overlay showing three power-up cards using Buttons.

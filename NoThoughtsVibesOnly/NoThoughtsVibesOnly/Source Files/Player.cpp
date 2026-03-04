@@ -5,9 +5,9 @@
 //
 // CONTROLS:
 // ----------------------------------------------------------------------------
-//   W / A / S / D   : Move
-//   Q / E           : Rotate
-//   Left Mouse Hold : Shoot toward cursor (10 shots/sec)
+//   W / A / S / D              : Move
+//   Left Arrow / Right Arrow   : Rotate
+//   Left Mouse Hold            : Shoot toward cursor (10 shots/sec)
 //
 // SYSTEMS USED:
 // ----------------------------------------------------------------------------
@@ -63,7 +63,7 @@ void Player::Start()
 // ============================================================================
 // Runs every frame. Order of operations:
 //   1. Read movement input (WASD) using current (upgraded) speed
-//   2. Read rotation input (QE)
+//   2. Read rotation input (Left Right arrows)
 //   3. Compute mouse direction for aiming
 //   4. Fire bullet on left-click hold (rate-limited by shootCooldown)
 //   5. Apply AoE damage + contact damage to nearby NPCs
@@ -84,8 +84,8 @@ void Player::Update(f32 deltaTime)
     // ------------------------------------------------------------------
     // 2. Rotation
     // ------------------------------------------------------------------
-    if (AEInputCheckCurr(AEVK_Q)) transform.rotation -= rotationSpeed * deltaTime;
-    if (AEInputCheckCurr(AEVK_E)) transform.rotation += rotationSpeed * deltaTime;
+    if (AEInputCheckCurr(AEVK_LEFT)) transform.rotation -= rotationSpeed * deltaTime;
+    if (AEInputCheckCurr(AEVK_RIGHT)) transform.rotation += rotationSpeed * deltaTime;
 
     // ------------------------------------------------------------------
     // 3. Aim direction - from player toward mouse cursor
@@ -190,9 +190,12 @@ void Player::Update(f32 deltaTime)
                 break;
             }
 
-            // Apply damage (clamped to 0)
-            health -= contactDamage;
-            if (health < 0.0f) health = 0.0f;
+            // Apply damage (clamped to 0) - ONLY IF NOT INVULNERABLE
+            if (!invulnAbility.IsActive())
+            {
+                health -= contactDamage;
+                if (health < 0.0f) health = 0.0f;
+            }
 
             // Apply knockback: push player away from the NPC
             if (dist > 0.0f && knockbackForce > 0.0f)
@@ -201,6 +204,24 @@ void Player::Update(f32 deltaTime)
                 transform.position.y -= (toNPC.y / dist) * knockbackForce * deltaTime;
             }
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Update Abilities & Check Input
+    // ------------------------------------------------------------------
+    invulnAbility.Update(deltaTime);
+
+    if (AEInputCheckTriggered(AEVK_E))
+    {
+        invulnAbility.TryActivate();
+    }
+
+    // Optional: Turn the player gold while invulnerable
+    if (invulnAbility.IsActive()) {
+        spriteRenderer.colour = { 1.0f, 0.8f, 0.0f, 1.0f };
+    }
+    else {
+        spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f };
     }
 
     // ------------------------------------------------------------------
