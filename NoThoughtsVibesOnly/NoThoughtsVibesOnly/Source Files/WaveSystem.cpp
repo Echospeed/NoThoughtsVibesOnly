@@ -3,6 +3,12 @@
 // ============================================================================
 // Manages progressive waves of enemies across multiple rounds.
 //
+// LEVEL MODES:
+// ----------------------------------------------------------------------------
+//   Level 1  : 5 waves, no boss
+//   Level 2  : 10 waves, boss on final wave
+//   Endless  : Infinite waves, boss every 5 rounds
+//
 // WAVE FLOW:
 // ----------------------------------------------------------------------------
 //   1. Player presses C -> StartNextWave() -> SpawnWave(config)
@@ -10,7 +16,7 @@
 //   3. WaveSystem::Update() detects IsWaveComplete() (all NPC objects inactive).
 //   4. A WAVE_BREAK_DURATION second countdown begins (shown in HUD).
 //   5. After the countdown, StartNextWave() fires automatically.
-//   6. Every 5 rounds a Boss is added to the wave.
+//   6. Boss spawns based on level config rules.
 //
 // ENEMY COUNT SCALING:
 // ----------------------------------------------------------------------------
@@ -44,10 +50,26 @@ void WaveSystem::Init(Player* player)
     currentRound = 1;
     inWaveBreak = false;
     waveBreakTimer = 0.0f;
+    levelConfig = ::GetLevelConfig(LevelType::ENDLESS); // Default, will be overwritten by SetLevelConfig
 
     std::cout << "\n==============================================\n"
         << "    WAVE SYSTEM READY - Press C to begin!\n"
         << "==============================================\n\n";
+}
+
+// ============================================================================
+// IsLevelComplete
+// ============================================================================
+// Returns true if all waves for this level are cleared (non-endless only)
+// ============================================================================
+bool WaveSystem::IsLevelComplete() const
+{
+    // Endless mode never completes via wave count
+    if (levelConfig.type == LevelType::ENDLESS)
+        return false;
+    
+    // Level complete when we've cleared the final wave and no enemies remain
+    return currentWave >= levelConfig.numWaves && IsWaveComplete() && !inWaveBreak;
 }
 
 // ============================================================================
@@ -62,21 +84,39 @@ void WaveSystem::Update(f32 deltaTime)
     {
         waveBreakTimer -= deltaTime;
         if (waveBreakTimer <= 0.0f)
+        {
+            // Check if we've reached max waves for non-endless levels
+            if (levelConfig.type != LevelType::ENDLESS && currentWave >= levelConfig.numWaves)
+            {
+                // Don't start another wave - level is complete
+                inWaveBreak = false;
+                return;
+            }
             StartNextWave();
-
+        }
         return; // Don't check for wave completion during a break
     }
 
     if (currentWave > 0 && IsWaveComplete())
     {
         std::cout << "\n==============================================\n"
-            << "    WAVE " << currentWave << " CLEARED!\n"
-            << "    Next wave in " << WAVE_BREAK_DURATION << "s...\n"
-            << "==============================================\n\n";
-
-        ++currentRound;
-        inWaveBreak = true;
-        waveBreakTimer = WAVE_BREAK_DURATION;
+            << "    WAVE " << currentWave << " CLEARED!\n";
+        
+        // Show different message for final wave vs continuing
+        if (levelConfig.type != LevelType::ENDLESS && currentWave >= levelConfig.numWaves)
+        {
+            std::cout << "    *** LEVEL COMPLETE! ***\n";
+            // Don't set inWaveBreak - let IsLevelComplete() return true
+        }
+        else
+        {
+            std::cout << "    Next wave in " << WAVE_BREAK_DURATION << "s...\n";
+            ++currentRound;
+            inWaveBreak = true;
+            waveBreakTimer = WAVE_BREAK_DURATION;
+        }
+        
+        std::cout << "==============================================\n\n";
     }
 }
 
@@ -93,7 +133,13 @@ void WaveSystem::StartNextWave()
     const WaveConfig config = GenerateWaveConfig();
 
     std::cout << "\n==============================================\n"
-        << "    WAVE " << currentWave << "  (Round " << currentRound << ")\n"
+        << "    WAVE " << currentWave;
+    
+    // Show wave progress for non-endless levels
+    if (levelConfig.type != LevelType::ENDLESS)
+        std::cout << " / " << levelConfig.numWaves;
+    
+    std::cout << "  (Round " << currentRound << ")\n"
         << "    Walkers: " << config.walkerCount
         << "  Melee: " << config.meleeCount
         << "  Rangers: " << config.rangerCount
@@ -275,10 +321,22 @@ u32 WaveSystem::GetEnemyCountForRound() const
 // ============================================================================
 // ShouldSpawnBoss
 // ============================================================================
-// Returns true every 5 rounds (rounds 5, 10, 15, ...).
+// Returns true based on level configuration:
+//   - Level 1: No boss (hasBoss = false)
+//   - Level 2: Boss on final wave (wave 10)
+//   - Endless: Boss every 5 rounds
 // ============================================================================
 bool WaveSystem::ShouldSpawnBoss() const
 {
+    // If level config says no boss, never spawn one
+    if (!levelConfig.hasBoss)
+        return false;
+    
+    // For non-endless levels with boss enabled, spawn boss on final wave
+    if (levelConfig.type != LevelType::ENDLESS)
+        return currentWave >= levelConfig.numWaves;
+    
+    // Endless mode: boss every 5 rounds
     return (currentRound % 5) == 0;
 }
 

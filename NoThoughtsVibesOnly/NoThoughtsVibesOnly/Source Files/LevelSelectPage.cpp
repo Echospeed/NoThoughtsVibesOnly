@@ -28,6 +28,7 @@
 #include <iostream>
 #include "Button.hpp"
 #include "Input.hpp"
+#include "LevelConfig.hpp"
 
 // ============================================================================
 // Global object list (level select objects register themselves here)
@@ -61,6 +62,7 @@ static TextRenderer levelSelectTitleText;  // Title text "SELECT LEVEL"
 void OnLevel1Clicked()
 {
     // TODO: Set level 1 configuration
+    g_CurrentLevel = GetLevelConfig(LevelType::LEVEL_1);
     StateManagerGamePage();  // For now, goes to the game
 }
 
@@ -68,12 +70,14 @@ void OnLevel1Clicked()
 void OnLevel2Clicked()
 {
     // TODO: Set level 2 configuration
+	g_CurrentLevel = GetLevelConfig(LevelType::LEVEL_2);
     StateManagerGamePage();  // For now, goes to the game
 }
 
 // Endless mode - links to current GamePage
 void OnEndlessClicked()
 {
+    g_CurrentLevel = GetLevelConfig(LevelType::ENDLESS);
     StateManagerGamePage();
 }
 

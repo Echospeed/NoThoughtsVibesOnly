@@ -50,6 +50,7 @@
 #include "GameUI.hpp"
 #include "Audio.hpp"
 #include "Particles.hpp"
+#include "LevelConfig.hpp"
 
 // ============================================================================
 // World constants
@@ -132,6 +133,7 @@ void Game_Load()
 // ============================================================================
 void Game_Init()
 {
+
     // --- Player ---
     pPlayer = new Player();
     sCamX = pPlayer->transform.position.x;
@@ -141,7 +143,19 @@ void Game_Init()
 
     // --- Systems ---
     waveSystem.Init(dynamic_cast<Player*>(pPlayer));
+    waveSystem.SetLevelConfig(g_CurrentLevel);  // Apply selected level configuration
     powerUpSystem.Init();
+
+    // Log level info
+    std::cout << "\n==============================================\n"
+        << "    LEVEL LOADED: ";
+    switch (g_CurrentLevel.type)
+    {
+    case LevelType::LEVEL_1: std::cout << "Level 1 (5 waves, no boss)"; break;
+    case LevelType::LEVEL_2: std::cout << "Level 2 (10 waves, boss on final wave)"; break;
+    case LevelType::ENDLESS: std::cout << "Endless Mode"; break;
+    }
+    std::cout << "\n==============================================\n\n";
 
     // Link PowerUpSystem to player so it can query upgraded stats
     Player* player = dynamic_cast<Player*>(pPlayer);
@@ -269,26 +283,13 @@ void Game_Update()
     }
 
     // ------------------------------------------------------------------
-    // 6b. Win condition: a wave is active, not in a break, no enemies left
+    // 6b. Win condition: level complete (all waves cleared for non-endless)
     // ------------------------------------------------------------------
-    if (waveSystem.GetCurrentWave() > 0 && !waveSystem.IsInBreak())
+    if (waveSystem.IsLevelComplete())
     {
-        bool anyEnemyAlive = false;
-        for (GameObject* obj : gamePageObj)
-        {
-            if (obj && obj->isActive && obj->ObjectType == NP)
-            {
-                anyEnemyAlive = true;
-                break;
-            }
-        }
-
-        if (!anyEnemyAlive)
-        {
-            if (bgMusic) bgMusic->Stop();
-            StateManagerChangeState(STATE_WIN);
-            return;
-        }
+        if (bgMusic) bgMusic->Stop();
+        StateManagerChangeState(STATE_WIN);
+        return;
     }
 
     // ------------------------------------------------------------------
@@ -492,7 +493,7 @@ void Game_Free()
     gamePageObj.clear();
     gamePageObj.shrink_to_fit();
 
- //   if (bgMusic) bgMusic->Free();
+    //if (bgMusic) bgMusic->Free();
 	//if (levelupSFX) levelupSFX->Free();
 	//if (shootSFX) shootSFX->Free();
 }

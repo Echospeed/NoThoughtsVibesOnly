@@ -42,7 +42,7 @@ struct PowerUp
 struct PlayerStats
 {
     // === Movement ===
-    f32 baseSpeed{2000.0f};
+    f32 baseSpeed{200.0f};
     f32 speedBonus{0.0f};           // Flat bonus from upgrades
     u32 speedUpgrades{0};           // Times upgraded
     

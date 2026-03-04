@@ -6,10 +6,12 @@
 // - Wave spawning with configurable enemy counts
 // - Boss waves every N rounds
 // - Experience rewards for clearing waves
+// - Level-based wave limits (Level 1: 5 waves, Level 2: 10 waves, Endless: infinite)
 // ============================================================================
 
 #pragma once
 #include "pch.hpp"
+#include "LevelConfig.hpp"
 #include <vector>
 
 // Forward declarations
@@ -48,6 +50,20 @@ public:
     // Cleans up wave system
     void Cleanup();
     
+    // === Level Config ===
+    
+    // Sets the level configuration (call after Init)
+    void SetLevelConfig(const LevelConfig& config) { levelConfig = config; }
+    
+    // Gets the current level configuration
+    const LevelConfig& GetLevelConfig() const { return levelConfig; }
+    
+    // Checks if all waves are complete (for non-endless levels)
+    bool IsLevelComplete() const;
+    
+    // Gets max waves for current level (UINT32_MAX = endless)
+    u32 GetMaxWaves() const { return levelConfig.numWaves; }
+    
     // === Wave Control ===
     
     // Starts the next wave
@@ -76,6 +92,7 @@ private:
     bool inWaveBreak{false};            // Whether between waves
     f32 waveBreakTimer{0.0f};           // Time remaining in break
     const f32 WAVE_BREAK_DURATION{5.0f}; // Seconds between waves
+    LevelConfig levelConfig{};          // Current level configuration
     
     // === Wave Generation ===
     
@@ -96,5 +113,3 @@ private:
     // Checks if current round should have a boss
     bool ShouldSpawnBoss() const;
 };
-
-//#endif // WAVESYSTEM_HPP
