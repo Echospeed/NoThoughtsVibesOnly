@@ -35,6 +35,7 @@
     <ClInclude Include="Header Files\Player.hpp" />
     <ClInclude Include="Header Files\PowerUpSystem.hpp" />
     <ClInclude Include="Header Files\SplashPage.hpp" />
+    <ClInclude Include="Header Files\SpriteAnimator.hpp" />
     <ClInclude Include="Header Files\SpriteRenderer.hpp" />
     <ClInclude Include="Header Files\StateManager.hpp" />
     <ClInclude Include="Header Files\TextRenderer.hpp" />
@@ -71,6 +72,7 @@
     <ClCompile Include="Source Files\Player.cpp" />
     <ClCompile Include="Source Files\PowerUpSystem.cpp" />
     <ClCompile Include="Source Files\SplashPage.cpp" />
+    <ClCompile Include="Source Files\SpriteAnimator.cpp" />
     <ClCompile Include="Source Files\SpriteRenderer.cpp" />
     <ClCompile Include="Source Files\StateManager.cpp" />
     <ClCompile Include="Source Files\TextRenderer.cpp" />

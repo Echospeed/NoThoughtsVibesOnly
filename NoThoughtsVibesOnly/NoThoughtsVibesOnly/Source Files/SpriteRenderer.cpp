@@ -56,7 +56,7 @@ void DrawSpriteRenderer(const SpriteRenderer& sr, Transform& transform)
     {
         // Texture mode: draw the image with optional alpha fade
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-        AEGfxTextureSet(sr.texture, 0, 0);
+        AEGfxTextureSet(sr.texture, sr.uOffset, sr.vOffset);
         AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, sr.colour.a);
         AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
     }
@@ -74,17 +74,55 @@ void DrawSpriteRenderer(const SpriteRenderer& sr, Transform& transform)
     // Build and apply the SRT matrix
     transform.Apply();
 
+    AEGfxVertexList* meshToDraw = nullptr;
+
     // Select mesh based on type
-    AEGfxVertexList* mesh = nullptr;
-    switch (sr.meshType)
+    if (sr.customMesh != nullptr)
     {
-    case MESH_TRIANGLE: mesh = Meshes::pTriangleMesh;    break;
-    case MESH_CIRCLE:   mesh = Meshes::pCircleMesh;      break;
-    case MESH_SQUARE:   // fall-through
-    default:            mesh = Meshes::pSquareCOriMesh;  break;
+        // If we gave it an animated spritesheet mesh, prioritize that
+        meshToDraw = sr.customMesh;
+    }
+    else
+    {
+        switch (sr.meshType)
+        {
+        case MESH_TRIANGLE: meshToDraw = Meshes::pTriangleMesh;   break;
+        case MESH_CIRCLE:   meshToDraw = Meshes::pCircleMesh;     break;
+        case MESH_SQUARE:
+        default:            meshToDraw = Meshes::pSquareCOriMesh; break;
+        }
     }
 
-    AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
+    AEGfxMeshDraw(meshToDraw, AE_GFX_MDM_TRIANGLES);
+}
+
+// ============================================================================
+// CreateSpriteSheetMesh
+// ============================================================================
+// Builds a custom 1x1 square mesh, but scales the UV coordinates down 
+// so it only renders a single frame of a larger spritesheet.
+// ============================================================================
+AEGfxVertexList* CreateSpriteSheetMesh(f32 frameWidth, f32 frameHeight, f32 texWidth, f32 texHeight)
+{
+    // Calculate the fractional size of one frame (e.g., 50px / 200px = 0.25)
+    f32 uSize = frameWidth / texWidth;
+    f32 vSize = frameHeight / texHeight;
+
+    AEGfxMeshStart();
+
+    // Top-Left corner is U: 0.0, V: 0.0
+    // Triangle 1
+    AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, vSize,  // Bottom-Left
+        0.5f, -0.5f, 0xFFFFFFFF, uSize, vSize,  // Bottom-Right
+        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);  // Top-Left
+
+    // Triangle 2
+    AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, uSize, vSize,  // Bottom-Right
+        0.5f, 0.5f, 0xFFFFFFFF, uSize, 0.0f,   // Top-Right
+        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);  // Top-Left
+
+    return AEGfxMeshEnd();
+
 }
 
 // ============================================================================

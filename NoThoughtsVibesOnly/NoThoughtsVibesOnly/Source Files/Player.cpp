@@ -56,6 +56,28 @@ void Player::Start()
         0.6f,         // maxLifetime — short-lived puff
         12.0f         // size — smaller than the player itself
     );
+
+    spriteRenderer.customMesh = CreateSpriteSheetMesh(500.0f, 500.0f, 2000.0f, 2500.0f);
+
+    playerSpritesheet = AEGfxTextureLoad("Assets/ame.png");
+
+    spriteRenderer.texture = playerSpritesheet;
+
+    idleAnim = Animation(0.2f, true);
+
+    idleAnim.AddFrames(0, 0, 500, 500);
+    idleAnim.AddFrames(500, 0, 500, 500);
+    idleAnim.AddFrames(1000, 0, 500, 500);
+    idleAnim.AddFrames(1500, 0, 500, 500);
+
+    runAnim = Animation(0.1f, true);
+
+    runAnim.AddFrames(0, 1000, 500, 500);
+    runAnim.AddFrames(500, 1000, 500, 500);
+    runAnim.AddFrames(1000, 1000, 500, 500);
+    runAnim.AddFrames(1500, 1000, 500, 500);
+
+    playerAnimator.Play(&idleAnim);
 }
 
 // ============================================================================
@@ -76,10 +98,38 @@ void Player::Update(f32 deltaTime)
     // ------------------------------------------------------------------
     const f32 currentSpeed = GetSpeed();
 
-    if (AEInputCheckCurr(AEVK_W)) transform.position.y += currentSpeed * deltaTime;
-    if (AEInputCheckCurr(AEVK_S)) transform.position.y -= currentSpeed * deltaTime;
-    if (AEInputCheckCurr(AEVK_A)) transform.position.x -= currentSpeed * deltaTime;
-    if (AEInputCheckCurr(AEVK_D)) transform.position.x += currentSpeed * deltaTime;
+    bool isMoving = false;
+
+    if (AEInputCheckCurr(AEVK_W))
+    {
+        transform.position.y += currentSpeed * deltaTime;
+        isMoving = true;
+    }
+    if (AEInputCheckCurr(AEVK_S))
+    {
+        transform.position.y -= currentSpeed * deltaTime;
+        isMoving = true;
+    }
+    if (AEInputCheckCurr(AEVK_A))
+    {
+        transform.position.x -= currentSpeed * deltaTime;
+        isMoving = true;
+    }
+    if (AEInputCheckCurr(AEVK_D))
+    {
+        transform.position.x += currentSpeed * deltaTime;
+        isMoving = true;
+    }
+
+    // 1. The State Machine: Decide which animation to play
+    if (isMoving)
+    {
+        playerAnimator.Play(&runAnim);
+    }
+    else
+    {
+        playerAnimator.Play(&idleAnim);
+    }
 
     // ------------------------------------------------------------------
     // 2. Rotation
@@ -236,6 +286,18 @@ void Player::Update(f32 deltaTime)
     if (transform.position.x < -halfW + halfPx) transform.position.x = -halfW + halfPx;
     if (transform.position.y > halfH - halfPy) transform.position.y = halfH - halfPy;
     if (transform.position.y < -halfH + halfPy) transform.position.y = -halfH + halfPy;
+
+
+    // ------------------------------------------------------------------
+    // 7. Animation
+    // ------------------------------------------------------------------
+
+    Rect currentFrame = playerAnimator.GetCurrentFrameRect();
+
+    spriteRenderer.uOffset = (f32)currentFrame.x / 2000.0f;
+    spriteRenderer.vOffset = (f32)currentFrame.y / 2500.0f;
+
+    playerAnimator.Update(deltaTime);
 }
 
 // ============================================================================
@@ -288,4 +350,13 @@ f32 Player::GetAoeDamage() const
 f32 Player::GetAoeRadius() const
 {
     return powerUpSystem ? powerUpSystem->GetStats().GetTotalAoeRadius() : 100.0f;
+}
+
+void Player::Free()
+{
+    if (playerSpritesheet != nullptr)
+    {
+        AEGfxTextureUnload(playerSpritesheet);
+        playerSpritesheet = nullptr;
+    }
 }

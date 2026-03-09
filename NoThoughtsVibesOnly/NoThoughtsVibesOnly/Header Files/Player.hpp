@@ -3,6 +3,8 @@
 #include "Particles.hpp"
 #include "Abilities.hpp"
 
+#include "SpriteAnimator.hpp"
+
 // Forward declaration
 class PowerUpSystem;
 
@@ -12,7 +14,8 @@ public:
     void Start();
     void Update(f32 deltaTime);
     void Shoot(AEVec2 dir);
-    
+    void Free();
+
     f32 health = 100.0f;    // starting health
     f32 maxHealth = 100.0f;
     
@@ -28,6 +31,13 @@ public:
     ParticleSystem smokePS;
 
     InvulnerabilityAbility invulnAbility;
+
+    AEGfxTexture* playerSpritesheet;
+
+    Animation idleAnim;
+    Animation runAnim;
+
+    Animator playerAnimator;
 
 private:
     f32 shootCooldown = 0.0f;
