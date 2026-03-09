@@ -32,7 +32,7 @@ public:
 
     InvulnerabilityAbility invulnAbility;
 
-    AEGfxTexture* playerSpritesheet;
+    AEGfxTexture* playerSpritesheet{nullptr};
 
     Animation idleAnim;
     Animation runAnim;

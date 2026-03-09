@@ -88,7 +88,7 @@ void DrawSpriteRenderer(const SpriteRenderer& sr, Transform& transform)
         {
         case MESH_TRIANGLE: meshToDraw = Meshes::pTriangleMesh;   break;
         case MESH_CIRCLE:   meshToDraw = Meshes::pCircleMesh;     break;
-        case MESH_SQUARE:
+        case MESH_SQUARE:   
         default:            meshToDraw = Meshes::pSquareCOriMesh; break;
         }
     }

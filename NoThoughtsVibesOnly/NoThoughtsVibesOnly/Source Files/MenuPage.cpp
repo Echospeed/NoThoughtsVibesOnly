@@ -78,6 +78,12 @@ TextRenderer infoText;      // Body text for info pages
 //Audio MenuAudio{ "Assets/bouken.mp3", -1, 1.0f, 1.0f, AudioType::MUSIC };
 
 // ============================================================================
+// Art Assets
+// ============================================================================
+SpriteRenderer creditsImg;
+Transform creditTransform;
+
+// ============================================================================
 // Sub-view navigation callbacks
 // ============================================================================
 void GoToControls() { currentMenuState = MENU_CONTROLS; }
@@ -125,8 +131,11 @@ void Main_Init()
 	controlsText = TextRenderer(fontPath,1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
 	controlsText << "CONTROLS";
 
-	creditsText = TextRenderer(fontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	creditsText = TextRenderer(fontPath, 1.0f, { 0.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
 	creditsText << "CREDITS";
+
+    InitSpriteRenderer(creditsImg, "Assets/Credits_NTOV.png", 1600.0f, 900.0f, MESH_SQUARE);
+    creditTransform = { {0.0f, 0.0f}, {1600.0f, 900.0f}, {0.0f} };
 }
 
 // ============================================================================
@@ -178,31 +187,39 @@ void Main_Draw()
         infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -100.0f }, { 1.0f, 1.0f, 1.0f });
 		infoText << "ESC  -  Pause  |  R  -  Restart  |  Q  -  Menu";
 		infoText.Draw();
+
+        backButton->transform.SetPosition( 0.0f, -350.0f );
     }
     else if (currentMenuState == MENU_CREDITS)
     {
+
+		//infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 150.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
+        //infoText << "Created By:"; 
+		//infoText.Draw();
+
+        //infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
+        //infoText << "DigiPen Institute of Technology";
+		//infoText.Draw();
+
+		//infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 50.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
+        //infoText << "- WenJie Chia   - John Chiow";
+		//infoText.Draw();
+
+		//infoText = TextRenderer(fontPath,1.0f, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
+        //infoText << "- Yan Bin Liu   - Stanely Lu";
+		//infoText.Draw();
+
+        //infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -50.0f }, { 1.0f, 1.0f, 1.0f });
+        //infoText << "No Thoughts, Vibes Only";
+		//infoText.Draw();
+        backButton->transform.SetPosition( -600.0f, -400.0f );
+        backButton->collider.position = { -600.0f, -400.0f };
+        backButton->textRenderer.SetPosition({ -600.0f, -400.0f });
+
+        DrawSpriteRenderer(creditsImg, creditTransform);
 		creditsText.Draw();
-
-		infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 150.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
-        infoText << "Created By:"; 
-		infoText.Draw();
-
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
-        infoText << "DigiPen Institute of Technology";
-		infoText.Draw();
-
-		infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 50.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
-        infoText << "- WenJie Chia   - John Chiow";
-		infoText.Draw();
-
-		infoText = TextRenderer(fontPath,1.0f, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
-        infoText << "- Yan Bin Liu   - Stanely Lu";
-		infoText.Draw();
-
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -50.0f }, { 1.0f, 1.0f, 1.0f });
-        infoText << "No Thoughts, Vibes Only";
-		infoText.Draw();
-
+        backButton->Draw();
+        backButton->textRenderer.Draw();
     }
 }
 
@@ -224,6 +241,7 @@ void Main_Free()
     quitButton = nullptr;
     backButton = nullptr;
 
+    FreeSpriteRenderer(creditsImg);
     //delete startButton;    startButton = nullptr;
     //delete controlsButton; controlsButton = nullptr;
     //delete creditsButton;  creditsButton = nullptr;
