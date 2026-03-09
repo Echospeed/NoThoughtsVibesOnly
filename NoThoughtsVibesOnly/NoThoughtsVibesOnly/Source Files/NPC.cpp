@@ -3,10 +3,10 @@
 // ============================================================================
 // Four enemy types, each with distinct movement and attack behaviour:
 //
-//   NPC_WALK   (Blue Ship)      : Wanders randomly. No shooting.
-//   NPC_MELEE  (Green Ship)     : Charges directly at the player. No shooting.
-//   NPC_RANGER (Pink Ship)      : Keeps distance; fires single bullets.
-//   NPC_BOSS   (Beige Ship)     : Orbits the player; fires 8-way bullet volleys.
+//   NPC_WALK   (Yellow Circle)  : Wanders randomly. No shooting.
+//   NPC_MELEE  (Blue Triangle)  : Charges directly at the player. No shooting.
+//   NPC_RANGER (Cyan Square)    : Keeps distance; fires single bullets.
+//   NPC_BOSS   (Magenta Circle) : Orbits the player; fires 8-way bullet volleys.
 //
 // INTERACTION WITH WAVESYSTEM:
 // ----------------------------------------------------------------------------
@@ -51,45 +51,37 @@ void NPC::Start()
     } while (AEVec2Distance(&spawnPos, &target->transform.position) < 100.0f);
 
     transform.position = { rX, rY };
-    transform.scale = { 50.0f, 50.0f };  // Same size as player
+    transform.scale = { 30.0f, 30.0f };
     transform.rotation = 0.0f;
 
     // --- Type-specific appearance and stats ---
     switch (type)
     {
     case NPC_WALK:
-        NPCSpritesheet = AEGfxTextureLoad("Assets/shipBlue_manned.png");
-        spriteRenderer.texture = NPCSpritesheet;
-        spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f }; // White (no tint)
-        spriteRenderer.meshType = MESH_SQUARE;
-        baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
+        spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 1.0f }; // Yellow
+        spriteRenderer.meshType = MESH_CIRCLE;
+        baseColour = { 1.0f, 1.0f, 0.0f, 1.0f };
         break;
 
     case NPC_MELEE:
-        NPCSpritesheet = AEGfxTextureLoad("Assets/shipGreen_manned.png");
-        spriteRenderer.texture = NPCSpritesheet;
-        spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f }; // White (no tint)
-        spriteRenderer.meshType = MESH_SQUARE;
-        baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
+        spriteRenderer.colour = { 0.0f, 0.0f, 1.0f, 1.0f }; // Blue
+        spriteRenderer.meshType = MESH_TRIANGLE;
+        baseColour = { 0.0f, 0.0f, 1.0f, 1.0f };
         break;
 
     case NPC_RANGER:
-        NPCSpritesheet = AEGfxTextureLoad("Assets/shipPink_manned.png");
-        spriteRenderer.texture = NPCSpritesheet;
-        spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f }; // White (no tint)
+        spriteRenderer.colour = { 0.0f, 1.0f, 1.0f, 1.0f }; // Cyan
         spriteRenderer.meshType = MESH_SQUARE;
-        baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
+        baseColour = { 0.0f, 1.0f, 1.0f, 1.0f };
         std::cout << "[NPC] Ranger spawned at ("
             << transform.position.x << ", " << transform.position.y << ")\n";
         break;
 
     case NPC_BOSS:
-        NPCSpritesheet = AEGfxTextureLoad("Assets/shipBeige_manned.png");
-        spriteRenderer.texture = NPCSpritesheet;
-        transform.scale = { 150.0f, 150.0f };         // 3x player size
-        spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f }; // White (no tint)
-        spriteRenderer.meshType = MESH_SQUARE;
-        baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
+        transform.scale = { 100.0f, 100.0f };         // 3x normal size
+        spriteRenderer.colour = { 1.0f, 0.0f, 1.0f, 1.0f }; // Magenta
+        spriteRenderer.meshType = MESH_CIRCLE;
+        baseColour = { 1.0f, 0.0f, 1.0f, 1.0f };
         health = 1000.0f; // 10x normal health
         speed = 150.0f;  // Slightly slower than normal
         fireRate = 0.5f;    // Fires twice per second
@@ -391,17 +383,3 @@ void NPC::BossNPCs(f32 deltaTime)
         fireCooldown = fireRate;
     }
 }
-
-// ============================================================================
-// Destructor
-// ============================================================================
-// Frees the NPC spritesheet texture to prevent memory leaks.
-// ============================================================================
-//NPC::~NPC()
-//{
-//    if (NPCSpritesheet != nullptr)
-//    {
-//        AEGfxTextureUnload(NPCSpritesheet);
-//        NPCSpritesheet = nullptr;
-//    }
-//}

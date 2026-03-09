@@ -8,7 +8,6 @@
 class NPC : public GameObject
 {
 public:
-	//~NPC(); // Destructor to free texture
 	void Start();
 	void Update(f32 deltaTime);
 	GameObject* target{nullptr};
@@ -20,8 +19,7 @@ public:
 	f32 fireRate{ 1.0f };     // seconds per shot
 	ParticleSystem explosionParticles; // For explosion effect on death
 	bool hasExploded = false; // To ensure explosion happens only once
-	AEGfxTexture* NPCSpritesheet{ nullptr };
-	Animation Animations;
+
 private:
 	AEVec2 velocity{ 0.0f, 0.0f };
 	f32 speed{ 200.0f };
