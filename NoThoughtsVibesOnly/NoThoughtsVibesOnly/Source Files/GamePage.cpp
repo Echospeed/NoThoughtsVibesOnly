@@ -187,6 +187,9 @@ void Game_Init()
         obj->Start();
 
     if (bgMusic) bgMusic->Play();
+
+    // Auto-start the first wave immediately
+    waveSystem.StartNextWave();
 }
 
 // ============================================================================
@@ -248,9 +251,22 @@ void Game_Update()
     // ------------------------------------------------------------------
     waveSystem.Update(dt);
 
-    // C key starts the very first wave manually
-    if (AEInputCheckTriggered(AEVK_C) && waveSystem.GetCurrentWave() == 0)
-        waveSystem.StartNextWave();
+    // C key kills all active enemies (debug/cheat)
+    if (AEInputCheckTriggered(AEVK_C))
+    {
+        for (auto& obj : gamePageObj)
+        {
+            if (obj && obj->ObjectType == NP && obj->isActive)
+            {
+                NPC* npc = dynamic_cast<NPC*>(obj);
+                if (npc)
+                {
+                    npc->health = 0.0f;  // Kill the enemy
+                    std::cout << "[DEBUG] Killed NPC\n";
+                }
+            }
+        }
+    }
 
     // ------------------------------------------------------------------
     // 4. Camera: smooth lerp toward player position
