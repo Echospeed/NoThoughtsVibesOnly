@@ -87,10 +87,10 @@ Transform creditTransform;
 // ============================================================================
 // Sub-view navigation callbacks
 // ============================================================================
-void GoToControls() { currentMenuState = MENU_CONTROLS; }
-void GoToCredits() { currentMenuState = MENU_CREDITS; }
-void GoToMain() { currentMenuState = MENU_MAIN; }
-void GoToLevelSelect() { StateManagerChangeState(STATE_LEVEL_SELECT); }
+static void GoToControls() { currentMenuState = MENU_CONTROLS; }
+static void GoToCredits() { currentMenuState = MENU_CREDITS; }
+static void GoToMain() { currentMenuState = MENU_MAIN; }
+static void GoToLevelSelect() { StateManagerChangeState(STATE_LEVEL_SELECT); }
 
 // ============================================================================
 // Main_Load
@@ -202,7 +202,6 @@ void Main_Draw()
     }
     else if (currentMenuState == MENU_CREDITS)
     {
-
         //infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 150.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
         //infoText << "Created By:"; 
         //infoText.Draw();
@@ -222,6 +221,8 @@ void Main_Draw()
         //infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -50.0f }, { 1.0f, 1.0f, 1.0f });
         //infoText << "No Thoughts, Vibes Only";
         //infoText.Draw();
+
+		creditsImg.colour.a = 0.4f;  // credits image is mostly decorative, so fade it out a bit to improve text readability
         backButton->transform.SetPosition(-600.0f, -400.0f);
         backButton->collider.position = { -600.0f, -400.0f };
         backButton->textRenderer.SetPosition({ -600.0f, -400.0f });

@@ -1,6 +1,91 @@
 // ============================================================================
 // Particles.cpp - Particle Engine Implementation
 // ============================================================================
+//
+// ============================================================================
+// HOW TO USE THIS SYSTEM - QUICK GUIDE
+// ============================================================================
+//
+// --- STEP 1: GLOBAL SETUP (do this once in GamePage.cpp) ---
+//
+//   Game_Load()   -> ParticleSystem::LoadSharedMesh();
+//   Game_Unload() -> ParticleSystem::FreeSharedMesh();
+//
+// --- STEP 2: DECLARE A PARTICLE SYSTEM (in your class .hpp) ---
+//
+//   ParticleSystem myPS;
+//
+// --- STEP 3: USE A PRESET OR MAKE YOUR OWN ---
+//
+//   // Option A: Use a preset (easiest)
+//   myPS = ParticleSystem::MakeSmoke();
+//   myPS = ParticleSystem::MakeExplosion();
+//
+//   // Option B: Custom effect via Init()
+//   myPS.Init(
+//       30,               // maxParticles  : max alive at once
+//      -100.0f, 100.0f,  // velX range    : horizontal spread (neg=left, pos=right)
+//      -100.0f, 100.0f,  // velY range    : vertical spread   (neg=down, pos=up)
+//       0.5f,   1.0f,    // lifetime      : seconds alive (randomised in this range)
+//       10.0f,  0.0f,    // size          : radius at birth -> radius at death
+//       1.0f, 0.5f, 0.0f,// startRGB      : colour at birth  (r, g, b)  0.0-1.0
+//       0.8f, 0.0f, 0.0f,// endRGB        : colour at death  (r, g, b)  0.0-1.0
+//       80.0f,           // gravity       : 0=float, 80=slight fall, 200=heavy fall
+//       2.0f             // drag          : 0=no slowdown, 1.5=medium, 3=stops fast
+//   );
+//
+// --- STEP 4: SPAWN PARTICLES ---
+//
+//   myPS.Emit(position);             // spawn 1 particle (good for streams/trails)
+//   myPS.EmitBurst(position, 20);    // spawn 20 at once (good for explosions)
+//   // NOTE: burst count cannot exceed maxParticles - extra are silently dropped
+//
+// --- STEP 5: TICK AND DRAW EVERY FRAME ---
+//
+//   myPS.Update(deltaTime);   // in your Update()
+//   myPS.Render();            // in your Draw() / Render()
+//
+// --- STEP 6: ADDING A NEW PRESET ---
+//
+//   In Particles.hpp, add inside the class:
+//       static ParticleSystem MakeMyEffect();
+//
+//   In Particles.cpp, copy MakeSmoke() or MakeExplosion() and tune the values.
+//
+// ============================================================================
+// PARAMETER CHEAT SHEET
+// ============================================================================
+//
+//   maxParticles : how many can be alive at the same time
+//                  more = bigger bursts possible, more memory used
+//
+//   velX range   : [-300, 300] = wide horizontal spray
+//                  [-10,   10] = barely any horizontal movement
+//
+//   velY range   : [30,  80]   = floats upward  (smoke)
+//                  [-300, 300] = sprays in all directions (explosion)
+//                  [-200,  0]  = falls downward  (rain/debris)
+//
+//   lifetime     : [0.1, 0.3]  = very short flash
+//                  [0.4, 0.8]  = quick puff
+//                  [1.0, 2.0]  = long lasting trail
+//
+//   size         : [20, 0]     = starts big, shrinks to nothing (explosion)
+//                  [5,  5]     = stays same size throughout
+//                  [2, 10]     = grows over lifetime (shockwave)
+//
+//   startRGB     : (1, 0.5, 0) = orange    (1, 1, 1) = white
+//   endRGB       : (0.8, 0, 0) = dark red  (0, 0, 0) = black (fades to dark)
+//
+//   gravity      :  0   = weightless (smoke, magic)
+//                   80  = slight arc (explosions)
+//                   200 = heavy fall (debris, blood)
+//
+//   drag         :  0   = keeps moving forever
+//                   1.5 = slows to a stop quickly   (smoke)
+//                   3.0 = almost instant stop       (sparks)
+//
+// ============================================================================
 // HOW THIS SYSTEM WORKS (big picture):
 //
 //   Each ParticleSystem owns a fixed-size pool of Particle structs allocated
@@ -330,9 +415,9 @@ ParticleSystem ParticleSystem::MakeSmoke()
         -25.0f, 25.0f,  // velX          - slight horizontal spread
         30.0f, 80.0f,  // velY          - drifts upward
         0.4f, 0.8f,   // lifetime      - short-lived puffs
-        24.0f, 4.0f,   // size          - visibly shrinks as it fades
-        0.1f, 0.6f, 0.6f, // start colour: mid green
-        0.1f, 0.2f, 0.2f, // end colour:   dark green (combined with alpha fade = transparent)
+        12.0f, 2.0f,   // size          - visibly shrinks as it fades
+        0.6f, 0.6f, 0.6f, // start colour: mid grey
+        0.2f, 0.2f, 0.2f, // end colour:   dark grey (combined with alpha fade = transparent)
         0.0f,   // gravity=0: smoke floats upward, not pulled down
         1.5f    // drag=1.5:  velocity halves fast, puffs hang rather than fly
     );
