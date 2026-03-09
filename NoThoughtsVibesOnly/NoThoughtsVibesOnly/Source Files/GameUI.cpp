@@ -228,7 +228,7 @@ void GameUI::DrawXPBar()
     }
 
     // Level and XP text
-	playerXP = TextRenderer(gameFont, 1.0f, { barX, barY + 28.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+	playerXP = TextRenderer(gameFont, 0.8f, { barX, barY + 28.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     playerXP << "LVL " << stats.level << "   " << (int)stats.currentExp << " / " << (int)stats.expToNextLevel << " XP";
 	playerXP.Draw();
 }
@@ -450,8 +450,11 @@ void GameUI::DrawPowerUpScreen()
         }
         else if (choices[i].type == POWERUP_BULLET_DAMAGE)
         {
-            statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 55.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+            statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 40.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
             statBuffText << "Current: " << (float)stats.GetTotalBulletDamage() << " dmg";
+            statBuffText.Draw();
+            statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 60.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+            statBuffText << "Bullets: " << stats.bulletCount << "  ->  " << stats.bulletCount + 5;
             statBuffText.Draw();
         }
         else if (choices[i].type == POWERUP_AOE_DAMAGE)

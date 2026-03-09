@@ -1,4 +1,59 @@
 ﻿#pragma once
+#include "GameObject.hpp"
+#include "NPC.hpp"
+#include "GameObjectType.hpp"
+
+// ============================================================================
+// class Bullet : public GameObject
+// ============================================================================
+// Represents a single projectile in the bullet pool.
+// Each bullet tracks its owner, direction, speed, and remaining lifetime.
+// ============================================================================
+class Bullet : public GameObject
+{
+public:
+    // ------------------------------------------------------------------------
+    // Start - Called once after construction (via obj->Start() in Game_Init).
+    // Sets initial transform, mesh type, and hides the bullet until fired.
+    // ------------------------------------------------------------------------
+    void Start();
+
+    // ------------------------------------------------------------------------
+    // Update - Called every frame (only executes logic if isActive == true).
+    // Moves the bullet, counts down lifetime, checks world bounds,
+    // and handles collision with NPCs (player bullets) or Player (enemy bullets).
+    // ------------------------------------------------------------------------
+    void Update(f32 deltaTime);
+
+    // ------------------------------------------------------------------------
+    // Activate - Convenience method to fire a bullet from a shooter.
+    // Sets position, direction, owner, resets lifetime, and makes it visible.
+    //
+    // shooter   : The GameObject that fired this bullet (player or NPC)
+    // direction : Normalised AEVec2 pointing toward the target
+    // newOwner  : BulletOwner::PLAYER or BulletOwner::ENEMY
+    // ------------------------------------------------------------------------
+    void Activate(GameObject* shooter, AEVec2 direction, BulletOwner newOwner);
+
+    // -----------------------------------------------------------------------
+    // Public Data
+    // -----------------------------------------------------------------------
+    GameObject* startPos{ nullptr };       // The GameObject that owns/fired this bullet
+    AEVec2      dir{ 0.0f, 0.0f };        // Normalised movement direction
+    f32         speed{ 1500.0f };          // Units per second
+    f32         lifeTime{ 0.0f };          // Remaining time before auto-despawn
+    f32         maxLifeTime{ 4.0f };       // Maximum travel time in seconds
+    BulletOwner owner{ BulletOwner::PLAYER }; // Determines who this bullet can damage
+    bool        spent{ false };            // True once fired; cleared only on reload
+
+private:
+    // ------------------------------------------------------------------------
+    // HideBullet - Deactivates the bullet and moves it offscreen.
+    // Called on: lifetime expiry, out-of-bounds, and successful hit.
+    // ------------------------------------------------------------------------
+    void HideBullet();
+};
+
 // ============================================================================
 // Bullet.hpp - Projectile Object (Player & Enemy)
 // ============================================================================
@@ -61,56 +116,56 @@
 //   }
 // ============================================================================
 
-#include "GameObject.hpp"
-#include "NPC.hpp"
-#include "GameObjectType.hpp"
-
-// ============================================================================
-// class Bullet : public GameObject
-// ============================================================================
-// Represents a single projectile in the bullet pool.
-// Each bullet tracks its owner, direction, speed, and remaining lifetime.
-// ============================================================================
-class Bullet : public GameObject
-{
-public:
-    // ------------------------------------------------------------------------
-    // Start - Called once after construction (via obj->Start() in Game_Init).
-    // Sets initial transform, mesh type, and hides the bullet until fired.
-    // ------------------------------------------------------------------------
-    void Start();
-
-    // ------------------------------------------------------------------------
-    // Update - Called every frame (only executes logic if isActive == true).
-    // Moves the bullet, counts down lifetime, checks world bounds,
-    // and handles collision with NPCs (player bullets) or Player (enemy bullets).
-    // ------------------------------------------------------------------------
-    void Update(f32 deltaTime);
-
-    // ------------------------------------------------------------------------
-    // Activate - Convenience method to fire a bullet from a shooter.
-    // Sets position, direction, owner, resets lifetime, and makes it visible.
-    //
-    // shooter   : The GameObject that fired this bullet (player or NPC)
-    // direction : Normalised AEVec2 pointing toward the target
-    // newOwner  : BulletOwner::PLAYER or BulletOwner::ENEMY
-    // ------------------------------------------------------------------------
-    void Activate(GameObject* shooter, AEVec2 direction, BulletOwner newOwner);
-
-    // -----------------------------------------------------------------------
-    // Public Data
-    // -----------------------------------------------------------------------
-    GameObject* startPos{ nullptr };       // The GameObject that owns/fired this bullet
-    AEVec2      dir{ 0.0f, 0.0f };        // Normalised movement direction
-    f32         speed{ 1500.0f };          // Units per second
-    f32         lifeTime{ 0.0f };          // Remaining time before auto-despawn
-    f32         maxLifeTime{ 4.0f };       // Maximum travel time in seconds
-    BulletOwner owner{ BulletOwner::PLAYER }; // Determines who this bullet can damage
-
-private:
-    // ------------------------------------------------------------------------
-    // HideBullet - Deactivates the bullet and moves it offscreen.
-    // Called on: lifetime expiry, out-of-bounds, and successful hit.
-    // ------------------------------------------------------------------------
-    void HideBullet();
-};
+//#include "GameObject.hpp"
+//#include "NPC.hpp"
+//#include "GameObjectType.hpp"
+//
+//// ============================================================================
+//// class Bullet : public GameObject
+//// ============================================================================
+//// Represents a single projectile in the bullet pool.
+//// Each bullet tracks its owner, direction, speed, and remaining lifetime.
+//// ============================================================================
+//class Bullet : public GameObject
+//{
+//public:
+//    // ------------------------------------------------------------------------
+//    // Start - Called once after construction (via obj->Start() in Game_Init).
+//    // Sets initial transform, mesh type, and hides the bullet until fired.
+//    // ------------------------------------------------------------------------
+//    void Start();
+//
+//    // ------------------------------------------------------------------------
+//    // Update - Called every frame (only executes logic if isActive == true).
+//    // Moves the bullet, counts down lifetime, checks world bounds,
+//    // and handles collision with NPCs (player bullets) or Player (enemy bullets).
+//    // ------------------------------------------------------------------------
+//    void Update(f32 deltaTime);
+//
+//    // ------------------------------------------------------------------------
+//    // Activate - Convenience method to fire a bullet from a shooter.
+//    // Sets position, direction, owner, resets lifetime, and makes it visible.
+//    //
+//    // shooter   : The GameObject that fired this bullet (player or NPC)
+//    // direction : Normalised AEVec2 pointing toward the target
+//    // newOwner  : BulletOwner::PLAYER or BulletOwner::ENEMY
+//    // ------------------------------------------------------------------------
+//    void Activate(GameObject* shooter, AEVec2 direction, BulletOwner newOwner);
+//
+//    // -----------------------------------------------------------------------
+//    // Public Data
+//    // -----------------------------------------------------------------------
+//    GameObject* startPos{ nullptr };       // The GameObject that owns/fired this bullet
+//    AEVec2      dir{ 0.0f, 0.0f };        // Normalised movement direction
+//    f32         speed{ 1500.0f };          // Units per second
+//    f32         lifeTime{ 0.0f };          // Remaining time before auto-despawn
+//    f32         maxLifeTime{ 4.0f };       // Maximum travel time in seconds
+//    BulletOwner owner{ BulletOwner::PLAYER }; // Determines who this bullet can damage
+//
+//private:
+//    // ------------------------------------------------------------------------
+//    // HideBullet - Deactivates the bullet and moves it offscreen.
+//    // Called on: lifetime expiry, out-of-bounds, and successful hit.
+//    // ------------------------------------------------------------------------
+//    void HideBullet();
+//};

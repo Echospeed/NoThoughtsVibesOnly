@@ -33,6 +33,32 @@ extern PowerUpSystem powerUpSystem; // Owned by GamePage.cpp
 extern Audio* shootSFX;      // TODO: play on enemy attack
 
 // ============================================================================
+// Texture cache - loaded once, shared across all NPC instances of each type.
+// Prevents a new AEGfxTextureLoad() call per NPC spawn (major leak source).
+// Call NPC_LoadTextures() in Game_Load() and NPC_UnloadTextures() in Game_Unload().
+// ============================================================================
+static AEGfxTexture* s_TexWalk = nullptr;
+static AEGfxTexture* s_TexMelee = nullptr;
+static AEGfxTexture* s_TexRanger = nullptr;
+static AEGfxTexture* s_TexBoss = nullptr;
+
+void NPC_LoadTextures()
+{
+    s_TexWalk = AEGfxTextureLoad("Assets/shipBlue_manned.png");
+    s_TexMelee = AEGfxTextureLoad("Assets/shipGreen_manned.png");
+    s_TexRanger = AEGfxTextureLoad("Assets/shipPink_manned.png");
+    s_TexBoss = AEGfxTextureLoad("Assets/shipBeige_manned.png");
+}
+
+void NPC_UnloadTextures()
+{
+    if (s_TexWalk) { AEGfxTextureUnload(s_TexWalk);   s_TexWalk = nullptr; }
+    if (s_TexMelee) { AEGfxTextureUnload(s_TexMelee);  s_TexMelee = nullptr; }
+    if (s_TexRanger) { AEGfxTextureUnload(s_TexRanger); s_TexRanger = nullptr; }
+    if (s_TexBoss) { AEGfxTextureUnload(s_TexBoss);   s_TexBoss = nullptr; }
+}
+
+// ============================================================================
 // Start
 // ============================================================================
 // Spawns the NPC at a random world position that is at least 100 units from
@@ -55,28 +81,29 @@ void NPC::Start()
     transform.rotation = 0.0f;
 
     // --- Type-specific appearance and stats ---
+    // Use shared texture cache - no per-instance AEGfxTextureLoad calls
     switch (type)
     {
     case NPC_WALK:
-        NPCSpritesheet = AEGfxTextureLoad("Assets/shipBlue_manned.png");
+        NPCSpritesheet = s_TexWalk;
         spriteRenderer.texture = NPCSpritesheet;
-        spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f }; // White (no tint)
+        spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
         baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
         break;
 
     case NPC_MELEE:
-        NPCSpritesheet = AEGfxTextureLoad("Assets/shipGreen_manned.png");
+        NPCSpritesheet = s_TexMelee;
         spriteRenderer.texture = NPCSpritesheet;
-        spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f }; // White (no tint)
+        spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
         baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
         break;
 
     case NPC_RANGER:
-        NPCSpritesheet = AEGfxTextureLoad("Assets/shipPink_manned.png");
+        NPCSpritesheet = s_TexRanger;
         spriteRenderer.texture = NPCSpritesheet;
-        spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f }; // White (no tint)
+        spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
         baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
         std::cout << "[NPC] Ranger spawned at ("
@@ -84,15 +111,15 @@ void NPC::Start()
         break;
 
     case NPC_BOSS:
-        NPCSpritesheet = AEGfxTextureLoad("Assets/shipBeige_manned.png");
+        NPCSpritesheet = s_TexBoss;
         spriteRenderer.texture = NPCSpritesheet;
-        transform.scale = { 150.0f, 150.0f };         // 3x player size
-        spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f }; // White (no tint)
+        transform.scale = { 150.0f, 150.0f };
+        spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
         baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
-        health = 1000.0f; // 10x normal health
-        speed = 150.0f;  // Slightly slower than normal
-        fireRate = 0.5f;    // Fires twice per second
+        health = 1000.0f;
+        speed = 150.0f;
+        fireRate = 0.5f;
         std::cout << "[BOSS] Boss spawned at ("
             << transform.position.x << ", " << transform.position.y << ")\n";
         break;
@@ -395,13 +422,12 @@ void NPC::BossNPCs(f32 deltaTime)
 // ============================================================================
 // Destructor
 // ============================================================================
-// Frees the NPC spritesheet texture to prevent memory leaks.
+// NPC textures are shared (loaded once via NPC_LoadTextures).
+// Null out the pointers so ~GameObject() / FreeSpriteRenderer() does NOT
+// try to unload the shared texture - NPC_UnloadTextures() handles that.
 // ============================================================================
-//NPC::~NPC()
-//{
-//    if (NPCSpritesheet != nullptr)
-//    {
-//        AEGfxTextureUnload(NPCSpritesheet);
-//        NPCSpritesheet = nullptr;
-//    }
-//}
+NPC::~NPC()
+{
+    spriteRenderer.texture = nullptr;
+    NPCSpritesheet = nullptr;
+}

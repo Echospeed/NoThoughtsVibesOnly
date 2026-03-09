@@ -117,6 +117,8 @@ void Game_Load()
     Meshes::CreateSquareCenterOriginMesh();
     Meshes::CreateCircleMesh();
 
+    NPC_LoadTextures(); // Load shared NPC texture cache once
+
     gameFont = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
 
     // Audio: music loops forever (-1), SFX plays once (0)
@@ -138,8 +140,8 @@ void Game_Init()
     pPlayer = new Player();
     sCamX = pPlayer->transform.position.x;
     sCamY = pPlayer->transform.position.y;
-	ammoText = TextRenderer(gameFont, 1.0f, { -500.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-	ammoText << "Ammo: 0 / 500"; // Initial text - updated dynamically in Game_Update
+    ammoText = TextRenderer(gameFont, 1.0f, { -500.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    ammoText << "Ammo: 10 / 10"; // Updated dynamically in Game_Update
 
     // --- Systems ---
     waveSystem.Init(dynamic_cast<Player*>(pPlayer));
@@ -163,8 +165,8 @@ void Game_Init()
 
     gameUI.Init(gameFont, &waveSystem, &powerUpSystem);
 
-    // --- Bullet pool: 500 player bullets ---
-    for (int i = 0; i < 500; ++i)
+    // --- Bullet pool: 10 player bullets (grows by 5 per Bullet Damage upgrade) ---
+    for (int i = 0; i < 10; ++i)
     {
         Bullet* b = new Bullet();
         b->startPos = pPlayer;
@@ -173,8 +175,8 @@ void Game_Init()
         b->spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 0.0f }; // Hidden initially
     }
 
-    // --- Bullet pool: 100 enemy bullets (startPos assigned by WaveSystem) ---
-    for (int i = 0; i < 100; ++i)
+    // --- Bullet pool: 10 enemy bullets (reused indefinitely, never run out) ---
+    for (int i = 0; i < 10; ++i)
     {
         Bullet* b = new Bullet();
         b->owner = BulletOwner::ENEMY;
@@ -330,7 +332,15 @@ void Game_Update()
     // ------------------------------------------------------------------
     // 8. HUD ammo text refresh
     // ------------------------------------------------------------------
-	//ammoText << "Ammo: " << availableBullets << " / 500";
+    {
+        u32 totalBullets = powerUpSystem.GetStats().bulletCount;
+        Player* p = dynamic_cast<Player*>(pPlayer);
+        ammoText = TextRenderer(gameFont, 1.0f, { -500.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+        if (p && p->IsReloading())
+            ammoText << "RELOADING...";
+        else
+            ammoText << "Ammo: " << (p ? p->GetAmmoInMagazine() : 0) << " / " << totalBullets;
+    }
 
     // ------------------------------------------------------------------
     // 9. Debug hotkeys
@@ -461,9 +471,9 @@ void Game_Draw()
     // 9. Power-up overlay (blocks gameplay while active)
     if (powerUpSystem.IsWaitingForUpgrade())
         gameUI.DrawPowerUpScreen();
-    
-    if(AEInputCheckTriggered(AEVK_U))
-		powerUpSystem.AddExperience(100.0f);
+
+    if (AEInputCheckTriggered(AEVK_U))
+        powerUpSystem.AddExperience(100.0f);
 
     // -----------------------------------------------------------------------
     // PAUSE OVERLAY (drawn in screen space so it covers everything)
@@ -478,14 +488,14 @@ void Game_Draw()
         AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
 
         // "PAUSED" header
-		pauseText = TextRenderer(gameFont, 1.0f, { 0.0f, 200.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-		pauseText << "PAUSED";
-		pauseText.Draw();
+        pauseText = TextRenderer(gameFont, 1.0f, { 0.0f, 200.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+        pauseText << "PAUSED";
+        pauseText.Draw();
 
         // Key hint text
-		hint = TextRenderer(gameFont, 0.8f, { 0.0f, -50.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-		hint << "ESC-Resume  R-Restart  Q-Menu";
-		hint.Draw();
+        hint = TextRenderer(gameFont, 0.8f, { 0.0f, -50.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+        hint << "ESC-Resume  R-Restart  Q-Menu";
+        hint.Draw();
     }
 
     // Restore world camera for next frame
@@ -511,8 +521,8 @@ void Game_Free()
     gamePageObj.shrink_to_fit();
 
     //if (bgMusic) bgMusic->Free();
-	//if (levelupSFX) levelupSFX->Free();
-	//if (shootSFX) shootSFX->Free();
+    //if (levelupSFX) levelupSFX->Free();
+    //if (shootSFX) shootSFX->Free();
 }
 
 // ============================================================================
@@ -524,6 +534,7 @@ void Game_Free()
 void Game_Unload()
 {
     Meshes::FreeMeshes();
+    NPC_UnloadTextures(); // Release shared NPC texture cache
     AEGfxDestroyFont(gameFont);
     //levelupSFX = nullptr;
     //bgMusic = nullptr;

@@ -25,6 +25,8 @@
 #include "PowerUpSystem.hpp"
 #include "Player.hpp"
 #include "NPC.hpp"
+#include "Bullet.hpp"
+#include "GamePage.hpp"
 #include <iostream>
 
 // ============================================================================
@@ -120,7 +122,7 @@ PowerUp PowerUpSystem::CreatePowerUp(PowerUpType type)
 
     case POWERUP_BULLET_DAMAGE:
         p.name = "BULLET POWER";
-        p.description = "+25 Bullet Damage";
+        p.description = "+25 Bullet Damage  +5 Bullets";
         p.value = 25.0f;
         break;
 
@@ -155,7 +157,21 @@ void PowerUpSystem::ApplyPowerUp(PowerUpType type, Player* player)
     case POWERUP_BULLET_DAMAGE:
         stats.bulletDamageBonus += 25.0f;
         ++stats.bulletDamageUpgrades;
-        std::cout << "[Upgrade] Bullet damage -> " << stats.GetTotalBulletDamage() << "\n";
+        stats.bulletCount += 5;
+        // Spawn 5 new bullet pool slots immediately into the live object list.
+        // Game_Free() will delete them in its normal loop - no double-delete risk.
+        for (int i = 0; i < 5; ++i)
+        {
+            Bullet* b = new Bullet();
+            b->startPos = player; // Player-owned bullet
+            b->isActive = false;
+            b->spent = false;  // ready to fire
+            b->owner = BulletOwner::PLAYER;
+            b->spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 0.0f }; // Hidden
+            b->Start();
+        }
+        std::cout << "[Upgrade] Bullet damage -> " << stats.GetTotalBulletDamage()
+            << "  Bullet count -> " << stats.bulletCount << "\n";
         break;
 
     case POWERUP_AOE_DAMAGE:

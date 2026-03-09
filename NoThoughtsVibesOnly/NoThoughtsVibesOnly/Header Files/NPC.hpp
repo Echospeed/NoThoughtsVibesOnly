@@ -5,14 +5,18 @@
 #include "Player.hpp"
 #include "Particles.hpp"
 
+// Shared NPC texture management - call in Game_Load / Game_Unload
+void NPC_LoadTextures();
+void NPC_UnloadTextures();
+
 class NPC : public GameObject
 {
 public:
-	//~NPC(); // Destructor to free texture
+	~NPC(); // Destructor to free texture
 	void Start();
 	void Update(f32 deltaTime);
-	GameObject* target{nullptr};
-	NPCType type{NPC_WALK};
+	GameObject* target{ nullptr };
+	NPCType type{ NPC_WALK };
 	f32 health{ 100.0f };
 	Colour baseColour{};
 	bool isVisibleToPlayer = true;

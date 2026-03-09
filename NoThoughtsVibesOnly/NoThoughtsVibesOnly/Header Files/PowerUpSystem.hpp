@@ -42,27 +42,28 @@ struct PowerUp
 struct PlayerStats
 {
     // === Movement ===
-    f32 baseSpeed{200.0f};
-    f32 speedBonus{0.0f};           // Flat bonus from upgrades
-    u32 speedUpgrades{0};           // Times upgraded
-    
+    f32 baseSpeed{ 200.0f };
+    f32 speedBonus{ 0.0f };           // Flat bonus from upgrades
+    u32 speedUpgrades{ 0 };           // Times upgraded
+
     // === Combat ===
-    f32 baseBulletDamage{100.0f};
-    f32 bulletDamageBonus{0.0f};    // Flat bonus from upgrades
-    u32 bulletDamageUpgrades{0};    // Times upgraded
-    
+    f32 baseBulletDamage{ 100.0f };
+    f32 bulletDamageBonus{ 0.0f };    // Flat bonus from upgrades
+    u32 bulletDamageUpgrades{ 0 };    // Times upgraded
+    u32 bulletCount{ 10 };            // Current pool size (starts at 10, +5 per upgrade)
+
     // === AoE ===
-    f32 baseAoeRadius{100.0f};      // Base AoE radius
-    f32 aoeRadiusBonus{0.0f};       // Bonus radius
-    f32 baseAoeDamage{100.0f};      // Base AoE damage per second
-    f32 aoeDamageBonus{0.0f};       // Bonus damage
-    u32 aoeUpgrades{0};             // Times upgraded
-    
+    f32 baseAoeRadius{ 100.0f };      // Base AoE radius
+    f32 aoeRadiusBonus{ 0.0f };       // Bonus radius
+    f32 baseAoeDamage{ 100.0f };      // Base AoE damage per second
+    f32 aoeDamageBonus{ 0.0f };       // Bonus damage
+    u32 aoeUpgrades{ 0 };             // Times upgraded
+
     // === Experience ===
-    f32 currentExp{0.0f};
-    f32 expToNextLevel{100.0f};
-    u32 level{1};
-    
+    f32 currentExp{ 0.0f };
+    f32 expToNextLevel{ 100.0f };
+    u32 level{ 1 };
+
     // === Methods ===
     f32 GetTotalSpeed() const { return baseSpeed + speedBonus; }
     f32 GetTotalBulletDamage() const { return baseBulletDamage + bulletDamageBonus; }
@@ -78,32 +79,32 @@ class PowerUpSystem
 public:
     // === Initialization ===
     void Init();
-    
+
     // === Experience Management ===
     void AddExperience(f32 amount);
     bool CheckLevelUp();                // Returns true if leveled up
-    
+
     // === Power-Up Selection ===
     void GeneratePowerUpChoices();      // Creates 3 random choices
     void ApplyPowerUp(PowerUpType type, Player* player);
-    
+
     // === Enemy Scaling ===
     f32 GetRangerDamageForRound(u32 round) const;
     f32 GetMeleeSpeedForRound(u32 round) const;
     f32 GetMeleeDamageForRound(u32 round) const;
-    
+
     // === Getters ===
     PlayerStats& GetStats() { return stats; }
     const PlayerStats& GetStats() const { return stats; }
     PowerUp* GetPowerUpChoices() { return powerUpChoices; }
     bool IsWaitingForUpgrade() const { return waitingForUpgrade; }
     void SetWaitingForUpgrade(bool waiting) { waitingForUpgrade = waiting; }
-    
+
 private:
     PlayerStats stats;
     PowerUp powerUpChoices[3]{};          // 3 choices on level up
-    bool waitingForUpgrade{false};      // Pauses game for upgrade choice
-    
+    bool waitingForUpgrade{ false };      // Pauses game for upgrade choice
+
     // Helper methods
     PowerUp CreatePowerUp(PowerUpType type);
 };

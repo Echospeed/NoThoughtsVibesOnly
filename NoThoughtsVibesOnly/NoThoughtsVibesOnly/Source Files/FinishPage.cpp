@@ -143,12 +143,21 @@ void FinishPage_Draw()
 // ============================================================================
 void FinishPage_Free()
 {
-    //FreeButton(RestartButton); // Uncomment if button is enabled
-    mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(), restartButton), mainPageObj.end());
-    mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(), menuButton), mainPageObj.end());
-
-    delete restartButton;  restartButton = nullptr;
-    delete menuButton;     menuButton = nullptr;
+    // Remove buttons from mainPageObj (they self-registered there on construction)
+    if (restartButton)
+    {
+        auto& v = mainPageObj;
+        v.erase(std::remove(v.begin(), v.end(), static_cast<GameObject*>(restartButton)), v.end());
+        delete restartButton;
+        restartButton = nullptr;
+    }
+    if (menuButton)
+    {
+        auto& v = mainPageObj;
+        v.erase(std::remove(v.begin(), v.end(), static_cast<GameObject*>(menuButton)), v.end());
+        delete menuButton;
+        menuButton = nullptr;
+    }
 }
 
 // ============================================================================

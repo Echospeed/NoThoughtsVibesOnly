@@ -47,14 +47,16 @@ void Player::Start()
 
     // Small initial cooldown prevents accidental shots at spawn
     shootCooldown = 0.3f;
+    isReloading = false;
+    ammoInMagazine = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount : 10;
 
     smokePS.Load();
     smokePS.Init(
-        30,           // maxParticles — small puff, doesn't need many
-        -30, 30,      // minVelX, maxVelX — spreads slightly sideways
-        20, 80,       // minVelY, maxVelY — drifts upward
-        0.6f,         // maxLifetime — short-lived puff
-        12.0f         // size — smaller than the player itself
+        30,           // maxParticles ? small puff, doesn't need many
+        -30, 30,      // minVelX, maxVelX ? spreads slightly sideways
+        20, 80,       // minVelY, maxVelY ? drifts upward
+        0.6f,         // maxLifetime ? short-lived puff
+        12.0f         // size ? smaller than the player itself
     );
 
     //spriteRenderer.customMesh = CreateSpriteSheetMesh(480.0f, 500.0f, 2000.0f, 2500.0f);
@@ -152,9 +154,33 @@ void Player::Update(f32 deltaTime)
     // ------------------------------------------------------------------
     // 4. Shooting - continuous fire on left mouse hold (10 shots/sec)
     // ------------------------------------------------------------------
+
+    // --- Reload tick ---
+    if (isReloading)
+    {
+        reloadTimer -= deltaTime;
+        if (reloadTimer <= 0.0f)
+        {
+            // Reload complete: reset all player bullets to inactive and unspent
+            for (GameObject* obj : gamePageObj)
+            {
+                if (obj->ObjectType != SHOT) continue;
+                Bullet* b = dynamic_cast<Bullet*>(obj);
+                if (!b || b->owner != BulletOwner::PLAYER) continue;
+                b->isActive = false;
+                b->spent = false;
+                b->spriteRenderer.colour.a = 0.0f;
+                b->transform.position = { -1000.0f, -1000.0f };
+            }
+            // Restore magazine count from the power-up system
+            ammoInMagazine = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount : 10;
+            isReloading = false;
+        }
+    }
+
     shootCooldown -= deltaTime;
 
-    if (AEInputCheckCurr(AEVK_LBUTTON) && shootCooldown <= 0.0f)
+    if (!isReloading && AEInputCheckCurr(AEVK_LBUTTON) && shootCooldown <= 0.0f)
     {
         Shoot(mouseDir);
         shootCooldown = 0.10f; // 10 shots per second
@@ -308,20 +334,31 @@ void Player::Update(f32 deltaTime)
 // ============================================================================
 void Player::Shoot(AEVec2 dir)
 {
+    if (isReloading || ammoInMagazine <= 0) return;
+
+    // Find and fire one unspent player bullet
     for (GameObject* obj : gamePageObj)
     {
-        if (obj->ObjectType != SHOT || obj->isActive) continue;
-
+        if (obj->ObjectType != SHOT) continue;
         Bullet* bullet = dynamic_cast<Bullet*>(obj);
         if (!bullet || bullet->owner != BulletOwner::PLAYER) continue;
+        if (bullet->isActive || bullet->spent) continue;
 
-        // Reactivate this pooled bullet
+        bullet->spent = true;
         bullet->isActive = true;
         bullet->transform.position = transform.position;
         bullet->dir = dir;
         bullet->lifeTime = bullet->maxLifeTime;
-        bullet->spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 1.0f }; // Yellow
-        break; // One bullet per Shoot() call
+        bullet->spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 1.0f };
+        --ammoInMagazine;
+        break;
+    }
+
+    // Magazine empty - start reload
+    if (ammoInMagazine <= 0)
+    {
+        isReloading = true;
+        reloadTimer = reloadDuration;
     }
 }
 
