@@ -57,27 +57,27 @@ void Player::Start()
         12.0f         // size — smaller than the player itself
     );
 
-    spriteRenderer.customMesh = CreateSpriteSheetMesh(500.0f, 500.0f, 2000.0f, 2500.0f);
+    //spriteRenderer.customMesh = CreateSpriteSheetMesh(480.0f, 500.0f, 2000.0f, 2500.0f);
 
-    playerSpritesheet = AEGfxTextureLoad("Assets/ame.png");
+    playerSpritesheet = AEGfxTextureLoad("Assets/shipYellow_manned.png");
 
     spriteRenderer.texture = playerSpritesheet;
 
     idleAnim = Animation(0.2f, true);
 
-    idleAnim.AddFrames(0, 0, 500, 500);
-    idleAnim.AddFrames(500, 0, 500, 500);
-    idleAnim.AddFrames(1000, 0, 500, 500);
-    idleAnim.AddFrames(1500, 0, 500, 500);
+    //idleAnim.AddFrames(0, 0, 500, 500);
+    //idleAnim.AddFrames(500, 0, 500, 500);
+    //idleAnim.AddFrames(1000, 0, 500, 500);
+    //idleAnim.AddFrames(1500, 0, 500, 500);
 
-    runAnim = Animation(0.1f, true);
+    //runAnim = Animation(0.1f, true);
 
-    runAnim.AddFrames(0, 1000, 500, 500);
-    runAnim.AddFrames(500, 1000, 500, 500);
-    runAnim.AddFrames(1000, 1000, 500, 500);
-    runAnim.AddFrames(1500, 1000, 500, 500);
+    //runAnim.AddFrames(0, 1000, 500, 500);
+    //runAnim.AddFrames(500, 1000, 500, 500);
+    //runAnim.AddFrames(1000, 1000, 500, 500);
+    //runAnim.AddFrames(1500, 1000, 500, 500);
 
-    playerAnimator.Play(&idleAnim);
+    //playerAnimator.Play(&idleAnim);
 }
 
 // ============================================================================
@@ -122,14 +122,14 @@ void Player::Update(f32 deltaTime)
     }
 
     // 1. The State Machine: Decide which animation to play
-    if (isMoving)
-    {
-        playerAnimator.Play(&runAnim);
-    }
-    else
-    {
-        playerAnimator.Play(&idleAnim);
-    }
+    //if (isMoving)
+    //{
+    //    playerAnimator.Play(&runAnim);
+    //}
+    //else
+    //{
+    //    playerAnimator.Play(&idleAnim);
+    //}
 
     // ------------------------------------------------------------------
     // 2. Rotation
