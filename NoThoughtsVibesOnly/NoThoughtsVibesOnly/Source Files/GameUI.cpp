@@ -35,18 +35,15 @@
 bool isOverlayActive = false;
 extern GameObject* pPlayer; // Declared in GamePage.cpp
 
-//TextRenderer playerHealth;
-//TextRenderer playerXP;
-//TextRenderer playerStats;
-//TextRenderer waveInfo;
-//TextRenderer waveRound;
-//TextRenderer waveTimer;
-//TextRenderer activeEnemyCount;
-//TextRenderer powerUpTitle;
-//TextRenderer statBuffText;
-//TextRenderer descriptionText;
-
-//Button powerUpButtons[3]; // 3 buttons for power-up choices
+// ============================================================================
+// Animated Health Bar State
+// ============================================================================
+// s_DisplayedPlayerHP lerps toward the real HP value each frame, creating
+// a smooth "damage drain" ghost bar effect behind the true green fill.
+// Initialised to 100 to match the player's starting health.
+// ============================================================================
+static f32 s_DisplayedPlayerHP = 100.0f;
+static f32 s_DisplayedPlayerMaxHP = 100.0f;
 // ============================================================================
 // Init
 // ============================================================================
@@ -75,29 +72,6 @@ void GameUI::DrawRect(f32 x, f32 y, f32 w, f32 h, f32 r, f32 g, f32 b, f32 a)
 
     AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
 }
-
-// ============================================================================
-// IsMouseOverBox (private helper)
-// ============================================================================
-// Point-in-AABB test using raw pixel mouse position, converted to screen space.
-// Used for power-up card mouse-over in DrawPowerUpScreen().
-// ============================================================================
-//bool GameUI::IsMouseOverBox(f32 boxX, f32 boxY, f32 boxW, f32 boxH)
-//{
-//    s32 mouseX, mouseY;
-//    AEInputGetCursorPosition(&mouseX, &mouseY);
-//
-//    // Convert pixel -> screen-center-relative
-//    const f32 worldX = static_cast<f32>(mouseX) - 800.0f;
-//    const f32 worldY = 450.0f - static_cast<f32>(mouseY);
-//
-//    const f32 halfW = boxW / 2.0f;
-//    const f32 halfH = boxH / 2.0f;
-//
-//    return (worldX >= boxX - halfW && worldX <= boxX + halfW &&
-//        worldY >= boxY - halfH && worldY <= boxY + halfH);
-//}
-
 // ============================================================================
 // DrawAllHealthBars - WORLD SPACE
 // ============================================================================
@@ -111,30 +85,51 @@ void GameUI::DrawAllHealthBars()
     AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
 
     Transform tf;
+    const f32 dt = (f32)AEFrameRateControllerGetFrameTime();
 
     // -------------------------------------------------------------------------
-    // Player health bar
+    // Player health bar (animated fill)
     // -------------------------------------------------------------------------
     const Player* player = dynamic_cast<Player*>(pPlayer);
     if (player && player->isActive)
     {
+        // Smoothly lerp displayed HP toward real HP each frame.
+        // lerpSpeed of 6 gives a ~0.17s drain for a full-bar hit.
+        s_DisplayedPlayerMaxHP = player->maxHealth;
+        const f32 lerpSpeed = 6.0f;
+        s_DisplayedPlayerHP += (player->health - s_DisplayedPlayerHP) * lerpSpeed * dt;
+
         const f32 barX = player->transform.position.x;
         const f32 barY = player->transform.position.y + 80.0f;
         const f32 barW = 60.0f;
         const f32 barH = 8.0f;
-        const f32 ratio = AEClamp(player->health / player->maxHealth, 0.0f, 1.0f);
+        const f32 trueRatio = AEClamp(player->health / player->maxHealth, 0.0f, 1.0f);
+        const f32 displayRatio = AEClamp(s_DisplayedPlayerHP / s_DisplayedPlayerMaxHP, 0.0f, 1.0f);
 
-        // Red background (empty health)
+        // 1. Red background (represents empty health)
         AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 1.0f);
         tf.SetPosition(barX, barY);
         tf.SetScale(barW, barH);
         tf.Apply();
         AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
 
-        // Green fill (current health), offset to anchor to left edge
-        if (ratio > 0.01f)
+        // 2. Pale yellow ghost bar - shows the lagging displayed value.
+        //    Only drawn when it has drifted ahead of the true value.
+        if (displayRatio > trueRatio + 0.01f)
         {
-            const f32 greenW = barW * ratio;
+            const f32 ghostW = barW * displayRatio;
+            const f32 ghostX = barX - (barW / 2.0f) + (ghostW / 2.0f);
+            AEGfxSetColorToMultiply(1.0f, 0.9f, 0.3f, 1.0f);
+            tf.SetPosition(ghostX, barY);
+            tf.SetScale(ghostW, barH);
+            tf.Apply();
+            AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
+        }
+
+        // 3. Green fill - true current health, anchored to the left edge.
+        if (trueRatio > 0.01f)
+        {
+            const f32 greenW = barW * trueRatio;
             const f32 greenX = barX - (barW / 2.0f) + (greenW / 2.0f);
             AEGfxSetColorToMultiply(0.0f, 1.0f, 0.0f, 1.0f);
             tf.SetPosition(greenX, barY);
@@ -191,10 +186,67 @@ void GameUI::DrawHealthText()
     const Player* player = dynamic_cast<Player*>(pPlayer);
     if (!player) return;
 
-	playerHealth = TextRenderer(gameFont, 1.0f, { -500.0f, -400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-	playerHealth << "HP: " << player->health << " / " << player->maxHealth;
+    playerHealth = TextRenderer(gameFont, 1.0f, { -500.0f, -400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    playerHealth << "HP: " << player->health << " / " << player->maxHealth;
     playerHealth.Draw();
-    
+
+    // ============================================================================
+    // Ammo Pip Icons
+    // ============================================================================
+    // Draws one small square icon per bullet in the magazine instead of text.
+    //   Yellow  = loaded round
+    //   Grey    = empty slot (spent this magazine)
+    //   Orange  = reloading (all pips pulse the same colour)
+    // Capped at 30 visible pips so they never overflow the screen width.
+    // ============================================================================
+    if (powerUpSystem)
+    {
+        const int totalAmmo = (int)powerUpSystem->GetStats().bulletCount;
+        const int currentAmmo = player->GetAmmoInMagazine();
+        const bool reloading = player->IsReloading();
+
+        // Clamp to a sane display max so pips don't overflow screen
+        const int displayMax = (totalAmmo > 30) ? 30 : totalAmmo;
+
+        const f32 pipSize = 8.0f;
+        const f32 pipGap = 4.0f;
+        const f32 pipStartX = -500.0f - (displayMax * (pipSize + pipGap)) / 2.0f;
+        const f32 pipY = -430.0f;
+
+        Transform tf;
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+
+        for (int i = 0; i < displayMax; ++i)
+        {
+            const f32 pipX = pipStartX + i * (pipSize + pipGap);
+            bool filled = !reloading && (i < currentAmmo);
+
+            if (reloading)
+            {
+                // Pips pulse orange during reload
+                AEGfxSetColorToMultiply(1.0f, 0.45f, 0.0f, 0.6f);
+            }
+            else if (filled)
+            {
+                AEGfxSetColorToMultiply(1.0f, 0.9f, 0.0f, 1.0f); // Yellow
+            }
+            else
+            {
+                AEGfxSetColorToMultiply(0.3f, 0.3f, 0.3f, 0.8f); // Empty: grey
+            }
+
+            tf.SetPosition(pipX, pipY);
+            tf.SetScale(pipSize, pipSize);
+            tf.Apply();
+            AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
+        }
+
+        // Reset render state
+        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+    }
 }
 
 // ============================================================================
@@ -228,9 +280,9 @@ void GameUI::DrawXPBar()
     }
 
     // Level and XP text
-	playerXP = TextRenderer(gameFont, 0.8f, { barX, barY + 28.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    playerXP = TextRenderer(gameFont, 0.8f, { barX, barY + 28.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     playerXP << "LVL " << stats.level << "   " << (int)stats.currentExp << " / " << (int)stats.expToNextLevel << " XP";
-	playerXP.Draw();
+    playerXP.Draw();
 }
 
 // ============================================================================
@@ -253,14 +305,14 @@ void GameUI::DrawCurrentStats()
 
     DrawRect(panelX, panelY, panelW, panelH, 0.1f, 0.1f, 0.15f, 0.85f);
 
-    playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY + (panelH * 0.4f)}, {0.6f, 0.8f, 0.8f, 0.8f});
-	playerStats << "CURRENT STATS";
+    playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY + (panelH * 0.4f) }, { 0.6f, 0.8f, 0.8f, 0.8f });
+    playerStats << "CURRENT STATS";
     playerStats.Draw();
 
-    playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY}, {1.0f, 1.0f, 1.0f, 1.0f});
+    playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY }, { 1.0f, 1.0f, 1.0f, 1.0f });
     playerStats << "SPD: " << (float)stats.GetTotalSpeed() << "   DMG: " << (float)stats.GetTotalBulletDamage();
-	playerStats.Draw();
-    playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY -30.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    playerStats.Draw();
+    playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY - 30.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     playerStats << "AOE: r=" << (float)stats.GetTotalAoeRadius() << "  d=" << (float)stats.GetTotalAoeDamage() << "/s";
     playerStats.Draw();
 }
@@ -277,13 +329,13 @@ void GameUI::DrawWaveInfo()
     const f32 infoX = 400.0f;
     const f32 infoY = 400.0f;
 
-	waveInfo = TextRenderer(gameFont,  1.0f, { infoX, infoY }, { 1.0f, 0.3f, 0.3f, 1.0f });
-	waveInfo << "WAVE " << waveSystem->GetCurrentWave();
-	waveInfo.Draw();
+    waveInfo = TextRenderer(gameFont, 1.0f, { infoX, infoY }, { 1.0f, 0.3f, 0.3f, 1.0f });
+    waveInfo << "WAVE " << waveSystem->GetCurrentWave();
+    waveInfo.Draw();
 
-	waveRound = TextRenderer(gameFont,  1.0f, { infoX, infoY - 35.0f }, { 0.7f, 0.7f, 0.7f, 1.0f });
-	waveRound << "Round " << waveSystem->GetCurrentRound();
-	waveRound.Draw();
+    waveRound = TextRenderer(gameFont, 1.0f, { infoX, infoY - 35.0f }, { 0.7f, 0.7f, 0.7f, 1.0f });
+    waveRound << "Round " << waveSystem->GetCurrentRound();
+    waveRound.Draw();
 
     // Count active NPCs for the enemy counter display
     int activeEnemies = 0;
@@ -291,9 +343,9 @@ void GameUI::DrawWaveInfo()
         if (obj && obj->isActive && obj->ObjectType == NP)
             ++activeEnemies;
 
-	activeEnemyCount = TextRenderer(gameFont, 1.0f, { infoX, infoY - 70.0f }, { 1.0f, 1.0f, 0.3f, 1.0f });
-	activeEnemyCount << activeEnemies << " Enemies";
-	activeEnemyCount.Draw();
+    activeEnemyCount = TextRenderer(gameFont, 1.0f, { infoX, infoY - 70.0f }, { 1.0f, 1.0f, 0.3f, 1.0f });
+    activeEnemyCount << activeEnemies << " Enemies";
+    activeEnemyCount.Draw();
 }
 
 // ============================================================================
@@ -312,13 +364,13 @@ void GameUI::DrawWaveTimer()
 
     DrawRect(timerX, timerY, 395.0f, 120.0f, 0.1f, 0.1f, 0.15f, 0.85f);
 
-	waveTimer = TextRenderer(gameFont, 1.0f, { timerX, timerY + 25.0f }, { 1.0f, 1.0f, 0.8f, 0.8f });
-	waveTimer << " NEXT WAVE IN";
+    waveTimer = TextRenderer(gameFont, 1.0f, { timerX, timerY + 25.0f }, { 1.0f, 1.0f, 0.8f, 0.8f });
+    waveTimer << " NEXT WAVE IN";
     waveTimer.Draw();
 
     // Countdown digits turn orange when time is short
     const f32 g = (timeRemaining > 2.0f) ? 1.0f : 0.3f;
-	waveTimer = TextRenderer(gameFont, 1.0f, { timerX, timerY - 35.0f }, { 1.0f, g, 0.0f, 0.8f });
+    waveTimer = TextRenderer(gameFont, 1.0f, { timerX, timerY - 35.0f }, { 1.0f, g, 0.0f, 0.8f });
     waveTimer.SetMaxPixelWidth(395.0f);
     waveTimer << std::fixed << std::setprecision(1) << timeRemaining;
     waveTimer.Draw();
@@ -459,9 +511,9 @@ void GameUI::DrawPowerUpScreen()
         }
         else if (choices[i].type == POWERUP_AOE_DAMAGE)
         {
-			statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 25.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
-			statBuffText << "Current:";
-			statBuffText.Draw();
+            statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 25.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+            statBuffText << "Current:";
+            statBuffText.Draw();
             statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 45.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
             statBuffText << "r=" << (float)stats.GetTotalAoeRadius();
             statBuffText.Draw();

@@ -1,226 +1,370 @@
 // ============================================================================
-// Particles.cpp - Particle System Implementation
+// Particles.cpp - Particle Engine Implementation
 // ============================================================================
-// Object-pooled particle system with configurable velocity, lifetime, and size.
-// Uses a free-list pattern: freeParticles holds available indices;
-// activeParticles holds indices of currently live particles.
+// HOW THIS SYSTEM WORKS (big picture):
 //
-// USAGE:
-// ----------------------------------------------------------------------------
-//   ParticleSystem ps;
+//   Each ParticleSystem owns a fixed-size pool of Particle structs allocated
+//   once in Init(). Two index lists track which slots are in use:
 //
-//   // In Load():
-//   ps.Load();
+//     freeParticles   - indices of slots available to spawn into
+//     activeParticles - indices of currently alive particles
 //
-//   // In Init():
-//   ps.Init(
-//       50,         // maxParticles
-//       -100, 100,  // minVelX, maxVelX
-//       -100, 100,  // minVelY, maxVelY
-//       1.5f,       // maxLifetime (seconds)
-//       8.0f        // size (world units)
-//   );
+//   On Emit():  grab an index from freeParticles, initialise that slot,
+//               push the index onto activeParticles.
 //
-//   // In Update():
-//   ps.Update(deltaTime);
-//   // Emit at a position:
-//   ps.Emit(someWorldPosition);
+//   On Update(): iterate activeParticles backwards (so swap-and-pop removal
+//               is safe). When a particle dies, swap its index to the back
+//               of activeParticles, pop it off, and return the index to
+//               freeParticles. This keeps removal O(1).
 //
-//   // In Draw() (call Render per active particle):
-//   for (u8 idx : activeParticles) ps.Render(&particles[idx]);
-//   // NOTE: activeParticles is private - expose via getter if needed.
+//   On Render(): iterate activeParticles and draw each live particle using
+//               the single shared circle mesh (s_Mesh). Colour and alpha are
+//               applied via AEGfxSetColorToAdd so no texture is needed.
 //
-//   // In Unload():
-//   ps.Free();
+// SHARED MESH:
+//   All ParticleSystem instances share ONE AEGfxVertexList* (s_Mesh).
+//   This avoids creating a new mesh for every effect in the game.
+//   Call LoadSharedMesh() once in Game_Load(), FreeSharedMesh() in Game_Unload().
 // ============================================================================
 
 #include "pch.hpp"
 #include "Particles.hpp"
+#include <cstdlib>
+#include <cmath>
+
+// One circle mesh shared across ALL ParticleSystem instances in the game.
+// nullptr until LoadSharedMesh() is called.
+AEGfxVertexList* ParticleSystem::s_Mesh = nullptr;
 
 // ============================================================================
-// Constructor / Destructor
+// LoadSharedMesh / FreeSharedMesh
 // ============================================================================
-ParticleSystem::ParticleSystem()
-    : particleMesh(nullptr)
-    , texture(nullptr)
+// Builds a unit circle mesh made of 20 triangles fanning out from the centre.
+// All particle systems use this same mesh, scaled per-particle at render time.
+// ============================================================================
+void ParticleSystem::LoadSharedMesh()
 {
-    printf("[Particles] System created.\n");
-}
+    if (s_Mesh) return; // Guard: don't rebuild if already loaded
 
-ParticleSystem::~ParticleSystem()
-{
-    Free();
-    printf("[Particles] System destroyed.\n");
-}
-
-// ============================================================================
-// Load
-// ============================================================================
-// Builds the circle mesh used to draw each particle.
-// A 20-segment fan gives a smooth circle at particle sizes.
-// ============================================================================
-void ParticleSystem::Load()
-{
-    const u8  segments = 20;
-    const f32 step = (PI * 2.0f) / segments;
+    const int segments = 20;                     // More segments = rounder circle, higher cost
+    const f32 step = (PI * 2.0f) / segments;     // Angle between each triangle slice
 
     AEGfxMeshStart();
-
-    for (u8 i = 0; i < segments; ++i)
+    for (int i = 0; i < segments; ++i)
     {
-        const f32 t1 = i * step;
-        const f32 t2 = (i + 1) * step;
+        const f32 t1 = i * step;             // Start angle of this slice
+        const f32 t2 = (i + 1) * step;      // End angle of this slice
 
+        // Each triangle: centre vertex + two rim vertices.
+        // UVs map so the centre is (0.5, 0.5) and the rim maps to [0,1].
         AEGfxTriAdd(
-            0.0f, 0.0f, 0xFFFFFFFF, 0.5f, 0.5f,
-            cosf(t1) * 0.5f, sinf(t1) * 0.5f, 0xFFFFFFFF, (cosf(t1) + 1.0f) * 0.5f, (sinf(t1) + 1.0f) * 0.5f,
-            cosf(t2) * 0.5f, sinf(t2) * 0.5f, 0xFFFFFFFF, (cosf(t2) + 1.0f) * 0.5f, (sinf(t2) + 1.0f) * 0.5f
+            0.0f, 0.0f, 0xFFFFFFFF, 0.5f, 0.5f,               // Centre
+            cosf(t1) * 0.5f, sinf(t1) * 0.5f, 0xFFFFFFFF, (cosf(t1) + 1) * 0.5f, (sinf(t1) + 1) * 0.5f,  // Rim t1
+            cosf(t2) * 0.5f, sinf(t2) * 0.5f, 0xFFFFFFFF, (cosf(t2) + 1) * 0.5f, (sinf(t2) + 1) * 0.5f   // Rim t2
         );
     }
+    s_Mesh = AEGfxMeshEnd(); // Finalise and upload the mesh to the GPU
+}
 
-    particleMesh = AEGfxMeshEnd();
+void ParticleSystem::FreeSharedMesh()
+{
+    // Safe to call even if LoadSharedMesh() was never called
+    if (s_Mesh) { AEGfxMeshFree(s_Mesh); s_Mesh = nullptr; }
+}
+
+// ============================================================================
+// RandRange
+// ============================================================================
+// Returns a uniformly distributed random float between lo and hi (inclusive).
+// Used to randomise per-particle velocity and lifetime on spawn.
+// ============================================================================
+f32 ParticleSystem::RandRange(f32 lo, f32 hi) const
+{
+    if (lo >= hi) return lo;                                        // Degenerate range - just return lo
+    return lo + (static_cast<f32>(rand()) / RAND_MAX) * (hi - lo); // Scale [0,1] rand into [lo, hi]
 }
 
 // ============================================================================
 // Init
 // ============================================================================
-// Sets particle system parameters and pre-allocates the particle pool.
-// All indices start in freeParticles (available for emission).
+// Configures this system and pre-allocates all particle slots.
+// Call before any Emit(). Calling Init() again fully resets the system.
+//
+// Parameters:
+//   maxParticles      - hard cap on simultaneously alive particles
+//   minVelX/maxVelX   - random horizontal velocity range at spawn
+//   minVelY/maxVelY   - random vertical velocity range at spawn
+//   minLifetime/max   - random lifespan in seconds
+//   startSize/endSize - particle radius at birth -> death (lerped over lifetime)
+//   startRGB/endRGB   - colour at birth -> death (lerped over lifetime)
+//   gravity           - downward acceleration (units/sec^2). 0 = weightless
+//   drag              - velocity damping per second. 0 = no drag, 2 = heavy drag
 // ============================================================================
-void ParticleSystem::Init(u8 _maxParticles,
-    f32 _minVelX, f32 _maxVelX,
-    f32 _minVelY, f32 _maxVelY,
-    f32 _maxLifetime, f32 _size)
+void ParticleSystem::Init(int  _maxParticles,
+    f32  _minVelX, f32 _maxVelX,
+    f32  _minVelY, f32 _maxVelY,
+    f32  _minLifetime, f32 _maxLifetime,
+    f32  _startSize, f32 _endSize,
+    f32  _startR, f32 _startG, f32 _startB,
+    f32  _endR, f32 _endG, f32 _endB,
+    f32  _gravity,
+    f32  _drag)
 {
-    maxParticles = _maxParticles;
-    maxLifetime = _maxLifetime;
-    minVelX = _minVelX;
-    maxVelX = _maxVelX;
-    minVelY = _minVelY;
-    maxVelY = _maxVelY;
-    size = _size;
-    isActive = false;
+    Free(); // Wipe any existing particles before reinitialising
 
-    particles.resize(maxParticles);
-    activeParticles.resize(0);
-    freeParticles.resize(maxParticles);
+    // Store spawn parameters - used every time Emit() is called
+    minVelX = _minVelX;   maxVelX = _maxVelX;
+    minVelY = _minVelY;   maxVelY = _maxVelY;
+    minLifetime = _minLifetime; maxLifetime = _maxLifetime;
+    startSize = _startSize; endSize = _endSize;
+    startR = _startR; startG = _startG; startB = _startB;
+    endR = _endR;   endG = _endG;   endB = _endB;
+    gravity = _gravity;
+    drag = _drag;
 
-    // Optionally load a texture; fall back to colour rendering if missing
-    texture = AEGfxTextureLoad("particle.png");
-    if (!texture)
-        printf("[Particles] No texture found - using colour mode.\n");
+    // Pre-allocate all particle slots upfront - no heap allocation during gameplay
+    particles.resize(_maxParticles);
 
-    // Initialise all particles to their default state and mark as free
-    for (u8 i = 0; i < maxParticles; ++i)
-    {
-        particles[i].velocity = { minVelX, minVelY };
-        particles[i].lifetime = maxLifetime;
-        particles[i].size = size;
-        particles[i].isActive = false;
+    // Reserve so activeParticles never triggers a realloc mid-frame
+    activeParticles.reserve(_maxParticles);
+
+    // Fill freeParticles with all indices [0, maxParticles-1].
+    // Emit() pops from the back; dead particles push their index back here.
+    freeParticles.resize(_maxParticles);
+    for (int i = 0; i < _maxParticles; ++i)
         freeParticles[i] = i;
+}
+
+// ============================================================================
+// Emit
+// ============================================================================
+// Spawns one particle at the given world position.
+// If the pool is full (all slots active), silently drops the request.
+// ============================================================================
+void ParticleSystem::Emit(const AEVec2& position)
+{
+    if (freeParticles.empty()) return; // Pool exhausted - silently skip
+
+    // Claim a free slot from the back of the free list (O(1))
+    const int idx = freeParticles.back();
+    freeParticles.pop_back();
+
+    Particle& p = particles[idx];
+
+    // Velocity and lifetime are randomised within the ranges set in Init()
+    p.position = position;
+    p.velocity = { RandRange(minVelX, maxVelX), RandRange(minVelY, maxVelY) };
+    p.maxLifetime = RandRange(minLifetime, maxLifetime); // Total lifespan
+    p.lifetime = p.maxLifetime;                       // Countdown timer starts full
+    p.startSize = startSize;
+    p.endSize = endSize;
+    p.size = startSize;  // Visual size starts at birth value
+    p.startR = startR; p.startG = startG; p.startB = startB;
+    p.endR = endR;   p.endG = endG;   p.endB = endB;
+    p.alpha = 1.0f;    // Fully opaque at birth
+    p.isActive = true;
+
+    // Register this index as active so Update() and Render() process it
+    activeParticles.push_back(idx);
+}
+
+// ============================================================================
+// EmitBurst
+// ============================================================================
+// Convenience wrapper: spawns 'count' particles in one call.
+// Used for one-shot effects like enemy death explosions.
+// Each particle still gets its own randomised velocity and lifetime.
+// ============================================================================
+void ParticleSystem::EmitBurst(const AEVec2& position, int count)
+{
+    for (int i = 0; i < count; ++i)
+        Emit(position);
+}
+
+// ============================================================================
+// Update
+// ============================================================================
+// Steps all active particles forward by dt seconds.
+// Iterates BACKWARDS so swap-and-pop removal never skips an element.
+// ============================================================================
+void ParticleSystem::Update(f32 dt)
+{
+    // Backwards: when we remove element [i] via swap-and-pop, the new [i]
+    // is the old last element - already processed since we go high->low.
+    for (int i = static_cast<int>(activeParticles.size()) - 1; i >= 0; --i)
+    {
+        const int idx = activeParticles[i];
+        Particle& p = particles[idx];
+
+        // --- Drag ---
+        // Multiplies velocity by (1 - drag*dt) each frame -> exponential slowdown.
+        // drag=0: no effect. drag=1.5: heavy braking (smoke). drag=2: very fast stop.
+        if (drag > 0.0f)
+        {
+            p.velocity.x *= (1.0f - drag * dt);
+            p.velocity.y *= (1.0f - drag * dt);
+        }
+
+        // --- Gravity ---
+        // Subtracts from Y velocity each frame, pulling particles downward.
+        // gravity=0: weightless float (smoke). gravity=80: slight fall (explosions).
+        p.velocity.y -= gravity * dt;
+
+        // --- Position integration (Euler method) ---
+        p.position.x += p.velocity.x * dt;
+        p.position.y += p.velocity.y * dt;
+
+        // --- Age the particle ---
+        p.lifetime -= dt;
+
+        // ratio: 0.0 at the moment of birth, 1.0 at the moment of death.
+        // All lerps below use this single value.
+        const f32 ratio = 1.0f - (p.lifetime / p.maxLifetime);
+
+        // --- Size lerp: grows or shrinks over lifetime ---
+        p.size = p.startSize + (p.endSize - p.startSize) * ratio;
+
+        // --- Alpha fade-out: fully opaque at birth, invisible at death ---
+        p.alpha = 1.0f - ratio;
+
+        // --- Death check ---
+        if (p.lifetime <= 0.0f)
+        {
+            p.isActive = false;
+
+            // Swap-and-pop: replace this entry with the last one, shrink the list.
+            // O(1) removal without shifting the rest of the array.
+            activeParticles[i] = activeParticles.back();
+            activeParticles.pop_back();
+
+            // Return the slot so it can be reused by a future Emit()
+            freeParticles.push_back(idx);
+        }
     }
 }
 
 // ============================================================================
 // Render
 // ============================================================================
-// Draws a single particle at its current position and size.
+// Draws every active particle as a colour-tinted circle.
+// Colour and alpha are driven by per-particle lerp values via ColorToAdd.
+// No texture is needed - the mesh vertex colour is zeroed out by ColorToMultiply.
 // ============================================================================
-void ParticleSystem::Render(Particles& particle)
+void ParticleSystem::Render()
 {
-    AEMtx33 rot, sc, tr, transform;
+    // Early out: skip if the shared mesh wasn't loaded or there's nothing alive
+    if (!s_Mesh || activeParticles.empty()) return;
 
-    AEMtx33Rot(&rot, 0.0f);
-    AEMtx33Scale(&sc, particle.size, particle.size);
-    AEMtx33Trans(&tr, particle.position.x, particle.position.y);
-    AEMtx33Concat(&transform, &sc, &rot);
-    AEMtx33Concat(&transform, &tr, &transform);
+    // COLOR mode: vertex colours are irrelevant; we set colour manually each draw
+    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
 
-    if (texture)
-    {
-        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-        AEGfxTextureSet(texture, 0, 0);
-    }
-    else
-    {
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    }
-
-    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-    AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+    // BLEND mode: enables alpha transparency so particles fade smoothly
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+
+    // Global transparency at 1.0 - per-particle alpha is handled by ColorToAdd below
     AEGfxSetTransparency(1.0f);
-    AEGfxSetTransform(transform.m);
-    AEGfxMeshDraw(particleMesh, AE_GFX_MDM_TRIANGLES);
-}
 
-// ============================================================================
-// Emit
-// ============================================================================
-// Activates one particle from the free list at the given world position.
-// No-ops if all particles are in use.
-// ============================================================================
-void ParticleSystem::Emit(const AEVec2& position)
-{
-    if (freeParticles.empty())
+    for (int idx : activeParticles)
     {
-        printf("[Particles] Pool exhausted - cannot emit.\n");
-        return;
-    }
+        const Particle& p = particles[idx];
+        if (!p.isActive) continue; // Defensive - should always be active in this list
 
-    const u8 index = freeParticles.back();
-    freeParticles.pop_back();
+        // How far through its life: 0=just born, 1=about to die
+        const f32 ratio = 1.0f - (p.lifetime / p.maxLifetime);
 
-    Particles& p = particles[index];
-    p.position = position;
-    p.lifetime = maxLifetime;
-    p.isActive = true;
+        // Interpolate colour from birth colour toward death colour
+        const f32 r = p.startR + (p.endR - p.startR) * ratio;
+        const f32 g = p.startG + (p.endG - p.startG) * ratio;
+        const f32 b = p.startB + (p.endB - p.startB) * ratio;
 
-    activeParticles.push_back(index);
-}
+        // Multiply=all zeros: zeroes out the mesh's own vertex colour
+        // Add=our colour:     adds our lerped RGB+alpha on top -> final colour is exactly ours
+        AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.0f);
+        AEGfxSetColorToAdd(r, g, b, p.alpha);
 
-// ============================================================================
-// Update
-// ============================================================================
-// Moves all active particles and removes those whose lifetime has expired.
-// Uses reverse iteration so removal from activeParticles is safe.
-// ============================================================================
-void ParticleSystem::Update(f32 deltaTime)
-{
-    for (s8 i = static_cast<s8>(activeParticles.size()) - 1; i >= 0; --i)
-    {
-        const u8 index = activeParticles[i];
-        Particles& p = particles[index];
+        // Build the world transform: scale to particle size, then move to world position.
+        // No rotation needed - circles look the same from every angle.
+        AEMtx33 sc, tr, transform;
+        AEMtx33Scale(&sc, p.size, p.size);              // Scale matrix (uniform - circle stays round)
+        AEMtx33Trans(&tr, p.position.x, p.position.y);  // Translation matrix
+        AEMtx33Concat(&transform, &tr, &sc);             // T * S: scale first, then translate
+        AEGfxSetTransform(transform.m);
 
-        // Move particle
-        p.position.x += p.velocity.x * deltaTime;
-        p.position.y += p.velocity.y * deltaTime;
-
-        // Count down lifetime
-        p.lifetime -= deltaTime;
-
-        if (p.lifetime <= 0.0f)
-        {
-            // Return index to free list via swap-and-pop (O(1) removal)
-            p.isActive = false;
-            activeParticles[i] = activeParticles.back();
-            activeParticles.pop_back();
-            freeParticles.push_back(index);
-        }
+        AEGfxMeshDraw(s_Mesh, AE_GFX_MDM_TRIANGLES);
     }
 }
 
 // ============================================================================
 // Free
 // ============================================================================
-// Unloads GPU resources and clears all particle data.
+// Clears all particle data. Safe to call multiple times.
+// Does NOT touch s_Mesh - that is shared and owned globally.
 // ============================================================================
 void ParticleSystem::Free()
 {
-    if (texture) { AEGfxTextureUnload(texture);      texture = nullptr; }
-    if (particleMesh) { AEGfxMeshFree(particleMesh);      particleMesh = nullptr; }
-
+    // IMPORTANT: do NOT free s_Mesh here.
+    // s_Mesh is shared across all ParticleSystem instances and must outlive them all.
+    // It is freed only when Game_Unload() calls ParticleSystem::FreeSharedMesh().
+    particles.clear();
     activeParticles.clear();
     freeParticles.clear();
-    particles.clear();
+}
+
+// ============================================================================
+// MakeSmoke - preset for the player's gun smoke puff
+// ============================================================================
+// Behaviour : gentle upward drift, decelerates quickly, shrinks and fades out
+// Colours   : mid grey -> dark grey
+// Lifetime  : 0.4 - 0.8 seconds  |  Max 30 simultaneous particles
+//
+// Tuning tips:
+//   More spread    : widen velX range (e.g. -50 to 50)
+//   Rises faster   : increase velY min/max (e.g. 60-120)
+//   Lasts longer   : increase lifetime range and reduce drag (e.g. 0.8)
+// ============================================================================
+ParticleSystem ParticleSystem::MakeSmoke()
+{
+    ParticleSystem ps;
+    ps.Init(
+        30,             // maxParticles  - cap on simultaneous smoke puffs
+        -25.0f, 25.0f,  // velX          - slight horizontal spread
+        30.0f, 80.0f,  // velY          - drifts upward
+        0.4f, 0.8f,   // lifetime      - short-lived puffs
+        24.0f, 4.0f,   // size          - visibly shrinks as it fades
+        0.1f, 0.6f, 0.6f, // start colour: mid green
+        0.1f, 0.2f, 0.2f, // end colour:   dark green (combined with alpha fade = transparent)
+        0.0f,   // gravity=0: smoke floats upward, not pulled down
+        1.5f    // drag=1.5:  velocity halves fast, puffs hang rather than fly
+    );
+    return ps;
+}
+
+// ============================================================================
+// MakeExplosion - preset for enemy death burst
+// ============================================================================
+// Behaviour : fast wide outward spray, falls slightly, shrinks to nothing
+// Colours   : bright orange -> dark red
+// Lifetime  : 0.3 - 0.7 seconds  |  Max 40 particles (all fired via EmitBurst)
+//
+// Tuning tips:
+//   Bigger bang    : widen velX/velY range (e.g. +-500) and increase startSize (e.g. 30)
+//   Longer burn    : increase lifetime range (e.g. 0.5-1.2)
+//   More floaty    : reduce gravity (e.g. 20) and drag (e.g. 0.5)
+//   Different NPC  : call EmitBurst(pos, 20) for normal enemies, EmitBurst(pos, 40) for boss
+// ============================================================================
+ParticleSystem ParticleSystem::MakeExplosion()
+{
+    ParticleSystem ps;
+    ps.Init(
+        40,               // maxParticles  - 40 slots; boss uses all 40, others use 20
+        -300.0f, 300.0f,  // velX          - wide horizontal spray
+        -300.0f, 300.0f,  // velY          - equal vertical spray (omnidirectional burst)
+        0.3f, 0.7f,    // lifetime      - fast burst, gone quickly
+        20.0f, 0.0f,    // size          - shrinks completely to nothing at death
+        1.0f, 0.5f, 0.0f, // start colour: bright orange
+        0.8f, 0.0f, 0.0f, // end colour:   dark red
+        80.0f,  // gravity=80: particles arc downward slightly (adds physical weight)
+        2.0f    // drag=2:     velocity drops fast so particles don't travel too far
+    );
+    return ps;
 }

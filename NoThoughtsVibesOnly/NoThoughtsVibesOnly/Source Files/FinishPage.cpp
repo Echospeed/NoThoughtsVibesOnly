@@ -20,6 +20,7 @@
 // ============================================================================
 
 #include "pch.hpp"
+#include "StarBackground.hpp"
 #include "FinishPage.hpp"
 #include "AEEngine.h"
 #include "Util.hpp"
@@ -68,8 +69,9 @@ void static OnFinishMenuClicked()
 void FinishPage_Load()
 {
     fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
-
     Meshes::CreateSquareCenterOriginMesh();
+    Meshes::CreateCircleMesh();
+    StarBackground::Init();
 }
 
 // ============================================================================
@@ -79,7 +81,7 @@ void FinishPage_Load()
 // ============================================================================
 void FinishPage_Init()
 {
-    AEGfxSetBackgroundColor(0.1f, 0.1f, 0.15f);
+    AEGfxSetBackgroundColor(0.0f, 0.0f, 0.02f);
 
     // Reset animation
     InitialScale = 1.5f;
@@ -109,6 +111,11 @@ void FinishPage_Update()
 
     dt = (f32)AEFrameRateControllerGetFrameTime();
     timer += dt;
+    StarBackground::Update(dt);
+
+    // Draw background + stars BEFORE buttons so buttons appear on top
+    StarBackground::DrawBackground();
+    StarBackground::Draw();
 
     // Grow text toward FinalScale over 6 seconds using lerp-smoothing
     if (timer < 6.0f)

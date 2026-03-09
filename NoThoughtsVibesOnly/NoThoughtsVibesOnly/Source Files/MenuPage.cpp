@@ -23,6 +23,7 @@
 // ============================================================================
 
 #include "pch.hpp"
+#include "StarBackground.hpp"
 #include "MenuPage.hpp"
 #include "Util.hpp"
 #include "AEEngine.h"
@@ -99,8 +100,9 @@ void GoToLevelSelect() { StateManagerChangeState(STATE_LEVEL_SELECT); }
 void Main_Load()
 {
     fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
-
     Meshes::CreateSquareCenterOriginMesh();
+    Meshes::CreateCircleMesh(); // Required by StarBackground
+    StarBackground::Init();
 }
 
 // ============================================================================
@@ -113,7 +115,7 @@ void Main_Init()
     AEGfxSetCamPosition(0.0f, 0.0f);
     currentMenuState = MENU_MAIN;
 
-    AEGfxSetBackgroundColor(0.1f, 0.1f, 0.15f);
+    AEGfxSetBackgroundColor(0.0f, 0.0f, 0.02f);
 
     mainText = TextRenderer(fontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     mainText << "HUIN!!!!!!!!";
@@ -146,6 +148,11 @@ void Main_Init()
 void Main_Update()
 {
     const f32 dt = (f32)AEFrameRateControllerGetFrameTime();
+    StarBackground::Update(dt);
+
+    // Draw background + stars BEFORE buttons so buttons appear on top
+    StarBackground::DrawBackground();
+    StarBackground::Draw();
 
     // Set button visibility based on which sub-view is active
     const bool isMain = (currentMenuState == MENU_MAIN);

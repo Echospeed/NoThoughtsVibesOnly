@@ -50,14 +50,7 @@ void Player::Start()
     isReloading = false;
     ammoInMagazine = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount : 10;
 
-    smokePS.Load();
-    smokePS.Init(
-        30,           // maxParticles ? small puff, doesn't need many
-        -30, 30,      // minVelX, maxVelX ? spreads slightly sideways
-        20, 80,       // minVelY, maxVelY ? drifts upward
-        0.6f,         // maxLifetime ? short-lived puff
-        12.0f         // size ? smaller than the player itself
-    );
+    smokePS = ParticleSystem::MakeSmoke();
 
     //spriteRenderer.customMesh = CreateSpriteSheetMesh(480.0f, 500.0f, 2000.0f, 2500.0f);
 

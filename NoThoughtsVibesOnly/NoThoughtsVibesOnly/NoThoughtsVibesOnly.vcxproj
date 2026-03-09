@@ -37,6 +37,7 @@
     <ClInclude Include="Header Files\SplashPage.hpp" />
     <ClInclude Include="Header Files\SpriteAnimator.hpp" />
     <ClInclude Include="Header Files\SpriteRenderer.hpp" />
+    <ClInclude Include="Header Files\StarBackground.hpp" />
     <ClInclude Include="Header Files\StateManager.hpp" />
     <ClInclude Include="Header Files\TextRenderer.hpp" />
     <ClInclude Include="Header Files\Transform.hpp" />
@@ -74,6 +75,7 @@
     <ClCompile Include="Source Files\SplashPage.cpp" />
     <ClCompile Include="Source Files\SpriteAnimator.cpp" />
     <ClCompile Include="Source Files\SpriteRenderer.cpp" />
+    <ClCompile Include="Source Files\StarBackground.cpp" />
     <ClCompile Include="Source Files\StateManager.cpp" />
     <ClCompile Include="Source Files\TextRenderer.cpp" />
     <ClCompile Include="Source Files\Transform.cpp" />

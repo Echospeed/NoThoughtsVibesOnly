@@ -229,39 +229,25 @@ void WaveSystem::SpawnWave(const WaveConfig& config)
     for (u32 i = 0; i < config.meleeCount; ++i)
         SpawnNPC(NPC_MELEE);
 
-    // --- Rangers (each needs 3 bullet pool slots) ---
+    // --- Rangers (each gets 3 freshly allocated bullets on spawn) ---
+    // Bullets are owned by the Ranger and freed back to the object list
+    // when the Ranger dies (NPC::Update clears startPos on death).
     for (u32 i = 0; i < config.rangerCount; ++i)
     {
         NPC* ranger = SpawnNPC(NPC_RANGER);
 
-        u32 bulletsAssigned = 0;
-        int totalBullets = 0;
-        int enemyBullets = 0;
-        int availableEnemyBullets = 0;
-
-        for (auto& obj : gamePageObj)
+        for (int b = 0; b < 3; ++b)
         {
-            if (obj->ObjectType != SHOT) continue;
-            ++totalBullets;
-
-            Bullet* b = dynamic_cast<Bullet*>(obj);
-            if (!b || b->owner != BulletOwner::ENEMY) continue;
-            ++enemyBullets;
-
-            if (b->startPos != nullptr) continue;
-            ++availableEnemyBullets;
-
-            // Assign this bullet slot to the new Ranger
-            b->startPos = ranger;
-            b->isActive = false;
-            ++bulletsAssigned;
-
-            if (bulletsAssigned >= 3) break; // Each Ranger gets 3 bullets
+            Bullet* bullet = new Bullet();
+            bullet->owner    = BulletOwner::ENEMY;
+            bullet->startPos = ranger;
+            bullet->isActive = false;
+            bullet->spent    = false;
+            bullet->spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 0.0f }; // Hidden
+            bullet->Start();
         }
 
-        std::cout << "[WaveSystem] Ranger #" << (i + 1)
-            << " assigned " << bulletsAssigned << " bullets"
-            << " (pool: " << availableEnemyBullets << " free)\n";
+        std::cout << "[WaveSystem] Ranger #" << (i + 1) << " spawned with 3 bullets\n";
     }
 
     // --- Boss ---
@@ -275,7 +261,9 @@ void WaveSystem::SpawnWave(const WaveConfig& config)
 // ============================================================================
 // SpawnBoss
 // ============================================================================
-// Spawns one Boss NPC and assigns 8 bullet pool slots to it.
+// Spawns one Boss NPC and allocates 8 fresh bullets directly to it.
+// No shared pool needed - bullets are created on demand and freed when
+// the Boss dies (NPC::Update clears startPos on death, Game_Free deletes all).
 // ============================================================================
 void WaveSystem::SpawnBoss()
 {
@@ -287,24 +275,22 @@ void WaveSystem::SpawnBoss()
 
     NPC* boss = new NPC();
     boss->ObjectType = NP;
-    boss->type = NPC_BOSS;
-    boss->target = playerRef;
+    boss->type       = NPC_BOSS;
+    boss->target     = playerRef;
     boss->Start();
 
-    u32 bulletsAssigned = 0;
-    for (auto& obj : gamePageObj)
+    for (int b = 0; b < 8; ++b)
     {
-        if (obj->ObjectType != SHOT) continue;
-
-        Bullet* b = dynamic_cast<Bullet*>(obj);
-        if (!b || b->owner != BulletOwner::ENEMY || b->startPos != nullptr) continue;
-
-        b->startPos = boss;
-        ++bulletsAssigned;
-        if (bulletsAssigned >= 8) break; // Boss fires 8-way volley
+        Bullet* bullet = new Bullet();
+        bullet->owner    = BulletOwner::ENEMY;
+        bullet->startPos = boss;
+        bullet->isActive = false;
+        bullet->spent    = false;
+        bullet->spriteRenderer.colour = { 1.0f, 0.0f, 1.0f, 0.0f }; // Hidden (magenta when fired)
+        bullet->Start();
     }
 
-    std::cout << "[WaveSystem] Boss spawned with " << bulletsAssigned << " bullet slots.\n";
+    std::cout << "[WaveSystem] Boss spawned with 8 bullets\n";
 }
 
 // ============================================================================

@@ -100,7 +100,9 @@ void Bullet::Update(f32 deltaTime)
             };
             const f32 distSq = toNPC.x * toNPC.x + toNPC.y * toNPC.y;
 
-            if (distSq < 30.0f * 30.0f) // 30 unit hit radius
+            // Hit radius = half the NPC's average dimension (fits any size incl. boss)
+            const f32 npcRadius = (npc->transform.scale.x + npc->transform.scale.y) * 0.25f;
+            if (distSq < npcRadius * npcRadius)
             {
                 // Apply upgraded damage from the firing player
                 Player* player = dynamic_cast<Player*>(startPos);
@@ -120,7 +122,9 @@ void Bullet::Update(f32 deltaTime)
         };
         const f32 distSq = toPlayer.x * toPlayer.x + toPlayer.y * toPlayer.y;
 
-        if (distSq < 30.0f * 30.0f)
+        // Hit radius = half the player's average dimension
+        const f32 playerRadius = (pPlayer->transform.scale.x + pPlayer->transform.scale.y) * 0.25f;
+        if (distSq < playerRadius * playerRadius)
         {
             Player* player = dynamic_cast<Player*>(pPlayer);
             if (player)

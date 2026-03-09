@@ -111,6 +111,9 @@
     <ClInclude Include="Header Files\SpriteAnimator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Header Files\StarBackground.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source Files\Bullet.cpp">
@@ -201,6 +204,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source Files\SpriteAnimator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source Files\StarBackground.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

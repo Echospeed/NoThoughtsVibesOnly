@@ -20,6 +20,7 @@
 // ============================================================================
 
 #include "pch.hpp"
+#include "StarBackground.hpp"
 #include "LevelSelectPage.hpp"
 #include "MenuPage.hpp"
 #include "Util.hpp"
@@ -70,7 +71,7 @@ void OnLevel1Clicked()
 void OnLevel2Clicked()
 {
     // TODO: Set level 2 configuration
-	g_CurrentLevel = GetLevelConfig(LevelType::LEVEL_2);
+    g_CurrentLevel = GetLevelConfig(LevelType::LEVEL_2);
     StateManagerGamePage();  // For now, goes to the game
 }
 
@@ -96,6 +97,8 @@ void LevelSelect_Load()
 {
     levelSelectFontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
     Meshes::CreateSquareCenterOriginMesh();
+    Meshes::CreateCircleMesh();
+    StarBackground::Init();
 }
 
 // ============================================================================
@@ -106,25 +109,25 @@ void LevelSelect_Load()
 void LevelSelect_Init()
 {
     AEGfxSetCamPosition(0.0f, 0.0f);
-    AEGfxSetBackgroundColor(0.1f, 0.1f, 0.15f);
+    AEGfxSetBackgroundColor(0.0f, 0.0f, 0.02f);
 
     // --- Level selection buttons ---
-    level1Button = new Button(levelSelectFontPath, { 0.0f,  100.0f }, { 300.0f, 75.0f }, 
-                              OnLevel1Clicked, { 0.2f, 0.5f, 0.8f, 1.0f }, "LEVEL 1");
-    
-    level2Button = new Button(levelSelectFontPath, { 0.0f,    0.0f }, { 300.0f, 75.0f }, 
-                              OnLevel2Clicked, { 0.3f, 0.6f, 0.3f, 1.0f }, "LEVEL 2");
-    
-    endlessButton = new Button(levelSelectFontPath, { 0.0f, -100.0f }, { 300.0f, 75.0f }, 
-                               OnEndlessClicked, { 0.8f, 0.4f, 0.0f, 1.0f }, "ENDLESS");
+    level1Button = new Button(levelSelectFontPath, { 0.0f,  100.0f }, { 300.0f, 75.0f },
+        OnLevel1Clicked, { 0.2f, 0.5f, 0.8f, 1.0f }, "LEVEL 1");
+
+    level2Button = new Button(levelSelectFontPath, { 0.0f,    0.0f }, { 300.0f, 75.0f },
+        OnLevel2Clicked, { 0.3f, 0.6f, 0.3f, 1.0f }, "LEVEL 2");
+
+    endlessButton = new Button(levelSelectFontPath, { 0.0f, -100.0f }, { 300.0f, 75.0f },
+        OnEndlessClicked, { 0.8f, 0.4f, 0.0f, 1.0f }, "ENDLESS");
 
     // --- Back button ---
-    levelSelectBackButton = new Button(levelSelectFontPath, { 0.0f, -250.0f }, { 200.0f, 75.0f }, 
-                                       GoToMainMenu, { 0.7f, 0.0f, 0.0f, 1.0f }, "BACK");
+    levelSelectBackButton = new Button(levelSelectFontPath, { 0.0f, -250.0f }, { 200.0f, 75.0f },
+        GoToMainMenu, { 0.7f, 0.0f, 0.0f, 1.0f }, "BACK");
 
     // --- Title text ---
-	levelSelectTitleText = TextRenderer(levelSelectFontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-	levelSelectTitleText << ("SELECT LEVEL");
+    levelSelectTitleText = TextRenderer(levelSelectFontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    levelSelectTitleText << ("SELECT LEVEL");
 }
 
 // ============================================================================
@@ -135,6 +138,11 @@ void LevelSelect_Init()
 void LevelSelect_Update()
 {
     const f32 dt = (f32)AEFrameRateControllerGetFrameTime();
+    StarBackground::Update(dt);
+
+    // Draw background + stars BEFORE buttons so buttons appear on top
+    StarBackground::DrawBackground();
+    StarBackground::Draw();
 
     // Manually update each button (they register to mainPageObj but we handle them here)
     if (level1Button) level1Button->Update(dt);
@@ -150,7 +158,7 @@ void LevelSelect_Update()
 // ============================================================================
 void LevelSelect_Draw()
 {
-	levelSelectTitleText.Draw();
+    levelSelectTitleText.Draw();
 }
 
 // ============================================================================
