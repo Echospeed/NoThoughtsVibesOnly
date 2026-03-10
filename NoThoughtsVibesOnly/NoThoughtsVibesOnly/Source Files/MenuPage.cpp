@@ -121,7 +121,7 @@ void Main_Init()
     quitButton = new Button(fontPath, { 0.0f, -200.0f }, { 300.0f, 75.0f }, StateManagerQuit, { 0.7f, 0.0f, 0.0f, 1.0f }, "QUIT");
     backButton = new Button(fontPath, { 0.0f, -350.0f }, { 200.0f, 75.0f }, GoToMain, { 0.7f, 0.0f, 0.0f, 1.0f }, "BACK");
 
-    controlsText = TextRenderer(fontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    controlsText = TextRenderer(fontPath, 1.0f, { 0.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     controlsText << "CONTROLS";
 
     creditsText = TextRenderer(fontPath, 1.0f, { 0.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
@@ -179,16 +179,28 @@ void Main_Draw()
     {
         controlsText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 300.0f }, { 1.0f, 1.0f, 1.0f });
         infoText << "W, A, S, D  -  Move";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 200.0f }, { 1.0f, 1.0f, 1.0f });
         infoText << "Left Click  -  Shoot";
         infoText.Draw();
 
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText << "E  -  Activate Invincibility";
+        infoText.Draw();
+
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText << "ESC  -  Pause";
+        infoText.Draw();
+
         infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -100.0f }, { 1.0f, 1.0f, 1.0f });
-        infoText << "ESC  -  Pause  |  R  -  Restart  |  Q  -  Menu";
+        infoText << "R  -  Restart";
+        infoText.Draw();
+
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -200.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText << "Q  -  Menu";
         infoText.Draw();
 
         // Sync all three parts of the back button so text/collider/visual align
