@@ -1,25 +1,27 @@
 // ============================================================================
 // MenuPage.cpp - Main Menu Implementation
 // ============================================================================
-// The main menu supports three sub-views: MAIN, CONTROLS, and CREDITS.
-// Buttons switch between views via simple state callbacks.
+// Supports three sub-views switched via simple state callbacks:
+//
+//   MENU_MAIN     : Start / Controls / Credits / Quit
+//   MENU_CONTROLS : Controls info + Back button
+//   MENU_CREDITS  : Credits image + Back button
 //
 // BUTTON SETUP:
 // ----------------------------------------------------------------------------
 //   Buttons are created in Main_Init() with new Button(...) and deleted in
-//   Main_Free(). Each button has:
-//     - A position, size, colour, and label text
-//     - A ButtonFunction callback (called on left-click)
+//   Main_Free(). Each button takes a position, size, colour, label, and a
+//   ButtonFunction callback (fired on left-click).
 //
 //   Example adding a new button:
 //       myButton = new Button(fontPath, {0.0f, 50.0f}, {300.0f, 75.0f},
 //                             MyCallbackFunction, {0.5f, 0.5f, 0.0f, 1.0f}, "LABEL");
 //
-// FLOW:
+// DRAW ORDER NOTE:
 // ----------------------------------------------------------------------------
-//   MENU_MAIN    : Shows Start / Controls / Credits / Quit
-//   MENU_CONTROLS: Shows controls info + Back button
-//   MENU_CREDITS : Shows credits info + Back button
+//   Buttons draw themselves inside Update() via GameObject::Update() -> Draw().
+//   StarBackground must therefore draw in Update() BEFORE button updates,
+//   not in Draw() which runs after Update() and would overdraw buttons.
 // ============================================================================
 
 #include "pch.hpp"
@@ -46,18 +48,18 @@ enum MenuState
 static MenuState currentMenuState = MENU_MAIN;
 
 // ============================================================================
-// Global object list (menu objects register themselves here in their ctor)
+// Global object list (buttons self-register here via GameObject ctor)
 // ============================================================================
 std::vector<GameObject*> mainPageObj;
 
 // ============================================================================
 // Resources
 // ============================================================================
-s8    fontPath{};      // Font handle
-Mouse worldMouse;      // Mouse position in world space
+s8    fontPath{};   // Font handle
+Mouse worldMouse;   // Mouse position in world space
 
 // ============================================================================
-// Buttons (heap-allocated, cleaned up in Main_Free)
+// Buttons (heap-allocated, deleted in Main_Free via mainPageObj loop)
 // ============================================================================
 Button* startButton{ nullptr };
 Button* controlsButton{ nullptr };
@@ -68,21 +70,16 @@ Button* backButton{ nullptr };
 // ============================================================================
 // Text renderers
 // ============================================================================
-TextRenderer mainText;      // Title text on main menu
-TextRenderer controlsText;  // "CONTROLS" header
-TextRenderer creditsText;   // "CREDITS" header
-TextRenderer infoText;      // Body text for info pages
+TextRenderer mainText;     // Title text on main menu
+TextRenderer controlsText; // "CONTROLS" header
+TextRenderer creditsText;  // "CREDITS" header
+TextRenderer infoText;     // Body text for info pages
 
 // ============================================================================
-// Audio (constructed at file scope - loads on game start)
-// ============================================================================
-//Audio MenuAudio{ "Assets/bouken.mp3", -1, 1.0f, 1.0f, AudioType::MUSIC };
-
-// ============================================================================
-// Art Assets
+// Art assets
 // ============================================================================
 SpriteRenderer creditsImg;
-Transform creditTransform;
+Transform      creditTransform;
 
 // ============================================================================
 // Sub-view navigation callbacks
@@ -95,8 +92,6 @@ static void GoToLevelSelect() { StateManagerChangeState(STATE_LEVEL_SELECT); }
 // ============================================================================
 // Main_Load
 // ============================================================================
-// Loads font and creates mesh resources.
-// ============================================================================
 void Main_Load()
 {
     fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
@@ -108,28 +103,21 @@ void Main_Load()
 // ============================================================================
 // Main_Init
 // ============================================================================
-// Resets menu state and creates all buttons.
-// ============================================================================
 void Main_Init()
 {
     AEGfxSetCamPosition(0.0f, 0.0f);
     currentMenuState = MENU_MAIN;
-
     AEGfxSetBackgroundColor(0.0f, 0.0f, 0.02f);
 
     mainText = TextRenderer(fontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     mainText << "HUIN!!!!!!!!";
 
-    // --- Main menu buttons ---
     startButton = new Button(fontPath, { 0.0f,  100.0f }, { 300.0f, 75.0f }, GoToLevelSelect, { 0.0f, 0.6f, 0.0f, 1.0f }, "START");
     controlsButton = new Button(fontPath, { 0.0f,    0.0f }, { 300.0f, 75.0f }, GoToControls, { 0.0f, 0.3f, 0.7f, 1.0f }, "CONTROLS");
     creditsButton = new Button(fontPath, { 0.0f, -100.0f }, { 300.0f, 75.0f }, GoToCredits, { 0.5f, 0.0f, 0.5f, 1.0f }, "CREDITS");
     quitButton = new Button(fontPath, { 0.0f, -200.0f }, { 300.0f, 75.0f }, StateManagerQuit, { 0.7f, 0.0f, 0.0f, 1.0f }, "QUIT");
-
-    // --- Back button (shown only in sub-views) ---
     backButton = new Button(fontPath, { 0.0f, -350.0f }, { 200.0f, 75.0f }, GoToMain, { 0.7f, 0.0f, 0.0f, 1.0f }, "BACK");
 
-    // --- Static text for info pages ---
     controlsText = TextRenderer(fontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     controlsText << "CONTROLS";
 
@@ -143,18 +131,23 @@ void Main_Init()
 // ============================================================================
 // Main_Update
 // ============================================================================
-// Toggles button visibility based on current sub-view, then updates all objects.
+// Stars and background draw here (before buttons) so they appear behind them.
+// Button visibility is toggled based on the active sub-view.
 // ============================================================================
 void Main_Update()
 {
     const f32 dt = (f32)AEFrameRateControllerGetFrameTime();
     StarBackground::Update(dt);
-
-    // Draw background + stars BEFORE buttons so buttons appear on top
     StarBackground::DrawBackground();
     StarBackground::Draw();
 
-    // Set button visibility based on which sub-view is active
+    // Credits image draws here so it sits behind the back button
+    if (currentMenuState == MENU_CREDITS)
+    {
+        creditsImg.colour.a = 0.4f; // Semi-transparent so stars bleed through
+        DrawSpriteRenderer(creditsImg, creditTransform);
+    }
+
     const bool isMain = (currentMenuState == MENU_MAIN);
     startButton->isActive = isMain;
     controlsButton->isActive = isMain;
@@ -163,15 +156,13 @@ void Main_Update()
     backButton->isActive = !isMain; // Back only shown in sub-views
 
     for (auto& obj : mainPageObj)
-    {
         if (obj) obj->Update(dt);
-    }
 }
 
 // ============================================================================
 // Main_Draw
 // ============================================================================
-// Draws the appropriate sub-view content.
+// Stars and buttons already drew in Update. Only text is drawn here.
 // ============================================================================
 void Main_Draw()
 {
@@ -183,7 +174,7 @@ void Main_Draw()
     {
         controlsText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
         infoText << "W, A, S, D  -  Move";
         infoText.Draw();
 
@@ -195,39 +186,18 @@ void Main_Draw()
         infoText << "ESC  -  Pause  |  R  -  Restart  |  Q  -  Menu";
         infoText.Draw();
 
-        // Sync all three parts of the button so text/collider/visual stay together
+        // Sync all three parts of the back button so text/collider/visual align
         backButton->transform.SetPosition(0.0f, -350.0f);
         backButton->collider.position = { 0.0f, -350.0f };
         backButton->textRenderer.SetPosition({ 0.0f, -350.0f });
     }
     else if (currentMenuState == MENU_CREDITS)
     {
-        //infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 150.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
-        //infoText << "Created By:"; 
-        //infoText.Draw();
-
-        //infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
-        //infoText << "DigiPen Institute of Technology";
-        //infoText.Draw();
-
-        //infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 50.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
-        //infoText << "- WenJie Chia   - John Chiow";
-        //infoText.Draw();
-
-        //infoText = TextRenderer(fontPath,1.0f, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }); // Reset text renderer to clear previous text
-        //infoText << "- Yan Bin Liu   - Stanely Lu";
-        //infoText.Draw();
-
-        //infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -50.0f }, { 1.0f, 1.0f, 1.0f });
-        //infoText << "No Thoughts, Vibes Only";
-        //infoText.Draw();
-
-		creditsImg.colour.a = 0.4f;  // credits image is mostly decorative, so fade it out a bit to improve text readability
+        // Reposition back button to bottom-left for the credits layout
         backButton->transform.SetPosition(-600.0f, -400.0f);
         backButton->collider.position = { -600.0f, -400.0f };
         backButton->textRenderer.SetPosition({ -600.0f, -400.0f });
 
-        DrawSpriteRenderer(creditsImg, creditTransform);
         creditsText.Draw();
         backButton->Draw();
         backButton->textRenderer.Draw();
@@ -237,7 +207,7 @@ void Main_Draw()
 // ============================================================================
 // Main_Free
 // ============================================================================
-// Deletes buttons and text renderers. Clears the object list.
+// Deletes all buttons via the mainPageObj list and frees the credits texture.
 // ============================================================================
 void Main_Free()
 {
@@ -246,21 +216,9 @@ void Main_Free()
     mainPageObj.clear();
     mainPageObj.shrink_to_fit();
 
-    startButton = nullptr;
-    controlsButton = nullptr;
-    creditsButton = nullptr;
-    quitButton = nullptr;
-    backButton = nullptr;
+    startButton = controlsButton = creditsButton = quitButton = backButton = nullptr;
 
     FreeSpriteRenderer(creditsImg);
-    //delete startButton;    startButton = nullptr;
-    //delete controlsButton; controlsButton = nullptr;
-    //delete creditsButton;  creditsButton = nullptr;
-    //delete quitButton;     quitButton = nullptr;
-    //delete backButton;     backButton = nullptr;
-
-    //mainPageObj.clear();
-    //mainPageObj.shrink_to_fit();
 }
 
 // ============================================================================

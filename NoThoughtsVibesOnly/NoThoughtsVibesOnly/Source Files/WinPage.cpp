@@ -2,22 +2,14 @@
 // WinPage.cpp - Victory Screen
 // ============================================================================
 // Shown when the player clears all waves.
-// Displays a "YOU WIN!" text that grows over time.
-//
-// BUTTON HANDLING:
-// ----------------------------------------------------------------------------
-//   The Win button (currently commented out) can be re-enabled to:
-//     - Return to Main Menu:   callback = StateManagerMenuPage
-//     - Restart the game:      callback = OnWinRestartClicked
-//
-//   To re-enable:
-//     1. Uncomment WinButton lines in Load, Init, Update, Draw, Free.
-//     2. Set desired callback in WinPage_Init().
+// Displays "YOU WIN!" text that grows over 6 seconds.
+// Two buttons: Restart (goes back to game) and Main Menu.
+// Press R to restart via keyboard shortcut.
 //
 // USAGE:
 // ----------------------------------------------------------------------------
 //   Entered automatically via StateManagerChangeState(STATE_WIN).
-//   Triggered in Game_Update() when all enemies are cleared.
+//   Triggered in Game_Update() when waveSystem.IsLevelComplete() is true.
 // ============================================================================
 
 #include "pch.hpp"
@@ -32,41 +24,27 @@
 // ============================================================================
 namespace
 {
-    Mouse worldMouse;                  // Mouse position for button hover
-    s8    fontPath{};                  // Font handle from AEGfxCreateFont()
+    Mouse worldMouse;
+    s8    fontPath{};
 
-    // Text animation parameters
-    f32 InitialScale = 1.5f;          // Scale at the start of the animation
-    f32 FinalScale = 3.5f;          // Scale at the end of the animation
-    f32 dt = 0.0f;          // Delta time per frame
-    f32 timer = 0.0f;          // Elapsed time since page was entered
+    f32 InitialScale = 1.5f; // Scale at start of animation
+    f32 FinalScale = 3.5f; // Scale at end of animation
+    f32 dt = 0.0f;
+    f32 timer = 0.0f;
 }
 
-// UI elements
-TextRenderer WinText;                  // Renders the "YOU WIN!" message
-Button* rButton;
-Button* mButton;
+TextRenderer WinText;
+Button* rButton; // Restart
+Button* mButton; // Main Menu
 
 // ============================================================================
-// Button Callbacks
+// Button callbacks
 // ============================================================================
-
-// Return to menu after winning
-void static OnWinMenuClicked()
-{
-    StateManagerChangeState(STATE_MENU);
-}
-
-// Restart the game from the win screen
-void static OnWinRestartClicked()
-{
-    StateManagerChangeState(STATE_PLAYING);
-}
+static void OnWinMenuClicked() { StateManagerChangeState(STATE_MENU); }
+static void OnWinRestartClicked() { StateManagerChangeState(STATE_PLAYING); }
 
 // ============================================================================
 // WinPage_Load
-// ============================================================================
-// Loads fonts and creates mesh resources. Called once on state entry.
 // ============================================================================
 void WinPage_Load()
 {
@@ -79,56 +57,43 @@ void WinPage_Load()
 // ============================================================================
 // WinPage_Init
 // ============================================================================
-// Resets animation and initialises UI. Called every time this state is entered.
-// ============================================================================
 void WinPage_Init()
 {
     AEGfxSetBackgroundColor(0.0f, 0.0f, 0.02f);
 
-    // Reset animation
     InitialScale = 1.5f;
     timer = 0.0f;
 
-    // "YOU WIN!" in red (change colour values to customise)
     WinText = TextRenderer(fontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 0.0f, 0.0f });
     WinText << "YOU WIN!";
 
     rButton = new Button(fontPath, { -300.0f, -150.0f }, { 300.0f, 75.0f }, OnWinRestartClicked, { 0.0f, 1.0f, 0.0f, 1.0f }, "Restart");
-
     mButton = new Button(fontPath, { 300.0f, -150.0f }, { 300.0f, 75.0f }, OnWinMenuClicked, { 0.0f, 0.0f, 1.0f, 1.0f }, "Main Menu");
 }
 
 // ============================================================================
 // WinPage_Update
 // ============================================================================
-// Drives the text grow animation and button interaction.
+// Stars draw before buttons so they appear behind them.
+// Text scale grows smoothly toward FinalScale over 6 seconds.
 // ============================================================================
 void WinPage_Update()
 {
-    // Center camera on UI
     AEGfxSetCamPosition(0.0f, 0.0f);
-
     GetMouseWorldPosition(worldMouse.position.x, worldMouse.position.y);
 
     dt = (f32)AEFrameRateControllerGetFrameTime();
     timer += dt;
     StarBackground::Update(dt);
-
-    // Draw background + stars BEFORE buttons so buttons appear on top
     StarBackground::DrawBackground();
     StarBackground::Draw();
 
-    // Smoothly scale text up toward FinalScale over 6 seconds
     if (timer < 6.0f)
-    {
         InitialScale += (FinalScale - InitialScale) * 0.6f * dt;
-    }
 
-    // --- Restart Button (uncomment to enable) ---
     mButton->Update(dt);
     rButton->Update(dt);
 
-    // --- Keyboard shortcut: press R to restart ---
     if (AEInputCheckTriggered(AEVK_R)) OnWinRestartClicked();
 }
 
@@ -137,6 +102,7 @@ void WinPage_Update()
 // ============================================================================
 void WinPage_Draw()
 {
+    WinText.SetScale(InitialScale);
     WinText.Draw();
 }
 
@@ -148,8 +114,8 @@ void WinPage_Free()
     mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(), rButton), mainPageObj.end());
     mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(), mButton), mainPageObj.end());
 
-    delete rButton;  rButton = nullptr;
-    delete mButton;  mButton = nullptr;
+    delete rButton; rButton = nullptr;
+    delete mButton; mButton = nullptr;
 }
 
 // ============================================================================
