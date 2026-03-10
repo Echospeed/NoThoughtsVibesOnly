@@ -82,6 +82,7 @@ TextRenderer infoText;     // Body text for info pages
 SpriteRenderer creditsImg;
 Transform      creditTransform;
 Audio* g_MenuMusic = nullptr;
+static f32 s_TitleTime = 0.0f; // Drives title text animation (scale pulse + colour cycle)
 
 // ============================================================================
 // Sub-view navigation callbacks
@@ -112,8 +113,9 @@ void Main_Init()
     currentMenuState = MENU_MAIN;
     AEGfxSetBackgroundColor(0.0f, 0.0f, 0.02f);
 
+    s_TitleTime = 0.0f;
     mainText = TextRenderer(fontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-    mainText << "HUIN!!!!!!!!";
+    mainText << "PEW! PEW! GALAXY";
 
     startButton = new Button(fontPath, { 0.0f,  100.0f }, { 300.0f, 75.0f }, GoToLevelSelect, { 0.0f, 0.6f, 0.0f, 1.0f }, "START");
     controlsButton = new Button(fontPath, { 0.0f,    0.0f }, { 300.0f, 75.0f }, GoToControls, { 0.0f, 0.3f, 0.7f, 1.0f }, "CONTROLS");
@@ -142,6 +144,7 @@ void Main_Init()
 void Main_Update()
 {
     const f32 dt = (f32)AEFrameRateControllerGetFrameTime();
+    s_TitleTime += dt; // Advance title animation
     StarBackground::Update(dt);
     StarBackground::DrawBackground();
     StarBackground::Draw();
@@ -173,6 +176,15 @@ void Main_Draw()
 {
     if (currentMenuState == MENU_MAIN)
     {
+        // Animate title: pulse scale + cycle through vivid colours
+        // Scale breathes between 1.0 and 1.12 at ~1.2 Hz
+        const f32 pulse = 1.0f + 0.12f * sinf(s_TitleTime * 7.5f);
+        // RGB channels offset by 120 degrees each for a smooth rainbow cycle
+        const f32 r = 0.55f + 0.45f * sinf(s_TitleTime * 1.8f);
+        const f32 g = 0.55f + 0.45f * sinf(s_TitleTime * 1.8f + 2.094f);
+        const f32 b = 0.55f + 0.45f * sinf(s_TitleTime * 1.8f + 4.189f);
+        mainText.SetScale(pulse);
+        mainText.SetColour({ r, g, b, 1.0f });
         mainText.Draw();
     }
     else if (currentMenuState == MENU_CONTROLS)
@@ -188,29 +200,25 @@ void Main_Draw()
         infoText.Draw();
 
         infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
-        infoText << "R  -  Reload";
-        infoText.Draw();
-
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
         infoText << "E  -  Activate Invincibility";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -100.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
         infoText << "ESC  -  Pause";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -200.0f }, { 1.0f, 1.0f, 1.0f });
-        infoText << "TAB  -  Restart";
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -100.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText << "R  -  Restart";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -300.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -200.0f }, { 1.0f, 1.0f, 1.0f });
         infoText << "Q  -  Menu";
         infoText.Draw();
 
         // Sync all three parts of the back button so text/collider/visual align
-        backButton->transform.SetPosition(0.0f, -420.0f);
-        backButton->collider.position = { 0.0f, -420.0f };
-        backButton->textRenderer.SetPosition({ 0.0f, -420.0f });
+        backButton->transform.SetPosition(0.0f, -350.0f);
+        backButton->collider.position = { 0.0f, -350.0f };
+        backButton->textRenderer.SetPosition({ 0.0f, -350.0f });
     }
     else if (currentMenuState == MENU_CREDITS)
     {
