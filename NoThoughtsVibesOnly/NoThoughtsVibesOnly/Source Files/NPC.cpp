@@ -151,7 +151,7 @@ void NPC::Start()
         spriteRenderer.texture = NPCSpritesheet;
         spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
-        fireRate = 2.0f;
+        fireRate = 3.0f;
         baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
         std::cout << "[NPC] Ranger spawned at ("
             << transform.position.x << ", " << transform.position.y << ")\n";
@@ -351,7 +351,7 @@ void NPC::RangerNPCs(f32 deltaTime)
 
     // --- Shooting: find an inactive bullet assigned to this NPC ---
     fireCooldown -= deltaTime;
-    if (fireCooldown <= 0.0f)
+    if (fireCooldown <= 0.02f)
     {
         for (auto& obj : gamePageObj)
         {

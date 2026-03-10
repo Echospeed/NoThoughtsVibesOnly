@@ -91,7 +91,7 @@ private:
     u32 currentRound{1};                // Current round number
     bool inWaveBreak{false};            // Whether between waves
     f32 waveBreakTimer{0.0f};           // Time remaining in break
-    const f32 WAVE_BREAK_DURATION{5.0f}; // Seconds between waves
+    const f32 WAVE_BREAK_DURATION{2.0f}; // Seconds between waves
     LevelConfig levelConfig{};          // Current level configuration
     
     // === Wave Generation ===
