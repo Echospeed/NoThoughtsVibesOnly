@@ -157,6 +157,12 @@ void Bullet::Activate(GameObject* shooter, AEVec2 direction, BulletOwner newOwne
     lifeTime = maxLifeTime;
     spriteRenderer.colour.a = 1.0f;
 
+    // Set speed based on owner
+    if (owner == BulletOwner::PLAYER)
+        speed = 1500.0f;  // Player bullet speed
+    else
+        speed = 800.0f;   // Enemy bullet speed (slower)
+
     // Spawn at shooter's current position
     if (shooter) transform.position = shooter->transform.position;
 
