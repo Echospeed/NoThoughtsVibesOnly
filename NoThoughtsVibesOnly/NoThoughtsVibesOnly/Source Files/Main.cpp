@@ -107,7 +107,11 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
             // Exit if the OS window is closed
             if (!AESysDoesWindowExist())
+            {
                 gGameRunning = 0;
+
+                StateManagerQuit();
+            }
 
             // Default render state (overridden per frame by each state)
             AEGfxSetBackgroundColor(0.5f, 0.5f, 0.5f);
