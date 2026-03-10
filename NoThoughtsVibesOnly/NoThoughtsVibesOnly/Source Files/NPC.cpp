@@ -4,7 +4,7 @@
 // Four enemy types, each with distinct movement and attack behaviour:
 //
 //   NPC_WALK   (Blue Ship)      : Wanders randomly. No shooting.
-//   NPC_MELEE  (Green Ship)     : Charges directly at the player. No shooting.
+//   NPC_MELEE  (Green Ship)     : Charges directly at the player. Explodes on contact for 40 damage.
 //   NPC_RANGER (Pink Ship)      : Keeps distance; fires single bullets.
 //   NPC_BOSS   (Beige Ship)     : Orbits the player; fires 8-way bullet volleys.
 //
@@ -151,7 +151,7 @@ void NPC::Start()
         spriteRenderer.texture = NPCSpritesheet;
         spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
-        fireRate = 3.0f;
+        fireRate = 2.0f;
         baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
         std::cout << "[NPC] Ranger spawned at ("
             << transform.position.x << ", " << transform.position.y << ")\n";
@@ -257,6 +257,14 @@ void NPC::Update(f32 deltaTime)
 // ============================================================================
 // Charges directly toward the player at full speed.
 // Bounces off world boundaries.
+//
+// CONTACT EXPLOSION:
+// ----------------------------------------------------------------------------
+//   When within collision range of the player, the melee NPC explodes:
+//     - Deals MELEE_EXPLOSION_DAMAGE instantly to the player (if not invulnerable)
+//     - Fires its own explosion particle burst
+//     - Kills itself (health = 0 triggers the death block on the next Update)
+//   This makes melee NPCs a genuine threat - one touch is a significant hit.
 // ============================================================================
 void NPC::BomberNPCs(f32 deltaTime)
 {
@@ -283,6 +291,37 @@ void NPC::BomberNPCs(f32 deltaTime)
     if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw;  velocity.x = -velocity.x; }
     if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh;  velocity.y = -velocity.y; }
     if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh;  velocity.y = -velocity.y; }
+
+    // --- Contact explosion: blow up on touching the player ---
+    const f32 dx = target->transform.position.x - transform.position.x;
+    const f32 dy = target->transform.position.y - transform.position.y;
+    const f32 dist = sqrtf(dx * dx + dy * dy);
+    const f32 playerRadius = (target->transform.scale.x + target->transform.scale.y) * 0.25f;
+    const f32 selfRadius = (transform.scale.x + transform.scale.y) * 0.25f;
+
+    if (dist < playerRadius + selfRadius)
+    {
+        // Deal explosion damage to the player (bypassed if invulnerable)
+        Player* player = dynamic_cast<Player*>(target);
+        if (player && !player->invulnAbility.IsActive())
+        {
+            const f32 MELEE_EXPLOSION_DAMAGE = 40.0f; // One-shot burst damage on contact
+            player->health -= MELEE_EXPLOSION_DAMAGE;
+            if (player->health < 0.0f) player->health = 0.0f;
+            std::cout << "[Melee] Contact explosion! -" << MELEE_EXPLOSION_DAMAGE << " HP to player\n";
+        }
+
+        // Trigger explosion burst immediately (death block will also fire it,
+        // but hasExploded guard ensures it only emits once)
+        if (!hasExploded)
+        {
+            hasExploded = true;
+            explosionParticles.EmitBurst(transform.position, 20);
+        }
+
+        // Kill self - death block in Update() handles cleanup next frame
+        health = 0.0f;
+    }
 }
 
 // ============================================================================
@@ -351,7 +390,7 @@ void NPC::RangerNPCs(f32 deltaTime)
 
     // --- Shooting: find an inactive bullet assigned to this NPC ---
     fireCooldown -= deltaTime;
-    if (fireCooldown <= 0.02f)
+    if (fireCooldown <= 0.0f)
     {
         for (auto& obj : gamePageObj)
         {
