@@ -22,7 +22,7 @@
 #include "Leaderboard.hpp"
 #include "LevelConfig.hpp"
 #include "WaveSystem.hpp"
-
+#include "GamePage.hpp" 
 // ============================================================================
 // File-scope state
 // ============================================================================
@@ -37,7 +37,7 @@ namespace
     f32 timer = 0.0f;
 
     bool s_ScoreSubmitted = false; // Guard so score is only submitted once per loss
-    int  s_FinalScore = 0;         // Calculated on FinishPage_Init
+    int  s_FinalScore = 0;         // Copied from g_FinalScore on Init
     std::string s_PlayerName = ""; // Name typed by the player
     bool s_NameSubmitted = false;  // True once Enter is pressed
 }
@@ -76,12 +76,15 @@ void FinishPage_Init()
     s_PlayerName = "";
     s_NameSubmitted = false;
 
-    // Calculate final score: 100 pts per wave cleared
-    s_FinalScore = (int)g_CurrentLevel.numWaves * 100;
+    // FIX: Read from g_FinalScore which was saved in Game_Update() right before
+    //      the state transition. The old code called waveSystem.GetCurrentWave()
+    //      here, but by this point Game_Free() has already run waveSystem.Cleanup()
+    //      which resets currentWave to 0 - so the score was always 0.
+    s_FinalScore = g_FinalScore;
 
-    // Submit default score (only once per lose screen entry)
-    Leaderboard::Submit("Player", s_FinalScore, g_CurrentLevel.name, (int)g_CurrentLevel.numWaves);
-    s_ScoreSubmitted = true;
+    // FIX: Removed the old auto-submit with "Player" name that fired on Init().
+    //      That was filling the leaderboard with fake "Player" entries before
+    //      the player typed anything. Now we wait for Enter to be pressed.
 
     GameOverText = TextRenderer(fontPath, InitialScale, { 0.0f, 330.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
     GameOverText << "YOU LOSE!";
@@ -118,19 +121,23 @@ void FinishPage_Update()
     // ==========================================================================
     if (!s_NameSubmitted)
     {
-        // Backspace
+        // Backspace removes the last character typed
         if (AEInputCheckTriggered(AEVK_BACK) && !s_PlayerName.empty())
             s_PlayerName.pop_back();
 
-        // Enter to confirm
+        // Enter confirms the name and submits the score to the leaderboard
         if (AEInputCheckTriggered(AEVK_RETURN) && !s_PlayerName.empty())
         {
-            Leaderboard::Submit(s_PlayerName, s_FinalScore, g_CurrentLevel.name, (int)g_CurrentLevel.numWaves);
+            // FIX: Use g_FinalWaveCount saved in Game_Update() so the leaderboard
+            //      entry accurately shows how far the player got this run.
+            Leaderboard::Submit(s_PlayerName, s_FinalScore,
+                g_CurrentLevel.name,
+                g_FinalWaveCount);
             s_ScoreSubmitted = true;
             s_NameSubmitted = true;
         }
 
-        // Letter keys A-Z
+        // Letter keys A-Z — build up the player's name one character at a time
         static const struct { int vk; char ch; } keys[] = {
             {AEVK_A,'A'},{AEVK_B,'B'},{AEVK_C,'C'},{AEVK_D,'D'},{AEVK_E,'E'},
             {AEVK_F,'F'},{AEVK_G,'G'},{AEVK_H,'H'},{AEVK_I,'I'},{AEVK_J,'J'},
@@ -144,6 +151,7 @@ void FinishPage_Update()
                 s_PlayerName += k.ch;
     }
 
+    // TAB restarts after name has been submitted
     if (s_NameSubmitted && AEInputCheckTriggered(AEVK_TAB)) OnFinishRestartClicked();
 }
 
@@ -163,6 +171,7 @@ void FinishPage_Draw()
         prompt << "ENTER YOUR NAME:";
         prompt.Draw();
 
+        // Show what the player has typed so far with a blinking cursor underscore
         std::string display = s_PlayerName + "_";
         TextRenderer nameDisplay(fontPath, 0.8f, { 0.0f, -210.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
         nameDisplay << display;
@@ -186,7 +195,7 @@ void FinishPage_Draw()
     {
         const f32 yPos = 200.0f - (i * 35.0f);
 
-        // Highlight the current run's score in gold
+        // Highlight this run's score in gold so the player can spot their entry
         const bool isNew = (entries[i].score == s_FinalScore);
         Colour col = isNew ? Colour{ 1.0f, 0.9f, 0.1f, 1.0f }
         : Colour{ 0.8f, 0.8f, 0.8f, 1.0f };

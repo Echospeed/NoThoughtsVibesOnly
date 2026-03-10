@@ -18,3 +18,5 @@ extern std::vector<GameObject*> gamePageObj;
 extern const f32 WORLD_WIDTH;
 extern const f32 WORLD_HEIGHT;
 extern int availableBullets;
+extern int g_FinalScore;
+extern int g_FinalWaveCount;

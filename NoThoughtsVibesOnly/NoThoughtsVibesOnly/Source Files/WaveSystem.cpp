@@ -236,7 +236,7 @@ void WaveSystem::SpawnWave(const WaveConfig& config)
     {
         NPC* ranger = SpawnNPC(NPC_RANGER);
 
-        for (int b = 0; b < 3; ++b)
+        for (int b = 0; b < 6; ++b)
         {
             Bullet* bullet = new Bullet();
             bullet->owner    = BulletOwner::ENEMY;

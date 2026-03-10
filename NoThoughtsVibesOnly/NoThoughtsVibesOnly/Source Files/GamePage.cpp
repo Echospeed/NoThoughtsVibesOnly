@@ -141,6 +141,16 @@ const  f32  CAM_SPEED = 5.0f;  // Camera lerp speed (higher = snappier)
 static f32 s_GameTime = 0.0f;
 
 // ============================================================================
+// Final score snapshot
+// ============================================================================
+// FIX: Store the final score and wave count here BEFORE Game_Free() is called.
+//      Game_Free() calls waveSystem.Cleanup() which resets currentWave and
+//      currentRound back to 0. Saving them at the moment of state transition
+//      lets FinishPage and WinPage read them safely after the waveSystem resets.
+int g_FinalScore = 0;
+int g_FinalWaveCount = 0;
+
+// ============================================================================
 // Screen Shake
 // ============================================================================
 static f32  s_ShakeTimer = 0.0f;   // Remaining shake duration (seconds)
@@ -394,6 +404,16 @@ void Game_Update()
         Player* p = dynamic_cast<Player*>(pPlayer);
         if (p && p->health <= 0.0f)
         {
+            //      Save score and wave count NOW before Game_Free() calls
+            //      waveSystem.Cleanup() and resets everything back to 0.
+            //      FinishPage reads g_FinalScore / g_FinalWaveCount instead.
+            g_FinalWaveCount = (g_CurrentLevel.type == LevelType::ENDLESS)
+                ? (int)waveSystem.GetCurrentRound()
+                : (int)waveSystem.GetCurrentWave();
+            g_FinalScore = (g_CurrentLevel.type == LevelType::ENDLESS)
+                ? g_FinalWaveCount * 150   // endless: 150 pts per round
+                : g_FinalWaveCount * 100;  // normal:  100 pts per wave
+
             if (bgMusic) bgMusic->Stop();
             StateManagerChangeState(STATE_FINISH);
             return;
@@ -405,6 +425,14 @@ void Game_Update()
     // ------------------------------------------------------------------
     if (waveSystem.IsLevelComplete())
     {
+        //  Same as above - save before waveSystem resets.
+        g_FinalWaveCount = (g_CurrentLevel.type == LevelType::ENDLESS)
+            ? (int)waveSystem.GetCurrentRound()
+            : (int)waveSystem.GetCurrentWave();
+        g_FinalScore = (g_CurrentLevel.type == LevelType::ENDLESS)
+            ? g_FinalWaveCount * 150
+            : g_FinalWaveCount * 100;
+
         if (bgMusic) bgMusic->Stop();
         StateManagerChangeState(STATE_WIN);
         return;
@@ -690,7 +718,7 @@ void Game_Draw()
     if (s_WaveAnnounceTimer > 0.0f && !powerUpSystem.IsWaitingForUpgrade())
     {
         const f32 t = s_WaveAnnounceTimer / WAVE_ANNOUNCE_DURATION; // 1.0 -> 0.0
-        f32 alpha{0.0f};
+        f32 alpha{ 0.0f };
         if (t > 0.8f) alpha = (1.0f - t) / 0.2f;
         else if (t > 0.4f) alpha = 1.0f;
         else               alpha = t / 0.4f;
