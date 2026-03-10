@@ -151,6 +151,7 @@ void NPC::Start()
         spriteRenderer.texture = NPCSpritesheet;
         spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
+        fireRate = 2.0f;
         baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
         std::cout << "[NPC] Ranger spawned at ("
             << transform.position.x << ", " << transform.position.y << ")\n";
