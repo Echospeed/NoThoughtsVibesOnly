@@ -681,6 +681,7 @@ void Game_Draw()
 
     // ============================================================================
     // Wave Announcement Banner
+    // Suppressed while the power-up overlay is open so it doesn't draw on top of the cards
     // ============================================================================
     if (s_WaveAnnounceTimer > 0.0f && !powerUpSystem.IsWaitingForUpgrade())
     {

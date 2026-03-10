@@ -173,7 +173,17 @@ void Player::Update(f32 deltaTime)
 
     shootCooldown -= deltaTime;
 
-    if (!isReloading && AEInputCheckCurr(AEVK_LBUTTON) && shootCooldown <= 0.0f)
+    // Shooting is suppressed while the power-up overlay is open, and for one
+    // extra frame after closing it so the selecting click doesn't also fire a bullet.
+    // If a power-up was just picked by mouse click, skip shooting this frame,
+    // reset the cooldown to add a small delay, and clear the flag.
+    if (suppressShootOneFrame)
+    {
+        suppressShootOneFrame = false;
+        shootCooldown = 0.3f; // Small delay before shooting resumes after picking a power-up
+    }
+    else if (!isReloading && AEInputCheckCurr(AEVK_LBUTTON) && shootCooldown <= 0.0f
+        && !(powerUpSystem && powerUpSystem->IsWaitingForUpgrade()))
     {
         Shoot(mouseDir);
         shootCooldown = 0.10f; // 10 shots per second

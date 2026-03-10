@@ -18,10 +18,10 @@ public:
 
     f32 health = 100.0f;    // starting health
     f32 maxHealth = 100.0f;
-    
+
     // Power-up system reference
-    PowerUpSystem* powerUpSystem{nullptr};
-    
+    PowerUpSystem* powerUpSystem{ nullptr };
+
     // Get current stats for damage calculations
     f32 GetBulletDamage() const;
     f32 GetAoeDamage() const;
@@ -32,11 +32,13 @@ public:
     f32  GetReloadProgress() const { return isReloading ? (1.0f - reloadTimer / reloadDuration) : 1.0f; }
     int  GetAmmoInMagazine() const { return ammoInMagazine; }
 
+    bool suppressShootOneFrame{ false }; // Set to true after picking a power-up to eat the click
+
     ParticleSystem smokePS;
 
     InvulnerabilityAbility invulnAbility;
 
-    AEGfxTexture* playerSpritesheet{nullptr};
+    AEGfxTexture* playerSpritesheet{ nullptr };
 
     Animation idleAnim;
     Animation runAnim;
@@ -45,12 +47,12 @@ public:
 
 private:
     f32 shootCooldown = 0.0f;
-	f32 rotationSpeed = 3.0f; // radians per second
+    f32 rotationSpeed = 3.0f; // radians per second
 
     // --- Reload system ---
     bool isReloading = false;
     f32  reloadTimer = 0.0f;
     f32  reloadDuration = 2.0f; // seconds to reload
-	int ammoInMagazine = 10; // starts with 10 bullets available
- 
+    int ammoInMagazine = 10; // starts with 10 bullets available
+
 };

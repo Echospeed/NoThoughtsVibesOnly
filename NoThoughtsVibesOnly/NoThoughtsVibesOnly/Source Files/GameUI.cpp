@@ -187,7 +187,7 @@ void GameUI::DrawHealthText()
     if (!player) return;
 
     playerHealth = TextRenderer(gameFont, 1.0f, { -500.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-    playerHealth << "HP: " << player->health << " / " << player->maxHealth;
+    playerHealth << "HP: " << std::fixed << std::setprecision(0) << player->health << " / " << player->maxHealth;
     playerHealth.Draw();
 
     // ============================================================================
@@ -445,15 +445,16 @@ void GameUI::DrawPowerUpScreen()
     powerUpTitle << "LEVEL UP!  Choose a Power-Up";
     powerUpTitle.Draw();
 
-    const f32  boxX[3] = { -370.0f, 0.0f, 370.0f };
-    const char* keys[3] = { "[1]",   "[2]", "[3]" };
+    // 4 cards evenly spaced across the screen (expanded from 3 to include Lifesteal)
+    const f32  boxX[4] = { -555.0f, -185.0f, 185.0f, 555.0f };
+    const char* keys[4] = { "[1]",   "[2]",   "[3]",  "[4]" };
     const f32  boxW = 280.0f;
     const f32  boxH = 220.0f;
     const f32  boxY = 40.0f;
 
     const bool mouseClicked = AEInputCheckTriggered(AEVK_LBUTTON);
 
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < 4; ++i) // Iterate all 4 power-up choices
     {
         SquareCollider cardCollider{}; // zero-initializes all members
         cardCollider.position = { boxX[i], boxY };
@@ -477,6 +478,8 @@ void GameUI::DrawPowerUpScreen()
         if (isHovered && mouseClicked && player)
         {
             powerUpSystem->ApplyPowerUp(choices[i].type, player);
+            // Suppress shooting for one frame so this click doesn't also fire a bullet
+            player->suppressShootOneFrame = true;
             isOverlayActive = false;
             return; // overlay gone, stop drawing
         }
@@ -521,9 +524,16 @@ void GameUI::DrawPowerUpScreen()
             statBuffText << "dmg=" << (float)stats.GetTotalAoeDamage() << "/s";
             statBuffText.Draw();
         }
+        else if (choices[i].type == POWERUP_LIFESTEAL)
+        {
+            // Shows total heal per kill: base 5 HP + accumulated lifestealBonus
+            statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 40.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
+            statBuffText << "Current: +" << (5.0f + stats.lifestealBonus) << " HP/kill";
+            statBuffText.Draw();
+        }
     }
 
     powerUpTitle = TextRenderer(gameFont, 0.8f, { 0.0f, -200.0f }, { 0.65f, 0.65f, 0.65f, 1.0f });
-    powerUpTitle << "Click a card  or  Press 1, 2, 3";
+    powerUpTitle << "Click a card  or  Press 1, 2, 3, 4";
     powerUpTitle.Draw();
 }
