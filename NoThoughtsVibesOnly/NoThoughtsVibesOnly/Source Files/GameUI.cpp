@@ -30,6 +30,7 @@
 #include <iomanip>
 #include "Collider.hpp"
 #include <functional>
+#include "Leaderboard.hpp"
 
 
 bool isOverlayActive = false;
@@ -347,6 +348,36 @@ void GameUI::DrawCurrentStats()
     playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY - 30.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     playerStats << "AOE: r=" << (float)stats.GetTotalAoeRadius() << "  d=" << (float)stats.GetTotalAoeDamage() << "/s";
     playerStats.Draw();
+
+    // -------------------------------------------------------------------------
+    // Live score panel - shows current run score and best score below stats
+    // -------------------------------------------------------------------------
+    {
+        const int wavesCleared = waveSystem ? waveSystem->GetCurrentWave() - 1 : 0;
+        const int currentScore = wavesCleared * 100;
+
+        const auto& entries = Leaderboard::GetEntries();
+        const int bestScore = entries.empty() ? 0 : entries[0].score;
+
+        const f32 hsX = panelX;
+        const f32 hsY = panelY - panelH / 2.0f - 20.0f;
+        const f32 hsW = panelW;
+        const f32 hsH = 55.0f;
+
+        DrawRect(hsX, hsY, hsW, hsH, 0.1f, 0.1f, 0.15f, 0.85f);
+
+        // Current score in white
+        TextRenderer scoreText(gameFont, 0.5f, { hsX, hsY + 12.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+        scoreText << "SCORE: " << currentScore << " pts";
+        scoreText.Draw();
+
+        // Best score in yellow, turns green if player is beating it
+        const bool beating = currentScore > bestScore && bestScore > 0;
+        Colour bestCol = beating ? Colour{ 0.2f, 1.0f, 0.2f, 1.0f } : Colour{ 1.0f, 1.0f, 0.2f, 1.0f };
+        TextRenderer bestText(gameFont, 0.5f, { hsX, hsY - 14.0f }, bestCol);
+        bestText << "BEST:  " << bestScore << " pts" << (beating ? "  <NEW RECORD!>" : "");
+        bestText.Draw();
+    }
 }
 
 // ============================================================================

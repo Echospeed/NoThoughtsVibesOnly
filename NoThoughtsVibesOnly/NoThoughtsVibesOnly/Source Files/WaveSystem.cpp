@@ -279,7 +279,7 @@ void WaveSystem::SpawnBoss()
     boss->target     = playerRef;
     boss->Start();
 
-    for (int b = 0; b < 8; ++b)
+    for (int b = 0; b < 24; ++b)
     {
         Bullet* bullet = new Bullet();
         bullet->owner    = BulletOwner::ENEMY;

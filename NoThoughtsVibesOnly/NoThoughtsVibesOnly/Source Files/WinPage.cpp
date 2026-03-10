@@ -4,7 +4,7 @@
 // Shown when the player clears all waves.
 // Displays "YOU WIN!" text that grows over 6 seconds.
 // Two buttons: Restart (goes back to game) and Main Menu.
-// Press TAB to restart via keyboard shortcut.
+// Press R to restart via keyboard shortcut.
 //
 // USAGE:
 // ----------------------------------------------------------------------------
@@ -18,6 +18,9 @@
 #include "AEEngine.h"
 #include "Util.hpp"
 #include "Button.hpp"
+#include "Leaderboard.hpp"
+#include "LevelConfig.hpp"
+#include "WaveSystem.hpp"
 
 // ============================================================================
 // File-scope state
@@ -27,10 +30,16 @@ namespace
     Mouse worldMouse;
     s8    fontPath{};
 
-    f32 InitialScale = 1.5f; // Scale at start of animation
-    f32 FinalScale = 3.5f; // Scale at end of animation
+    f32 InitialScale = 1.5f;
+    f32 FinalScale = 3.5f;
     f32 dt = 0.0f;
     f32 timer = 0.0f;
+
+    bool s_ScoreSubmitted = false; // Guard so score is only submitted once per win
+    int  s_FinalScore = 0;     // Calculated on WinPage_Init
+    std::string s_PlayerName = "";   // Name typed by the player
+    bool s_NameSubmitted = false;    // True once Enter is pressed
+
 }
 
 TextRenderer WinText;
@@ -63,12 +72,21 @@ void WinPage_Init()
 
     InitialScale = 1.5f;
     timer = 0.0f;
+    s_ScoreSubmitted = false;
 
-    WinText = TextRenderer(fontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 0.0f, 0.0f });
+    // Calculate final score: 100 pts per wave cleared
+    // Extend this formula with kills/damage when those are tracked
+    s_FinalScore = (int)g_CurrentLevel.numWaves * 100;
+
+    // Submit to leaderboard (only once per win screen entry)
+    Leaderboard::Submit("Player", s_FinalScore, g_CurrentLevel.name, (int)g_CurrentLevel.numWaves);
+    s_ScoreSubmitted = true;
+
+    WinText = TextRenderer(fontPath, 1.0f, { 0.0f, 330.0f }, { 1.0f, 0.0f, 0.0f });
     WinText << "YOU WIN!";
 
-    rButton = new Button(fontPath, { -300.0f, -150.0f }, { 300.0f, 75.0f }, OnWinRestartClicked, { 0.0f, 1.0f, 0.0f, 1.0f }, "Restart");
-    mButton = new Button(fontPath, { 300.0f, -150.0f }, { 300.0f, 75.0f }, OnWinMenuClicked, { 0.0f, 0.0f, 1.0f, 1.0f }, "Main Menu");
+    rButton = new Button(fontPath, { -300.0f, -320.0f }, { 300.0f, 75.0f }, OnWinRestartClicked, { 0.0f, 1.0f, 0.0f, 1.0f }, "Restart");
+    mButton = new Button(fontPath, { 300.0f, -320.0f }, { 300.0f, 75.0f }, OnWinMenuClicked, { 0.0f, 0.0f, 1.0f, 1.0f }, "Main Menu");
 }
 
 // ============================================================================
@@ -93,8 +111,37 @@ void WinPage_Update()
 
     mButton->Update(dt);
     rButton->Update(dt);
+	// =======================================================================
+    // --- Name input handling ---
+	// =======================================================================
+    if (!s_NameSubmitted)
+    {
+        // Backspace
+        if (AEInputCheckTriggered(AEVK_BACK) && !s_PlayerName.empty())
+            s_PlayerName.pop_back();
 
-    if (AEInputCheckTriggered(AEVK_TAB)) OnWinRestartClicked();
+        // Enter to confirm
+        if (AEInputCheckTriggered(AEVK_RETURN) && !s_PlayerName.empty())
+        {
+            Leaderboard::Submit(s_PlayerName, s_FinalScore, g_CurrentLevel.name, (int)g_CurrentLevel.numWaves);
+            s_ScoreSubmitted = true;
+            s_NameSubmitted = true;
+        }
+
+        // Letter keys A-Z
+        static const struct { int vk; char ch; } keys[] = {
+            {AEVK_A,'A'},{AEVK_B,'B'},{AEVK_C,'C'},{AEVK_D,'D'},{AEVK_E,'E'},
+            {AEVK_F,'F'},{AEVK_G,'G'},{AEVK_H,'H'},{AEVK_I,'I'},{AEVK_J,'J'},
+            {AEVK_K,'K'},{AEVK_L,'L'},{AEVK_M,'M'},{AEVK_N,'N'},{AEVK_O,'O'},
+            {AEVK_P,'P'},{AEVK_Q,'Q'},{AEVK_R,'R'},{AEVK_S,'S'},{AEVK_T,'T'},
+            {AEVK_U,'U'},{AEVK_V,'V'},{AEVK_W,'W'},{AEVK_X,'X'},{AEVK_Y,'Y'},
+            {AEVK_Z,'Z'}
+        };
+        for (auto& k : keys)
+            if (AEInputCheckTriggered(static_cast<char>(k.vk)) && s_PlayerName.size() < 12)
+                s_PlayerName += k.ch;
+    }
+    if (s_NameSubmitted && AEInputCheckTriggered(AEVK_TAB)) OnWinRestartClicked();
 }
 
 // ============================================================================
@@ -104,6 +151,52 @@ void WinPage_Draw()
 {
     WinText.SetScale(InitialScale);
     WinText.Draw();
+
+	// ==========================================================================
+    // Name input box - shown until player submits their name
+    // ==========================================================================
+    if (!s_NameSubmitted)
+    {
+        // Dark input panel
+        TextRenderer prompt(fontPath, 0.6f, { 0.0f, -170.0f }, { 1.0f, 1.0f, 0.2f, 1.0f });
+        prompt << "ENTER YOUR NAME:";
+        prompt.Draw();
+
+        // Show typed name with blinking cursor
+        std::string display = s_PlayerName + "_";
+        TextRenderer nameDisplay(fontPath, 0.8f, { 0.0f, -210.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+        nameDisplay << display;
+        nameDisplay.Draw();
+
+        TextRenderer hint(fontPath, 0.45f, { 0.0f, -250.0f }, { 0.6f, 0.6f, 0.6f, 1.0f });
+        hint << "Press ENTER to confirm  |  BACKSPACE to delete";
+        hint.Draw();
+    }
+
+    // -------------------------------------------------------------------------
+    // Leaderboard display - top 10 scores shown on the right side of the screen
+    // -------------------------------------------------------------------------
+    const auto& entries = Leaderboard::GetEntries();
+
+    TextRenderer lbTitle(fontPath, 0.7f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 0.2f, 1.0f });
+    lbTitle << "TOP SCORES";
+    lbTitle.Draw();
+
+    for (int i = 0; i < (int)entries.size() && i < 10; ++i)
+    {
+        const f32 yPos = 200.0f - (i * 35.0f);
+
+        // Highlight the current run's score in gold
+        const bool isNew = (entries[i].score == s_FinalScore);
+        Colour col = isNew ? Colour{ 1.0f, 0.9f, 0.1f, 1.0f }
+        : Colour{ 0.8f, 0.8f, 0.8f, 1.0f };
+
+        TextRenderer row(fontPath, 0.55f, { 0.0f, yPos }, col);
+        row << (i + 1) << ". " << entries[i].name
+            << "  " << entries[i].score << " pts"
+            << "  [" << entries[i].level << "]";
+        row.Draw();
+    }
 }
 
 // ============================================================================

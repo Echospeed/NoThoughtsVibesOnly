@@ -108,7 +108,7 @@ NPC::~NPC()
 void NPC::Start()
 {
     // --- Random spawn: keep trying until we're far enough from the player ---
-    f32    rX, rY;
+    f32 rX{ 0.0f }, rY{ 0.0f };
     AEVec2 spawnPos{};
     do
     {
@@ -533,8 +533,14 @@ void NPC::BossNPCs(f32 deltaTime)
             if (!b || b->owner != BulletOwner::ENEMY) continue;
             if (b->isActive || b->startPos != this)   continue;
 
-            // Evenly distribute 8 bullets around a full circle (360/8 = 45 deg each)
-            const f32 angle = bulletsFired * (2.0f * 3.14159f / 8.0f);
+            // Get the angle from boss to player
+            const f32 baseAngle = atan2f(
+                target->transform.position.y - transform.position.y,
+                target->transform.position.x - transform.position.x
+            );
+
+            // Spread 8 bullets evenly around that direction
+            const f32 angle = baseAngle + bulletsFired * (2.0f * 3.14159f / 8.0f);
             const AEVec2 dir = { cosf(angle), sinf(angle) };
 
             b->Activate(this, dir, BulletOwner::ENEMY);

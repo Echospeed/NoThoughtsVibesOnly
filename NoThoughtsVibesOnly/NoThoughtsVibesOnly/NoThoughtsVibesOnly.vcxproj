@@ -23,6 +23,7 @@
     <ClInclude Include="Header Files\GamePage.hpp" />
     <ClInclude Include="Header Files\GameUI.hpp" />
     <ClInclude Include="Header Files\Input.hpp" />
+    <ClInclude Include="Header Files\Leaderboard.hpp" />
     <ClInclude Include="Header Files\LevelConfig.hpp" />
     <ClInclude Include="Header Files\LevelSelectPage.hpp" />
     <ClInclude Include="Header Files\MenuPage.hpp" />
@@ -56,6 +57,10 @@
     <ClCompile Include="Source Files\GamePage.cpp" />
     <ClCompile Include="Source Files\GameUI.cpp" />
     <ClCompile Include="Source Files\Input.cpp" />
+    <ClCompile Include="Source Files\Leaderboard.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Source Files\LevelConfig.cpp" />
     <ClCompile Include="Source Files\LevelSelectPage.cpp" />
     <ClCompile Include="Source Files\Main.cpp" />
@@ -136,7 +141,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)Src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Src;%(AdditionalIncludeDirectories);C:\Users\user\Desktop\Y1T2\1451 gam150\NTOV_git_repo\NoThoughtsVibesOnly\NoThoughtsVibesOnly\NoThoughtsVibesOnly\Header Files\include;C:\Users\user\Desktop\Y1T2\1451 gam150\NTOV_git_repo\NoThoughtsVibesOnly\NoThoughtsVibesOnly\NoThoughtsVibesOnly\Header Files\include</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <LanguageStandard>Default</LanguageStandard>
@@ -164,6 +169,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmodL.dll" "$(OutDir)" /s /r /y /q</
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>;C:\Users\user\Desktop\Y1T2\1451 gam150\NTOV_git_repo\NoThoughtsVibesOnly\NoThoughtsVibesOnly\NoThoughtsVibesOnly\Header Files\include;C:\Users\user\Desktop\Y1T2\1451 gam150\NTOV_git_repo\NoThoughtsVibesOnly\NoThoughtsVibesOnly\NoThoughtsVibesOnly\Header Files\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -690,7 +690,7 @@ void Game_Draw()
     if (s_WaveAnnounceTimer > 0.0f && !powerUpSystem.IsWaitingForUpgrade())
     {
         const f32 t = s_WaveAnnounceTimer / WAVE_ANNOUNCE_DURATION; // 1.0 -> 0.0
-        f32 alpha;
+        f32 alpha{0.0f};
         if (t > 0.8f) alpha = (1.0f - t) / 0.2f;
         else if (t > 0.4f) alpha = 1.0f;
         else               alpha = t / 0.4f;

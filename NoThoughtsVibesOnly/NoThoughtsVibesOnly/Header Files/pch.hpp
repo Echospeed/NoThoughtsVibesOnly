@@ -4,6 +4,24 @@
 #define PCH_H
 
 // ---------------------------------------------------------------------------
+// Windows Macro Guards - MUST come before any Windows or engine headers
+// ---------------------------------------------------------------------------
+// NOMINMAX    : Prevents Windows.h from defining min/max as macros,
+//               which breaks RapidJSON's use of std::min / std::max.
+// WIN32_LEAN_AND_MEAN : Strips rarely-used Windows headers for faster builds.
+// _CRT_SECURE_NO_WARNINGS : Suppresses fopen/strcpy deprecation warnings.
+// ---------------------------------------------------------------------------
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+// ---------------------------------------------------------------------------
 // Standard Library Headers
 // ---------------------------------------------------------------------------
 #include <vector>

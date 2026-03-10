@@ -171,6 +171,10 @@ void Player::Update(f32 deltaTime)
         }
     }
 
+    // --- Manual reload on R key ---
+    if (AEInputCheckTriggered(AEVK_R))
+        TriggerReload();
+
     shootCooldown -= deltaTime;
 
     // Shooting is suppressed while the power-up overlay is open, and for one
@@ -372,6 +376,19 @@ void Player::Shoot(AEVec2 dir)
         isReloading = true;
         reloadTimer = reloadDuration;
     }
+}
+
+// ============================================================================
+// TriggerReload
+// ============================================================================
+// Manually starts a reload. No-ops if already reloading or magazine is full.
+// ============================================================================
+void Player::TriggerReload()
+{
+    const int maxAmmo = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount : 10;
+    if (isReloading || ammoInMagazine == maxAmmo) return;
+    isReloading = true;
+    reloadTimer = reloadDuration;
 }
 
 // ============================================================================

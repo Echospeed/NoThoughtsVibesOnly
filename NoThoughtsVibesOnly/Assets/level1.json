@@ -1,0 +1,10 @@
+{
+  "name": "Level 1",
+  "type": "LEVEL_1",
+  "numWaves": 5,
+  "hasBoss": false,
+  "waveBreakDuration": 3.0,
+  "baseEnemyCount": 5,
+  "maxEnemyCount": 20,
+  "description": "5 waves, no boss. Good for beginners."
+}

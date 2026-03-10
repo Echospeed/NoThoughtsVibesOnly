@@ -1,0 +1,10 @@
+{
+  "name": "Level 2",
+  "type": "LEVEL_2",
+  "numWaves": 10,
+  "hasBoss": true,
+  "waveBreakDuration": 3.0,
+  "baseEnemyCount": 5,
+  "maxEnemyCount": 20,
+  "description": "10 waves, boss on final wave. For veterans."
+}
