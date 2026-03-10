@@ -186,7 +186,7 @@ void GameUI::DrawHealthText()
     const Player* player = dynamic_cast<Player*>(pPlayer);
     if (!player) return;
 
-    playerHealth = TextRenderer(gameFont, 1.0f, { -500.0f, -400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    playerHealth = TextRenderer(gameFont, 1.0f, { -500.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     playerHealth << "HP: " << player->health << " / " << player->maxHealth;
     playerHealth.Draw();
 
@@ -434,7 +434,7 @@ void GameUI::DrawPowerUpScreen()
 
     isOverlayActive = true;
 
-    PowerUp* choices = powerUpSystem->GetPowerUpChoices();
+    const PowerUp* choices = powerUpSystem->GetPowerUpChoices();
     const PlayerStats& stats = powerUpSystem->GetStats();
     Player* player = dynamic_cast<Player*>(pPlayer);
 

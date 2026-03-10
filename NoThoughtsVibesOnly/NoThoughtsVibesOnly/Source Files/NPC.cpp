@@ -17,6 +17,8 @@
 // INTERACTION WITH POWERSYSTEM:
 // ----------------------------------------------------------------------------
 //   On death, the NPC awards XP via powerUpSystem.AddExperience().
+//   On death, the NPC also heals the player: 5 HP base (15 for boss) +
+//   powerUpSystem.GetStats().lifestealBonus (upgraded via POWERUP_LIFESTEAL).
 //
 // EXPLOSION PARTICLE LIFECYCLE:
 // ----------------------------------------------------------------------------
@@ -206,6 +208,23 @@ void NPC::Update(f32 deltaTime)
 
         // Award XP to the player
         powerUpSystem.AddExperience(25.0f);
+
+        // Heal the player on kill.
+        // Base heal is 5 HP. lifestealBonus is added per POWERUP_LIFESTEAL upgrade.
+        // Boss kills give 3x the heal as a reward for the extra difficulty.
+        // Heal is always capped at maxHealth.
+        if (target)
+        {
+            Player* player = dynamic_cast<Player*>(target);
+            if (player)
+            {
+                const f32 baseHeal = (type == NPC_BOSS) ? 15.0f : 5.0f;
+                const f32 healAmount = baseHeal + powerUpSystem.GetStats().lifestealBonus;
+                player->health += healAmount;
+                if (player->health > player->maxHealth)
+                    player->health = player->maxHealth;
+            }
+        }
 
         // Fire the explosion burst - EmitBurst spawns all particles at once.
         // Boss gets 40 (fills the pool), normal enemies get 20.

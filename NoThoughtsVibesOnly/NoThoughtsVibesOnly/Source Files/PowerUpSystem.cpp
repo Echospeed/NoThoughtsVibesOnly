@@ -7,9 +7,9 @@
 // ----------------------------------------------------------------------------
 //   1. Enemy dies -> NPC::Update() calls powerUpSystem.AddExperience(25).
 //   2. AddExperience() checks for level-up via CheckLevelUp().
-//   3. On level-up: GeneratePowerUpChoices() creates 3 options.
+//   3. On level-up: GeneratePowerUpChoices() creates 4 options.
 //   4. waitingForUpgrade = true  -> Game_Update() blocks gameplay.
-//   5. Player presses 1/2/3  -> ApplyPowerUp() applies the chosen stat.
+//   5. Player presses 1/2/3/4  -> ApplyPowerUp() applies the chosen stat.
 //   6. waitingForUpgrade = false -> gameplay resumes.
 //
 // SCALING:
@@ -91,7 +91,7 @@ bool PowerUpSystem::CheckLevelUp()
 // ============================================================================
 // GeneratePowerUpChoices
 // ============================================================================
-// Always offers all 3 core upgrades in a fixed order.
+// Always offers all 4 upgrades in a fixed order: Speed, Bullet Damage, AoE, Lifesteal.
 // (Can be randomised later by shuffling the array if desired.)
 // ============================================================================
 void PowerUpSystem::GeneratePowerUpChoices()
@@ -99,6 +99,7 @@ void PowerUpSystem::GeneratePowerUpChoices()
     powerUpChoices[0] = CreatePowerUp(POWERUP_SPEED);
     powerUpChoices[1] = CreatePowerUp(POWERUP_BULLET_DAMAGE);
     powerUpChoices[2] = CreatePowerUp(POWERUP_AOE_DAMAGE);
+    powerUpChoices[3] = CreatePowerUp(POWERUP_LIFESTEAL); // Always available as the 4th option
 }
 
 // ============================================================================
@@ -130,6 +131,12 @@ PowerUp PowerUpSystem::CreatePowerUp(PowerUpType type)
         p.name = "AoE MASTERY";
         p.description = "+20 AoE Radius  +25 Damage/sec";
         p.value = 20.0f;
+        break;
+
+    case POWERUP_LIFESTEAL:
+        p.name = "LIFESTEAL";
+        p.description = "+10 HP healed per kill"; // Stacks with base 5 HP heal on kill
+        p.value = 10.0f;
         break;
     }
 
@@ -180,6 +187,13 @@ void PowerUpSystem::ApplyPowerUp(PowerUpType type, Player* player)
         ++stats.aoeUpgrades;
         std::cout << "[Upgrade] AoE radius -> " << stats.GetTotalAoeRadius()
             << "  damage -> " << stats.GetTotalAoeDamage() << "/sec\n";
+        break;
+
+    case POWERUP_LIFESTEAL:
+        // Adds +10 to lifestealBonus. Total heal per kill = 5 (base) + lifestealBonus.
+        // Boss kills use 15 (base) + lifestealBonus instead. See NPC.cpp death block.
+        stats.lifestealBonus += 10.0f;
+        std::cout << "[Upgrade] Lifesteal -> +" << (5.0f + stats.lifestealBonus) << " HP per kill\n";
         break;
     }
 

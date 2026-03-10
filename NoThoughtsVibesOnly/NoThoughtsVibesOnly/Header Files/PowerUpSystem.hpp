@@ -22,7 +22,8 @@ enum PowerUpType
 {
     POWERUP_SPEED,          // Increase movement speed
     POWERUP_BULLET_DAMAGE,  // Increase bullet damage
-    POWERUP_AOE_DAMAGE      // Increase AoE radius and damage
+    POWERUP_AOE_DAMAGE,     // Increase AoE radius and damage
+    POWERUP_LIFESTEAL       // Increase heal-on-kill amount
 };
 
 // ============================================================================
@@ -64,6 +65,9 @@ struct PlayerStats
     f32 expToNextLevel{ 100.0f };
     u32 level{ 1 };
 
+    // === Lifesteal ===
+    f32 lifestealBonus{ 0.0f };   // Extra HP healed per kill (on top of base 5)
+
     // === Methods ===
     f32 GetTotalSpeed() const { return baseSpeed + speedBonus; }
     f32 GetTotalBulletDamage() const { return baseBulletDamage + bulletDamageBonus; }
@@ -96,13 +100,13 @@ public:
     // === Getters ===
     PlayerStats& GetStats() { return stats; }
     const PlayerStats& GetStats() const { return stats; }
-    PowerUp* GetPowerUpChoices() { return powerUpChoices; }
+    const PowerUp* GetPowerUpChoices() const { return powerUpChoices; }
     bool IsWaitingForUpgrade() const { return waitingForUpgrade; }
     void SetWaitingForUpgrade(bool waiting) { waitingForUpgrade = waiting; }
 
 private:
     PlayerStats stats;
-    PowerUp powerUpChoices[3]{};          // 3 choices on level up
+    PowerUp powerUpChoices[4]{};          // 4 choices on level up
     bool waitingForUpgrade{ false };      // Pauses game for upgrade choice
 
     // Helper methods

@@ -202,7 +202,7 @@ void Game_Init()
     pPlayer = new Player();
     sCamX = pPlayer->transform.position.x;
     sCamY = pPlayer->transform.position.y;
-    ammoText = TextRenderer(gameFont, 1.0f, { -500.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    ammoText = TextRenderer(gameFont, 1.0f, { -500.0f, -400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     ammoText << "Ammo: 10 / 10"; // Updated dynamically in Game_Update
 
     // --- Systems ---
@@ -310,7 +310,7 @@ void Game_Update()
     // ------------------------------------------------------------------
     if (powerUpSystem.IsWaitingForUpgrade())
     {
-        PowerUp* choices = powerUpSystem.GetPowerUpChoices();
+        const PowerUp* choices = powerUpSystem.GetPowerUpChoices();
         Player* player = dynamic_cast<Player*>(pPlayer);
         if (levelupSFX && levelUpSFXFlag) { levelupSFX->Play(); levelUpSFXFlag = false; };
         if (AEInputCheckTriggered(AEVK_1)) powerUpSystem.ApplyPowerUp(choices[0].type, player);
@@ -433,7 +433,7 @@ void Game_Update()
     {
         u32 totalBullets = powerUpSystem.GetStats().bulletCount;
         Player* p = dynamic_cast<Player*>(pPlayer);
-        ammoText = TextRenderer(gameFont, 1.0f, { -500.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+        ammoText = TextRenderer(gameFont, 1.0f, { -500.0f, -400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
         if (p && p->IsReloading())
             ammoText << "RELOADING...";
         else
@@ -682,7 +682,7 @@ void Game_Draw()
     // ============================================================================
     // Wave Announcement Banner
     // ============================================================================
-    if (s_WaveAnnounceTimer > 0.0f)
+    if (s_WaveAnnounceTimer > 0.0f && !powerUpSystem.IsWaitingForUpgrade())
     {
         const f32 t = s_WaveAnnounceTimer / WAVE_ANNOUNCE_DURATION; // 1.0 -> 0.0
         f32 alpha;
