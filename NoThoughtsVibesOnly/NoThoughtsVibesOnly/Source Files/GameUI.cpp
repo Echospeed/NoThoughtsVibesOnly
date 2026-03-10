@@ -246,6 +246,38 @@ void GameUI::DrawHealthText()
         // Reset render state
         AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
         AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+
+        // -------------------------------------------------------------------------
+        // Reload Progress Bar
+        // -------------------------------------------------------------------------
+        // A thin bar just below the ammo pips. Only visible while reloading.
+        // Fills left-to-right orange -> white as reload completes.
+        // -------------------------------------------------------------------------
+        if (reloading)
+        {
+            const f32 progress = player->GetReloadProgress(); // 0.0 -> 1.0
+            const f32 barW = displayMax * (pipSize + pipGap);
+            const f32 barH = 5.0f;
+            const f32 barX = pipStartX + barW / 2.0f;
+            const f32 barY = pipY - pipSize - 4.0f;
+
+            // Dark background track
+            DrawRect(barX, barY, barW, barH, 0.15f, 0.15f, 0.15f, 0.9f);
+
+            // Animated fill: starts orange, turns white near completion
+            if (progress > 0.01f)
+            {
+                const f32 fillW = barW * progress;
+                const f32 fillX = barX - barW / 2.0f + fillW / 2.0f;
+                const f32 g = 0.45f + progress * 0.55f; // orange -> white
+                DrawRect(fillX, barY, fillW, barH - 1.0f, 1.0f, g, 0.0f, 1.0f);
+            }
+
+            // "RELOADING" label above the bar
+            TextRenderer reloadLabel(gameFont, 0.55f, { barX, barY + 14.0f }, { 1.0f, 0.6f, 0.1f, 1.0f });
+            reloadLabel << "RELOADING...";
+            reloadLabel.Draw();
+        }
     }
 }
 

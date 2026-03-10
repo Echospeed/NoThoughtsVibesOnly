@@ -61,7 +61,7 @@ void PausePage_Update()
     GetMouseWorldPosition(worldMouse.position.x, worldMouse.position.y);
 
     if (AEInputCheckTriggered(AEVK_ESCAPE)) { StateManagerChangeState(STATE_PLAYING); return; }
-    if (AEInputCheckTriggered(AEVK_R)) { StateManagerChangeState(STATE_RESTART); return; }
+    if (AEInputCheckTriggered(AEVK_TAB)) { StateManagerChangeState(STATE_RESTART); return; }
     if (AEInputCheckTriggered(AEVK_Q)) { StateManagerChangeState(STATE_MENU);    return; }
 }
 

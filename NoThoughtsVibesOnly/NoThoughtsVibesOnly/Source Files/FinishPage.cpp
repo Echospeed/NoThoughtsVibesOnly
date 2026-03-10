@@ -4,7 +4,7 @@
 // Shown when the player's health reaches zero.
 // Displays "YOU LOSE!" text that grows over 6 seconds.
 // Two buttons: Restart (goes back to game) and Main Menu.
-// Press R to restart via keyboard shortcut.
+// Press TAB to restart via keyboard shortcut.
 //
 // USAGE:
 // ----------------------------------------------------------------------------
@@ -94,7 +94,7 @@ void FinishPage_Update()
     menuButton->Update(dt);
     restartButton->Update(dt);
 
-    if (AEInputCheckTriggered(AEVK_R)) OnFinishRestartClicked();
+    if (AEInputCheckTriggered(AEVK_TAB)) OnFinishRestartClicked();
 }
 
 // ============================================================================

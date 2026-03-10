@@ -32,6 +32,9 @@ public:
     f32  GetReloadProgress() const { return isReloading ? (1.0f - reloadTimer / reloadDuration) : 1.0f; }
     int  GetAmmoInMagazine() const { return ammoInMagazine; }
 
+    // Manually starts a reload. No-ops if already reloading or magazine is full.
+    void TriggerReload();
+
     bool suppressShootOneFrame{ false }; // Set to true after picking a power-up to eat the click
 
     ParticleSystem smokePS;

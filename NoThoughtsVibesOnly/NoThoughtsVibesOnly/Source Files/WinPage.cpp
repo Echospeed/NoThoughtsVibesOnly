@@ -4,7 +4,7 @@
 // Shown when the player clears all waves.
 // Displays "YOU WIN!" text that grows over 6 seconds.
 // Two buttons: Restart (goes back to game) and Main Menu.
-// Press R to restart via keyboard shortcut.
+// Press TAB to restart via keyboard shortcut.
 //
 // USAGE:
 // ----------------------------------------------------------------------------
@@ -94,7 +94,7 @@ void WinPage_Update()
     mButton->Update(dt);
     rButton->Update(dt);
 
-    if (AEInputCheckTriggered(AEVK_R)) OnWinRestartClicked();
+    if (AEInputCheckTriggered(AEVK_TAB)) OnWinRestartClicked();
 }
 
 // ============================================================================

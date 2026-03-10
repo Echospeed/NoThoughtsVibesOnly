@@ -8,6 +8,7 @@
 //   W / A / S / D              : Move
 //   Left Arrow / Right Arrow   : Rotate
 //   Left Mouse Hold            : Shoot toward cursor (10 shots/sec)
+//   R				            : Manual reload (if not already reloading or magazine full)
 //
 // SYSTEMS USED:
 // ----------------------------------------------------------------------------
@@ -169,6 +170,12 @@ void Player::Update(f32 deltaTime)
             ammoInMagazine = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount : 10;
             isReloading = false;
         }
+    }
+
+    // Manual reload: press R to reload early (even with ammo remaining)
+    if (AEInputCheckTriggered(AEVK_R) && !isReloading)
+    {
+        TriggerReload();
     }
 
     shootCooldown -= deltaTime;
@@ -390,6 +397,25 @@ f32 Player::GetAoeDamage() const
 f32 Player::GetAoeRadius() const
 {
     return powerUpSystem ? powerUpSystem->GetStats().GetTotalAoeRadius() : 100.0f;
+}
+
+// ============================================================================
+// TriggerReload
+// ============================================================================
+// Manually starts a reload. Safe to call at any time:
+//   - No-ops if already reloading.
+//   - No-ops if magazine is already full (nothing to reload).
+// Called automatically when the magazine empties, and manually via R key.
+// ============================================================================
+void Player::TriggerReload()
+{
+    if (isReloading) return;
+
+    const int maxAmmo = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount : 10;
+    if (ammoInMagazine >= maxAmmo) return; // Already full - nothing to reload
+
+    isReloading = true;
+    reloadTimer = reloadDuration;
 }
 
 void Player::Free()

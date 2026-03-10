@@ -188,25 +188,29 @@ void Main_Draw()
         infoText.Draw();
 
         infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
-        infoText << "E  -  Activate Invincibility";
+        infoText << "R  -  Reload";
         infoText.Draw();
 
         infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
-        infoText << "ESC  -  Pause";
+        infoText << "E  -  Activate Invincibility";
         infoText.Draw();
 
         infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -100.0f }, { 1.0f, 1.0f, 1.0f });
-        infoText << "R  -  Restart";
+        infoText << "ESC  -  Pause";
         infoText.Draw();
 
         infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -200.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText << "TAB  -  Restart";
+        infoText.Draw();
+
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -300.0f }, { 1.0f, 1.0f, 1.0f });
         infoText << "Q  -  Menu";
         infoText.Draw();
 
         // Sync all three parts of the back button so text/collider/visual align
-        backButton->transform.SetPosition(0.0f, -350.0f);
-        backButton->collider.position = { 0.0f, -350.0f };
-        backButton->textRenderer.SetPosition({ 0.0f, -350.0f });
+        backButton->transform.SetPosition(0.0f, -420.0f);
+        backButton->collider.position = { 0.0f, -420.0f };
+        backButton->textRenderer.SetPosition({ 0.0f, -420.0f });
     }
     else if (currentMenuState == MENU_CREDITS)
     {

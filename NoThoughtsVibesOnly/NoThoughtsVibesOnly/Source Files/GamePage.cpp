@@ -24,15 +24,17 @@
 //
 // KEY BINDINGS (in-game):
 // ----------------------------------------------------------------------------
-//   WASD        : Move player
-//   QE          : Rotate player
-//   LMB (hold)  : Shoot toward cursor
-//   ESC         : Toggle pause overlay
-//   R  (paused) : Restart
-//   Q  (paused) : Return to main menu
-//   C           : Start first wave
-//   SPACE       : Jump to Finish (debug)
-//   ENTER       : Jump to Win    (debug)
+//   WASD             : Move player
+//   Left/Right Arrow : Rotate player
+//   LMB (hold)       : Shoot toward cursor
+//   E                : Activate invulnerability ability
+//   ESC              : Toggle pause overlay
+//   TAB  (paused)    : Restart
+//   Q  (paused)      : Return to main menu
+//   C  (debug)       : Kill all active enemies instantly
+//   U  (debug)       : Add 100 XP
+//   SPACE (debug)    : Jump to Finish (lose) screen
+//   ENTER (debug)    : Jump to Win screen
 // ============================================================================
 
 #include "pch.hpp"
@@ -297,7 +299,7 @@ void Game_Update()
     if (isPaused)
     {
         // Allow restart/quit while paused
-        if (AEInputCheckTriggered(AEVK_R)) { isPaused = false; StateManagerChangeState(STATE_RESTART); return; }
+        if (AEInputCheckTriggered(AEVK_TAB)) { isPaused = false; StateManagerChangeState(STATE_RESTART); return; }
         if (AEInputCheckTriggered(AEVK_Q)) { isPaused = false; StateManagerChangeState(STATE_MENU);    return; }
         return; // Freeze everything else while paused
     }
@@ -445,7 +447,7 @@ void Game_Update()
     // ------------------------------------------------------------------
     if (AEInputCheckTriggered(AEVK_SPACE))  StateManagerChangeState(STATE_FINISH);  // Force lose
     if (AEInputCheckTriggered(AEVK_RETURN)) StateManagerChangeState(STATE_WIN);      // Force win
-    if (AEInputCheckTriggered(AEVK_R))      StateManagerChangeState(STATE_RESTART);
+    if (AEInputCheckTriggered(AEVK_TAB))      StateManagerChangeState(STATE_RESTART);
     if (AEInputCheckTriggered(AEVK_Q))      StateManagerChangeState(STATE_MENU);
 }
 
@@ -454,18 +456,20 @@ void Game_Update()
 // ============================================================================
 // Rendering order:
 //   WORLD SPACE (camera at player)
-//     1. Deep red world border
+//     1. Deep red world border (pulsing glow, intensifies near edge)
 //     2. Deep space floor (near-black blue)
-//     3. Stars (600 circle dots, fixed seed)
-//     4. Faint grid lines
-//     5. AoE indicator circle
-//     6. Minimap
-//     7. All active game objects (skips invisible NPCs)
+//     3. Stars (600 circle dots, two parallax layers)
+//     4. AoE indicator circle (around player)
+//     5. Entity glow halos (player, boss, bullets - drawn before entities)
+//     6. All active game objects (skips invisible NPCs)
+//     7. Particle effects (smoke, explosions)
 //     8. Health bars (world-space, float above entities)
+//     9. Minimap (top-right overlay)
 //   SCREEN SPACE (camera at 0,0)
-//     9. Ammo text, HP text, XP bar, stats, wave info, wave timer
-//    10. Power-up selection overlay (if leveled up)
-//    11. Pause overlay (if paused)
+//    10. Ammo text, HP text, XP bar, stats, wave info, wave timer, abilities
+//    11. Power-up selection overlay (if leveled up)
+//    12. Wave announcement banner (fades in/out on new wave)
+//    13. Pause overlay (if paused)
 // ============================================================================
 void Game_Draw()
 {
