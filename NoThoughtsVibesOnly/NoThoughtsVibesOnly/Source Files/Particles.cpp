@@ -414,10 +414,10 @@ ParticleSystem ParticleSystem::MakeSmoke()
         30,             // maxParticles  - cap on simultaneous smoke puffs
         -25.0f, 25.0f,  // velX          - slight horizontal spread
         30.0f, 80.0f,  // velY          - drifts upward
-        0.4f, 0.8f,   // lifetime      - short-lived puffs
-        12.0f, 2.0f,   // size          - visibly shrinks as it fades
-        0.6f, 0.6f, 0.6f, // start colour: mid grey
-        0.2f, 0.2f, 0.2f, // end colour:   dark grey (combined with alpha fade = transparent)
+        0.8f, 1.2f,   // lifetime      - short-lived puffs
+        24.0f, 4.0f,   // size          - visibly shrinks as it fades
+        0.1f, 0.6f, 0.6f, // start colour: mid ash green
+        0.1f, 0.2f, 0.2f, // end colour:   dark ash green (combined with alpha fade = transparent)
         0.0f,   // gravity=0: smoke floats upward, not pulled down
         1.5f    // drag=1.5:  velocity halves fast, puffs hang rather than fly
     );
