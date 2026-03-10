@@ -34,6 +34,7 @@
 #include "Button.hpp"
 #include "Input.hpp"
 #include "Audio.hpp"
+#include "SplashPage.hpp"
 
 // ============================================================================
 // Menu sub-state
@@ -80,6 +81,7 @@ TextRenderer infoText;     // Body text for info pages
 // ============================================================================
 SpriteRenderer creditsImg;
 Transform      creditTransform;
+Audio* g_MenuMusic = nullptr;
 
 // ============================================================================
 // Sub-view navigation callbacks
@@ -94,6 +96,7 @@ static void GoToLevelSelect() { StateManagerChangeState(STATE_LEVEL_SELECT); }
 // ============================================================================
 void Main_Load()
 {
+    g_MenuMusic = new Audio("Assets/Audio/MainMenusfx.wav", -1, 0.5f, 1.0f, AudioType::MUSIC);
     fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
     Meshes::CreateSquareCenterOriginMesh();
     Meshes::CreateCircleMesh(); // Required by StarBackground
@@ -118,7 +121,7 @@ void Main_Init()
     quitButton = new Button(fontPath, { 0.0f, -200.0f }, { 300.0f, 75.0f }, StateManagerQuit, { 0.7f, 0.0f, 0.0f, 1.0f }, "QUIT");
     backButton = new Button(fontPath, { 0.0f, -350.0f }, { 200.0f, 75.0f }, GoToMain, { 0.7f, 0.0f, 0.0f, 1.0f }, "BACK");
 
-    controlsText = TextRenderer(fontPath, 1.0f, { 0.0f, 250.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    controlsText = TextRenderer(fontPath, 1.0f, { 0.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     controlsText << "CONTROLS";
 
     creditsText = TextRenderer(fontPath, 1.0f, { 0.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
@@ -126,6 +129,8 @@ void Main_Init()
 
     InitSpriteRenderer(creditsImg, "Assets/Credits_NTOV.png", 1600.0f, 900.0f, MESH_SQUARE);
     creditTransform = { {0.0f, 0.0f}, {1600.0f, 900.0f}, {0.0f} };
+
+    if (g_MenuMusic) g_MenuMusic->Play();
 }
 
 // ============================================================================
@@ -174,16 +179,28 @@ void Main_Draw()
     {
         controlsText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 300.0f }, { 1.0f, 1.0f, 1.0f });
         infoText << "W, A, S, D  -  Move";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 200.0f }, { 1.0f, 1.0f, 1.0f });
         infoText << "Left Click  -  Shoot";
         infoText.Draw();
 
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText << "E  -  Activate Invincibility";
+        infoText.Draw();
+
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText << "ESC  -  Pause";
+        infoText.Draw();
+
         infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -100.0f }, { 1.0f, 1.0f, 1.0f });
-        infoText << "ESC  -  Pause  |  R  -  Restart  |  Q  -  Menu";
+        infoText << "R  -  Restart";
+        infoText.Draw();
+
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -200.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText << "Q  -  Menu";
         infoText.Draw();
 
         // Sync all three parts of the back button so text/collider/visual align
@@ -211,6 +228,8 @@ void Main_Draw()
 // ============================================================================
 void Main_Free()
 {
+    if (g_MenuMusic) g_MenuMusic->Stop();
+
     for (auto* obj : mainPageObj)
         delete obj;
     mainPageObj.clear();
@@ -228,4 +247,5 @@ void Main_Unload()
 {
     AEGfxDestroyFont(fontPath);
     Meshes::FreeMeshes();
+    if (g_MenuMusic) { g_MenuMusic->Free();    delete g_MenuMusic;    g_MenuMusic = nullptr; }
 }
