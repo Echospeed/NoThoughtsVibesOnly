@@ -8,7 +8,6 @@
 //   W / A / S / D              : Move
 //   Left Arrow / Right Arrow   : Rotate
 //   Left Mouse Hold            : Shoot toward cursor (10 shots/sec)
-//   R				            : Manual reload (if not already reloading or magazine full)
 //
 // SYSTEMS USED:
 // ----------------------------------------------------------------------------
@@ -172,12 +171,6 @@ void Player::Update(f32 deltaTime)
         }
     }
 
-    // Manual reload: press R to reload early (even with ammo remaining)
-    if (AEInputCheckTriggered(AEVK_R) && !isReloading)
-    {
-        TriggerReload();
-    }
-
     shootCooldown -= deltaTime;
 
     // Shooting is suppressed while the power-up overlay is open, and for one
@@ -223,11 +216,20 @@ void Player::Update(f32 deltaTime)
 
         const f32 npcRadius = (np->transform.scale.x + np->transform.scale.y) / 4.0f;
 
-        // AoE damage ring (shows red tint while in range)
+        // AoE damage ring - pulse the NPC dim/bright to show it's being damaged
         if (dist < (aoeRadius + npcRadius))
         {
             np->health -= aoeDamage * deltaTime;
-            np->spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f };
+
+            // Pulse alpha between 0.4 and 1.0 at ~4 Hz so the NPC visibly flickers,
+            // indicating it is inside the AoE and taking damage.
+            const f32 pulse = 0.7f + 0.3f * sinf((f32)AEGetTime(nullptr) * 25.0f);
+            np->spriteRenderer.colour = {
+                np->baseColour.r,
+                np->baseColour.g * 0.3f, // drain green/blue to tint red
+                np->baseColour.b * 0.3f,
+                pulse                     // flickering alpha
+            };
         }
         else
         {
@@ -397,25 +399,6 @@ f32 Player::GetAoeDamage() const
 f32 Player::GetAoeRadius() const
 {
     return powerUpSystem ? powerUpSystem->GetStats().GetTotalAoeRadius() : 100.0f;
-}
-
-// ============================================================================
-// TriggerReload
-// ============================================================================
-// Manually starts a reload. Safe to call at any time:
-//   - No-ops if already reloading.
-//   - No-ops if magazine is already full (nothing to reload).
-// Called automatically when the magazine empties, and manually via R key.
-// ============================================================================
-void Player::TriggerReload()
-{
-    if (isReloading) return;
-
-    const int maxAmmo = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount : 10;
-    if (ammoInMagazine >= maxAmmo) return; // Already full - nothing to reload
-
-    isReloading = true;
-    reloadTimer = reloadDuration;
 }
 
 void Player::Free()
