@@ -15,6 +15,7 @@
 #include "SplashPage.hpp"
 #include "AEEngine.h"
 #include "Util.hpp"
+#include "StarBackground.hpp"
 
 // ============================================================================
 // File-scope state
@@ -34,6 +35,9 @@ void SplashPage_Load()
     ss_DigiPen_Logo = AEGfxTextureLoad(path);
     printf("[Splash] Loaded texture '%s' -> %p\n", path, (void*)ss_DigiPen_Logo);
 
+    Meshes::CreateCircleMesh(); // Required by StarBackground
+    StarBackground::Init();
+
     Meshes::CreateSquareCenterOriginMesh();
 }
 
@@ -42,7 +46,7 @@ void SplashPage_Load()
 // ============================================================================
 void SplashPage_Init()
 {
-    AEGfxSetBackgroundColor(0.1f, 0.1f, 0.15f);
+    //AEGfxSetBackgroundColor(0.1f, 0.1f, 0.15f);
     timer = 0.0f;
 }
 
@@ -53,6 +57,10 @@ void SplashPage_Init()
 // ============================================================================
 void SplashPage_Update()
 {
+    StarBackground::Update((f32)AEFrameRateControllerGetFrameTime());
+    StarBackground::DrawBackground();
+    StarBackground::Draw();
+
     timer += (f32)AEFrameRateControllerGetFrameTime();
 
     if (timer > 6.0f || AEInputCheckTriggered(AEVK_SPACE))

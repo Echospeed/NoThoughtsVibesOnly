@@ -74,7 +74,7 @@ static Star        s_Stars[STAR_COUNT];
 
 static void GenerateStars()
 {
-    srand(42); // Fixed seed - same stars every run
+    srand((unsigned int)AEGetTime(nullptr)); // Random seed - different stars every run
     for (int i = 0; i < STAR_COUNT; ++i)
     {
         s_Stars[i].x = ((f32)rand() / RAND_MAX) * WORLD_WIDTH - WORLD_WIDTH / 2.0f;
@@ -569,9 +569,6 @@ void Game_Draw()
         }
     }
 
-    // 6. Minimap
-    DrawMinimap(gamePageObj, sCamX, sCamY);
-
     // ============================================================================
     // Entity Glow Halos - drawn BEFORE entities so glows sit visually behind them
     // ============================================================================
@@ -623,36 +620,6 @@ void Game_Draw()
         }
     }
 
-    // ============================================================================
-    // Bullet Trails - 3 fading copies offset backwards along bullet direction
-    // ============================================================================
-    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    for (auto& obj : gamePageObj)
-    {
-        if (obj->ObjectType != SHOT || !obj->isActive) continue;
-        const Bullet* b = dynamic_cast<Bullet*>(obj);
-        if (!b) continue;
-        const f32 bulletSize = obj->transform.scale.x;
-        for (int t = 1; t <= 3; ++t)
-        {
-            const f32 trailAlpha = 0.25f - t * 0.07f; // 0.18, 0.11, 0.04
-            const f32 trailScale = 1.0f - t * 0.2f;   // 0.8,  0.6,  0.4
-            const f32 offset = t * bulletSize * 1.2f;
-            const f32 trailX = obj->transform.position.x - b->dir.x * offset;
-            const f32 trailY = obj->transform.position.y - b->dir.y * offset;
-            AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.0f);
-            if (b->owner == BulletOwner::PLAYER)
-                AEGfxSetColorToAdd(1.0f, 0.85f, 0.0f, trailAlpha);
-            else
-                AEGfxSetColorToAdd(1.0f, 0.15f, 0.0f, trailAlpha);
-            tf.SetPosition(trailX, trailY);
-            tf.SetUniformScale(bulletSize * trailScale);
-            tf.Apply();
-            AEGfxMeshDraw(Meshes::pCircleMesh, AE_GFX_MDM_TRIANGLES);
-        }
-    }
-
     // Reset colour state before drawing actual entities
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
     AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
@@ -684,6 +651,9 @@ void Game_Draw()
 
     // 8. World-space health bars
     gameUI.DrawAllHealthBars();
+
+    // 6. Minimap
+    DrawMinimap(gamePageObj, sCamX, sCamY);
 
     // Restore camera (undo shake for next frame)
     AEGfxSetCamPosition(sCamX, sCamY);
