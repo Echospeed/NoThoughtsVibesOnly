@@ -183,8 +183,8 @@ void Main_Draw()
         const f32 r = 0.55f + 0.45f * sinf(s_TitleTime * 1.8f);
         const f32 g = 0.55f + 0.45f * sinf(s_TitleTime * 1.8f + 2.094f);
         const f32 b = 0.55f + 0.45f * sinf(s_TitleTime * 1.8f + 4.189f);
-        mainText.SetScale(pulse);
-        mainText.SetColour({ r, g, b, 1.0f });
+		mainText.SetScale(pulse); // Uniform scale so text grows/shrinks but doesn't stretch
+		mainText.SetColour({ r, g, b, 1.0f }); // Full opacity
         mainText.Draw();
     }
     else if (currentMenuState == MENU_CONTROLS)
