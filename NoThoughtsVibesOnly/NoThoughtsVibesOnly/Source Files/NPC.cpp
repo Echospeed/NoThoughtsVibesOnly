@@ -135,7 +135,7 @@ void NPC::Start()
         spriteRenderer.texture = NPCSpritesheet;
         spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
-        baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
+        baseColour = { 0.0f, 0.5f, 1.0f, 1.0f };
         break;
 
     case NPC_MELEE:
@@ -143,7 +143,7 @@ void NPC::Start()
         spriteRenderer.texture = NPCSpritesheet;
         spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
-        baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
+        baseColour = { 0.0f, 1.0f, 0.0f, 1.0f };
         break;
 
     case NPC_RANGER:
@@ -152,7 +152,7 @@ void NPC::Start()
         spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
         fireRate = 2.0f;
-        baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
+        baseColour = { 1.0f, 0.753f, 0.796f, 1.0f };
         std::cout << "[NPC] Ranger spawned at ("
             << transform.position.x << ", " << transform.position.y << ")\n";
         break;
@@ -163,7 +163,7 @@ void NPC::Start()
         transform.scale = { 150.0f, 150.0f }; // 3x player size
         spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
-        baseColour = { 1.0f, 1.0f, 1.0f, 1.0f };
+        baseColour = { 0.961f, 0.961f, 0.863f, 1.0f };
         health = 1000.0f; // 10x normal health
         speed = 150.0f;  // Slightly slower
         fireRate = 0.5f;    // Fires twice per second
