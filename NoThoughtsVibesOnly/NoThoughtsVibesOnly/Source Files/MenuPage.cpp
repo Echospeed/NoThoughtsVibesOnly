@@ -191,27 +191,27 @@ void Main_Draw()
     {
         controlsText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 300.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 300.0f }, { 1.0f, 0.0f, 0.0f });
         infoText << "W, A, S, D  -  Move";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 200.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 200.0f }, { 1.0f, 0.498f, 1.0f });
         infoText << "Left Click  -  Shoot";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 0.008f });
         infoText << "E  -  Activate Invincibility";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.008f });
         infoText << "ESC  -  Pause";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -100.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -100.0f }, { 0.0f, 1.0f, 1.0f });
         infoText << "R  -  Restart";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -200.0f }, { 1.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -200.0f }, { 0.694f, 0.612f, 0.851f });
         infoText << "Q  -  Menu";
         infoText.Draw();
 
