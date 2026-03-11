@@ -590,7 +590,7 @@ void Game_Draw()
         {
             AEGfxSetRenderMode(AE_GFX_RM_COLOR);
             AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.0f);
-            AEGfxSetColorToAdd(0.05f, 0.30f, 0.30f, 0.25f);
+            AEGfxSetColorToAdd(1.0f, 0.87f, 0.00f, 0.25f);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             tf.SetPosition(player->transform.position.x, player->transform.position.y);
             tf.SetUniformScale(player->GetAoeRadius());
@@ -613,8 +613,6 @@ void Game_Draw()
 
         if (obj == pPlayer)
         {
-            // Player: dark red square halo
-            AEGfxSetColorToAdd(0.6f, 0.0f, 0.0f, 0.18f);
             tf.SetPosition(obj->transform.position.x, obj->transform.position.y);
             tf.SetScale(obj->transform.scale.x * 1.7f, obj->transform.scale.y * 1.7f);
             tf.Apply();
