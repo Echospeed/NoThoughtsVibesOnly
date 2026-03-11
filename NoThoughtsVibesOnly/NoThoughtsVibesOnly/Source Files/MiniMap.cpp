@@ -43,12 +43,12 @@ void DrawMinimap(const std::vector<GameObject*>& objs, f32 camX, f32 camY)
 
     AEMtx33 scale, trans, rot, transform;
 
-    // Minimap background (semi-transparent black)
-    AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.5f);
+    // Minimap background (semi-transparent white)
+    // AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 0.5f);
     CreateSquare(Meshes::pSquareCOriMesh, &transform, &scale, &rot, &trans,
         mapWorldX, mapWorldY,
         MINI_SIZE, MINI_SIZE, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.5f);
+        1.0f, 1.0f, 1.0f, 0.15f);
 
     // Draw each object onto the minimap
     for (size_t i = 0; i < objs.size(); ++i)
