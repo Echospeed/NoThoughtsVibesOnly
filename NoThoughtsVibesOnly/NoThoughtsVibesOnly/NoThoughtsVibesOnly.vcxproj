@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="Header Files\Abilities.hpp" />
     <ClInclude Include="Header Files\Audio.hpp" />
+    <ClInclude Include="Header Files\AudioManager.hpp" />
     <ClInclude Include="Header Files\Bullet.hpp" />
     <ClInclude Include="Header Files\Button.hpp" />
     <ClInclude Include="Header Files\Collider.hpp" />
@@ -48,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source Files\Audio.cpp" />
+    <ClCompile Include="Source Files\AudioManager.cpp" />
     <ClCompile Include="Source Files\Bullet.cpp" />
     <ClCompile Include="Source Files\Button.cpp" />
     <ClCompile Include="Source Files\Collider.cpp" />

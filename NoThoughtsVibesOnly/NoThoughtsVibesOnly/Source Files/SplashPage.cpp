@@ -16,6 +16,7 @@
 #include "AEEngine.h"
 #include "Util.hpp"
 #include "StarBackground.hpp"
+#include "AudioManager.hpp"
 
 // ============================================================================
 // File-scope state
@@ -48,6 +49,7 @@ void SplashPage_Init()
 {
     //AEGfxSetBackgroundColor(0.1f, 0.1f, 0.15f);
     timer = 0.0f;
+//    AudioManager::PlaySFX("MenuMusic");
 }
 
 // ============================================================================

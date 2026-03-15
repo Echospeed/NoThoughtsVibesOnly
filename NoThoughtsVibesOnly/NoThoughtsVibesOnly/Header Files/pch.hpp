@@ -44,6 +44,7 @@
 #include "Transform.hpp"   
 #include "Colour.hpp"      
 #include "Audio.hpp"
+#include "AudioManager.hpp"
 
 // ---------------------------------------------------------------------------
 // Graphics & UI Headers

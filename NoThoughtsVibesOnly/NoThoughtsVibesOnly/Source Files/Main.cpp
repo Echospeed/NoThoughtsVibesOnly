@@ -31,6 +31,7 @@
 
 #include "pch.hpp"
 #include "StateManager.hpp"
+#include "AudioManager.hpp"
 #include <crtdbg.h>
 
 // ============================================================================
@@ -60,6 +61,8 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     AESysReset();
 
     printf("[Main] Engine initialised.\n");
+
+    AudioManager::Init();
 
     // --- State machine initialisation ---
     StateManagerInit(STATE_SPLASH);
@@ -135,6 +138,8 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
         sm.Advance();
     }
     sm.FreeManager();
+
+    AudioManager::Free();
 
     // --- Engine shutdown ---
     AESysExit();
