@@ -24,7 +24,7 @@
 static const f32 MINI_WORLD_REF_WIDTH = 2000.0f; // World width the map represents
 static const f32 MINI_SIZE = 200.0f;   // Minimap display size (px)
 static const f32 MINI_X = 650.0f;   // Screen-space X offset from center
-static const f32 MINI_Y = 300.0f;   // Screen-space Y offset from center
+static const f32 MINI_Y = -300.0f;   // Screen-space Y offset from center
 static const f32 MINI_SCALE = MINI_SIZE / MINI_WORLD_REF_WIDTH;
 
 // ============================================================================
@@ -48,7 +48,7 @@ void DrawMinimap(const std::vector<GameObject*>& objs, f32 camX, f32 camY)
     CreateSquare(Meshes::pSquareCOriMesh, &transform, &scale, &rot, &trans,
         mapWorldX, mapWorldY,
         MINI_SIZE, MINI_SIZE, 0.0f,
-        1.0f, 1.0f, 1.0f, 0.15f);
+        1.0f, 1.0f, 1.0f, 0.5f);
 
     // Draw each object onto the minimap
     for (size_t i = 0; i < objs.size(); ++i)
@@ -62,13 +62,13 @@ void DrawMinimap(const std::vector<GameObject*>& objs, f32 camX, f32 camY)
             const f32 py = mapWorldY + entity->transform.position.y * MINI_SCALE;
 
             // Dynamically pull the player's current color
+            // Dynamically pull the player's current color
             CreateSquare(Meshes::pSquareCOriMesh, &transform, &scale, &rot, &trans,
-                px, py, 8.0f, 8.0f, 0.0f,
+                px, py, 12.0f, 12.0f, 0.0f,
                 entity->spriteRenderer.colour.r,
                 entity->spriteRenderer.colour.g,
                 entity->spriteRenderer.colour.b,
                 1.0f);
-            continue;
         }
 
         // Filter out everything that isn't an NPC
@@ -82,8 +82,9 @@ void DrawMinimap(const std::vector<GameObject*>& objs, f32 camX, f32 camY)
         const f32 ex = mapWorldX + entity->transform.position.x * MINI_SCALE;
         const f32 ey = mapWorldY + entity->transform.position.y * MINI_SCALE;
 
+        // Small dot for visible NPCs, matching their specific type color
         CreateSquare(Meshes::pCircleMesh, &transform, &scale, &rot, &trans,
-            ex, ey, 2.0f, 2.0f, 0.0f,
+            ex, ey, 5.0f, 5.0f, 0.0f,
             npc->baseColour.r,
             npc->baseColour.g,
             npc->baseColour.b,

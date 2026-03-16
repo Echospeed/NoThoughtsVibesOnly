@@ -135,7 +135,7 @@ void NPC::Start()
         spriteRenderer.texture = NPCSpritesheet;
         spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
-        baseColour = { 0.0f, 0.5f, 1.0f, 1.0f };
+        baseColour = { 0.0f, 0.0f, 1.0f, 1.0f };
         break;
 
     case NPC_MELEE:
