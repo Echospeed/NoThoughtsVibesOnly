@@ -389,7 +389,7 @@ void GameUI::DrawWaveInfo()
 {
     if (!waveSystem) return;
 
-    const f32 infoX = 400.0f;
+    const f32 infoX = 500.0f;
     const f32 infoY = 400.0f;
 
     waveInfo = TextRenderer(gameFont, 1.0f, { infoX, infoY }, { 1.0f, 0.3f, 0.3f, 1.0f });
