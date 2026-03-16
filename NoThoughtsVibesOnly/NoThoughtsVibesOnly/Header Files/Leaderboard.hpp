@@ -29,12 +29,13 @@
 #include <string>
 #include <vector>
 
+// Defines the data structure for a single leaderboard entry
 struct LeaderboardEntry
 {
-    std::string name = "Player";  // Player name
+    std::string name = "Player";   // Player name
     int         score = 0;         // Final score
     std::string level = "Unknown"; // Level name e.g. "Level 1"
-    int         wave = 0;         // Wave reached
+    int         wave = 0;          // Wave reached
 };
 
 namespace Leaderboard

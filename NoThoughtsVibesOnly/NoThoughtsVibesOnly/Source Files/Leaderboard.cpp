@@ -16,20 +16,15 @@
 // ============================================================================
 #include "Leaderboard.hpp"
 
-#pragma warning(push)
-#pragma warning(disable: 26495) // uninitialized member
-#pragma warning(disable: 26494) // variable not initialized
-#pragma warning(disable: 26482) // enum used as index
-#pragma warning(disable: 26451) // arithmetic overflow checks
+// RapidJSON includes (Warning suppressions removed by request)
 #include "include/rapidjson/document.h"
-#include "include/rapidjson/filereadstream.h"
-#include "include/rapidjson/filewritestream.h"
+#include "include/rapidjson/istreamwrapper.h"
+#include "include/rapidjson/ostreamwrapper.h"
 #include "include/rapidjson/prettywriter.h"
-#pragma warning(pop)
 
 #include <algorithm>
 #include <iostream>
-#include <cstdio>
+#include <fstream> // Using modern C++ file streams
 
 namespace Leaderboard
 {
@@ -43,20 +38,19 @@ namespace Leaderboard
     {
         s_Entries.clear();
 
-        FILE* fp = fopen(SAVE_PATH, "rb");
-        if (!fp)
+        // Using std::ifstream for safe C++ file reading
+        std::ifstream ifs(SAVE_PATH);
+        if (!ifs.is_open())
         {
             std::cout << "[Leaderboard] No save file found - starting fresh.\n";
             s_Loaded = true;
             return;
         }
 
-        char buf[8192]{};
-        rapidjson::FileReadStream is(fp, buf, sizeof(buf));
-
+        // Wrap the standard input stream for RapidJSON to process
+        rapidjson::IStreamWrapper isw(ifs);
         rapidjson::Document doc;
-        doc.ParseStream(is);
-        fclose(fp);
+        doc.ParseStream(isw);
 
         if (doc.HasParseError() || !doc.HasMember("entries") || !doc["entries"].IsArray())
         {
@@ -66,7 +60,7 @@ namespace Leaderboard
         }
 
         const auto& arr = doc["entries"].GetArray();
-        for (rapidjson::SizeType i = 0; i < arr.Size() && (int)i < MAX_ENTRIES; ++i)
+        for (rapidjson::SizeType i = 0; i < arr.Size() && static_cast<int>(i) < MAX_ENTRIES; ++i)
         {
             const auto& obj = arr[i];
             LeaderboardEntry e;
@@ -79,7 +73,7 @@ namespace Leaderboard
             s_Entries.push_back(e);
         }
 
-        // Ensure sorted order after load
+        // Ensure sorted order after load using the C++ standard algorithm
         std::sort(s_Entries.begin(), s_Entries.end(),
             [](const LeaderboardEntry& a, const LeaderboardEntry& b)
             { return a.score > b.score; });
@@ -93,8 +87,9 @@ namespace Leaderboard
     // ========================================================================
     void Save()
     {
-        FILE* fp = fopen(SAVE_PATH, "wb");
-        if (!fp)
+        // Using std::ofstream for safe C++ file writing
+        std::ofstream ofs(SAVE_PATH);
+        if (!ofs.is_open())
         {
             std::cout << "[Leaderboard] ERROR: Could not write to " << SAVE_PATH << "\n";
             return;
@@ -112,9 +107,10 @@ namespace Leaderboard
             rapidjson::Value obj(rapidjson::kObjectType);
 
             // rapidjson::StringRef requires the string to outlive the document,
-            // so we copy strings using the allocator
-            rapidjson::Value name(e.name.c_str(), (rapidjson::SizeType)e.name.size(), alloc);
-            rapidjson::Value level(e.level.c_str(), (rapidjson::SizeType)e.level.size(), alloc);
+            // so we copy strings using the allocator.
+            // Using static_cast to safely match RapidJSON's expected SizeType.
+            rapidjson::Value name(e.name.c_str(), static_cast<rapidjson::SizeType>(e.name.size()), alloc);
+            rapidjson::Value level(e.level.c_str(), static_cast<rapidjson::SizeType>(e.level.size()), alloc);
 
             obj.AddMember("name", name, alloc);
             obj.AddMember("score", e.score, alloc);
@@ -126,13 +122,12 @@ namespace Leaderboard
 
         doc.AddMember("entries", arr, alloc);
 
-        // Write with pretty formatting so the file is human-readable
-        char buf[8192]{};
-        rapidjson::FileWriteStream os(fp, buf, sizeof(buf));
-        rapidjson::PrettyWriter<rapidjson::FileWriteStream> writer(os);
+        // Write with pretty formatting so the file is human-readable.
+        // OStreamWrapper bridges RapidJSON with std::ofstream.
+        rapidjson::OStreamWrapper osw(ofs);
+        rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
         doc.Accept(writer);
 
-        fclose(fp);
         std::cout << "[Leaderboard] Saved " << s_Entries.size() << " entries to " << SAVE_PATH << "\n";
     }
 
@@ -157,8 +152,9 @@ namespace Leaderboard
             [](const LeaderboardEntry& a, const LeaderboardEntry& b)
             { return a.score > b.score; });
 
-        // Keep only top MAX_ENTRIES
-        if ((int)s_Entries.size() > MAX_ENTRIES)
+        // Keep only top MAX_ENTRIES.
+        // static_cast applied to safely compare sizes.
+        if (static_cast<int>(s_Entries.size()) > MAX_ENTRIES)
             s_Entries.resize(MAX_ENTRIES);
 
         std::cout << "[Leaderboard] New entry: " << e.name

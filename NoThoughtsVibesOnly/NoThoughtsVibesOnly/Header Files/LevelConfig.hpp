@@ -22,20 +22,18 @@
 //   bool  boss      = g_CurrentLevel.hasBoss;
 //   float breakTime = g_CurrentLevel.waveBreakDuration;
 // ============================================================================
-#pragma warning(disable: 26482) // enum used as index
 #include "pch.hpp"
-#pragma warning(push)
-#pragma warning(disable: 26495) // uninitialized member
-#pragma warning(disable: 26494) // variable not initialized
-//#pragma warning(disable: 26482) // enum used as index
-#pragma warning(disable: 26451) // arithmetic overflow checks
+
+// RapidJSON includes (Warning suppressions removed by request)
 #include "include/rapidjson/document.h"
-#include "include/rapidjson/filereadstream.h"
-#pragma warning(pop)
-#include <cstdio>
+#include "include/rapidjson/istreamwrapper.h"
+
+#include <fstream> // Using modern C++ file streams
 #include <string>
 #include <iostream>
+#include <cstdint> // Required for cross-platform fixed-width types like uint32_t
 
+// Strongly typed scoped enum for level selection
 enum class LevelType
 {
     LEVEL_1,
@@ -46,7 +44,7 @@ enum class LevelType
 struct LevelConfig
 {
     LevelType   type;
-    u32         numWaves;
+    uint32_t    numWaves;
     bool        hasBoss;
     float       waveBreakDuration; // Seconds between waves
     int         baseEnemyCount;    // Starting enemy count per wave
@@ -63,21 +61,20 @@ extern LevelConfig g_CurrentLevel;
 // Opens filepath, parses it with RapidJSON, and fills out cfg.
 // Returns true on success, false if file missing or parse error.
 // ============================================================================
-inline bool LoadLevelFromJson(const char* filepath, LevelConfig& cfg)
+inline bool LoadLevelFromJson(const std::string& filepath, LevelConfig& cfg)
 {
-    FILE* fp = fopen(filepath, "rb");
-    if (!fp)
+    // C++ style file handling
+    std::ifstream ifs(filepath);
+    if (!ifs.is_open())
     {
         std::cout << "[LevelConfig] WARNING: Could not open '" << filepath << "' - using defaults.\n";
         return false;
     }
 
-    char buf[4096]{};
-    rapidjson::FileReadStream is(fp, buf, sizeof(buf));
-
+    // Bridge standard streams to RapidJSON
+    rapidjson::IStreamWrapper isw(ifs);
     rapidjson::Document doc;
-    doc.ParseStream(is);
-    fclose(fp);
+    doc.ParseStream(isw);
 
     if (doc.HasParseError())
     {
@@ -85,9 +82,10 @@ inline bool LoadLevelFromJson(const char* filepath, LevelConfig& cfg)
         return false;
     }
 
-    // Read each field with a safe HasMember check before accessing
+    // Read each field with a safe HasMember check before accessing.
+    // Explicit static_cast guarantees the JSON Int matches our uint32_t expectation.
     if (doc.HasMember("numWaves") && doc["numWaves"].IsInt())
-        cfg.numWaves = (u32)doc["numWaves"].GetInt();
+        cfg.numWaves = static_cast<uint32_t>(doc["numWaves"].GetInt());
 
     if (doc.HasMember("hasBoss") && doc["hasBoss"].IsBool())
         cfg.hasBoss = doc["hasBoss"].GetBool();
@@ -134,5 +132,6 @@ inline LevelConfig GetLevelConfig(LevelType levelType)
     }
 
     // Endless - no JSON, always hardcoded
+    // Leverages UINT32_MAX to mathematically represent infinite waves safely
     return { LevelType::ENDLESS, UINT32_MAX, true, 3.0f, 5, 20, "Endless", "Infinite waves. Survive as long as you can." };
 }
