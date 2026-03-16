@@ -7,15 +7,15 @@
 // ============================================================================
 // Supports two effect presets out of the box:
 //
-//   ParticleSystem::MakeSmoke()     - grey upward drift, fades + shrinks
+//   ParticleSystem::MakeSmoke()     - ash green upward drift, fades + shrinks
 //   ParticleSystem::MakeExplosion() - orange burst, fast fade + shrink
 //
 // Or configure manually via Init() for custom effects.
 //
-// SHARED MESH:
-//   Call ParticleSystem::LoadSharedMesh() once in Game_Load().
-//   Call ParticleSystem::FreeSharedMesh() once in Game_Unload().
-//   Individual systems do NOT own a mesh.
+// MESH:
+//   Particles reuse Meshes::pCircleMesh from Util.hpp.
+//   No LoadSharedMesh() / FreeSharedMesh() calls needed.
+//   Just ensure Meshes::CreateCircleMesh() is called in Game_Load() as usual.
 //
 // USAGE:
 //   ParticleSystem ps;
@@ -69,10 +69,6 @@ public:
     static ParticleSystem MakeSmoke();
     static ParticleSystem MakeExplosion();
 
-    // Call once in Game_Load / Game_Unload
-    static void LoadSharedMesh();
-    static void FreeSharedMesh();
-
     bool HasActiveParticles() const { return !activeParticles.empty(); }
 
 private:
@@ -88,8 +84,6 @@ private:
     f32 endR{}, endG{}, endB{};
     f32 gravity{};
     f32 drag{};
-
-    static AEGfxVertexList* s_Mesh;
 
     f32 RandRange(f32 lo, f32 hi) const;
 };

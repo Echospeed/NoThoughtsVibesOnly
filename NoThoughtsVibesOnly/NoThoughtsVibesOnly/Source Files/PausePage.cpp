@@ -1,33 +1,44 @@
 // ============================================================================
 // PausePage.cpp - In-Game Pause Overlay
 // ============================================================================
-// NOTE: This page is NOT currently used as a separate game state.
-// Pause is handled directly inside GamePage.cpp using the isPaused flag.
-// This file is preserved if the pause screen is promoted to its own state.
+// Owned entirely by PausePage - GamePage just calls these functions.
+// isPaused and bgMusic are extern from GamePage.cpp.
 //
-// TO ENABLE AS A SEPARATE STATE:
+// CALL ORDER IN GamePage.cpp:
 // ----------------------------------------------------------------------------
-//   1. In Game_Update(), replace the isPaused toggle with:
-//          StateManagerChangeState(STATE_PAUSE);
-//   2. PauseState is already registered in StateManager::CreateState().
-//   3. Call bgMusic->Pause() before entering STATE_PAUSE.
+//   Game_Load()   -> PausePage_Load()
+//   Game_Init()   -> PausePage_Init()
+//   Game_Draw()   -> if (isPaused) { PausePage_Draw(); PausePage_Update(); }
+//   Game_Free()   -> PausePage_Free()
+//   Game_Unload() -> PausePage_Unload()
 // ============================================================================
-
 #include "pch.hpp"
+#include "Player.hpp"
 #include "PausePage.hpp"
 #include "AEEngine.h"
 #include "Util.hpp"
 #include "Button.hpp"
 #include "Input.hpp"
+#include "Audio.hpp"
+#include "MenuPage.hpp"
+
+// Shared with GamePage.cpp
+extern bool   isPaused;
+extern Audio* bgMusic;
+extern GameObject* pPlayer;
 
 // ============================================================================
 // File-scope state
 // ============================================================================
 namespace
 {
-    Mouse worldMouse;
-    s8    fontPath{};
+    Mouse        worldMouse;
+    s8           fontPath{};
     TextRenderer pauseText;
+    TextRenderer hintText;
+    Button* resumeBtn{ nullptr };
+    Button* restartBtn{ nullptr };
+    Button* menuBtn{ nullptr };
 }
 
 // ============================================================================
@@ -36,7 +47,6 @@ namespace
 void PausePage_Load()
 {
     fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
-    Meshes::CreateSquareCenterOriginMesh();
 }
 
 // ============================================================================
@@ -44,52 +54,99 @@ void PausePage_Load()
 // ============================================================================
 void PausePage_Init()
 {
-    AEGfxSetCamPosition(0.0f, 0.0f);
-
-    pauseText = TextRenderer(fontPath, 1.0f, { 0.0f, 300.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    pauseText = TextRenderer(fontPath, 1.0f, { 0.0f, 200.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     pauseText << "PAUSED";
+
+    hintText = TextRenderer(fontPath, 0.6f, { 0.0f, -230.0f }, { 0.6f, 0.6f, 0.6f, 1.0f });
+    hintText << "ESC to resume  |  TAB to restart";
+
+    resumeBtn = new Button(fontPath, { 0.0f,  50.0f }, { 300.0f, 75.0f },
+        []() { isPaused = false; if (bgMusic) bgMusic->Resume();
+        Player* p = dynamic_cast<Player*>(pPlayer);
+        if (p) p->suppressShootOneFrame = true; },
+        { 0.0f, 0.6f, 0.0f, 1.0f }, "RESUME");
+
+    restartBtn = new Button(fontPath, { 0.0f, -50.0f }, { 300.0f, 75.0f },
+        []() { isPaused = false; StateManagerChangeState(STATE_RESTART); },
+        { 0.8f, 0.5f, 0.0f, 1.0f }, "RESTART");
+
+    menuBtn = new Button(fontPath, { 0.0f, -150.0f }, { 300.0f, 75.0f },
+        []() { isPaused = false; StateManagerChangeState(STATE_MENU); },
+        { 0.6f, 0.0f, 0.0f, 1.0f }, "MAIN MENU");
 }
 
 // ============================================================================
 // PausePage_Update
 // ============================================================================
-// ESC resumes. R restarts. Q goes to menu.
+// Called from Game_Draw() while isPaused is true.
+// Handles keyboard shortcuts and button click detection.
 // ============================================================================
 void PausePage_Update()
 {
-    AEGfxSetCamPosition(0.0f, 0.0f);
     GetMouseWorldPosition(worldMouse.position.x, worldMouse.position.y);
 
-    if (AEInputCheckTriggered(AEVK_ESCAPE)) { StateManagerChangeState(STATE_PLAYING); return; }
-    if (AEInputCheckTriggered(AEVK_TAB)) { StateManagerChangeState(STATE_RESTART); return; }
-    if (AEInputCheckTriggered(AEVK_Q)) { StateManagerChangeState(STATE_MENU);    return; }
+    // Keyboard shortcuts
+    if (AEInputCheckTriggered(AEVK_TAB)) { isPaused = false; StateManagerChangeState(STATE_RESTART); return; }
+    if (AEInputCheckTriggered(AEVK_Q)) { isPaused = false; StateManagerChangeState(STATE_MENU);    return; }
+
+    const f32 dt = (f32)AEFrameRateControllerGetFrameTime();
+    resumeBtn->Update(dt);
+    restartBtn->Update(dt);
+    menuBtn->Update(dt);
 }
 
 // ============================================================================
 // PausePage_Draw
 // ============================================================================
-// Draws a dark overlay over the game world, then "PAUSED" text.
+// Dark overlay + PAUSED text + hint text + buttons.
 // ============================================================================
 void PausePage_Draw()
 {
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.7f);
+    AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.0f);
+    AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.7f);
 
-    AEMtx33 transform, scale, trans;
-    AEMtx33Scale(&scale, 2000.0f, 2000.0f);
-    AEMtx33Trans(&trans, 0.0f, 0.0f);
-    AEMtx33Concat(&transform, &trans, &scale);
-    AEGfxSetTransform(transform.m);
+    Transform t;
+    t.SetPosition(0.0f, 0.0f);
+    t.SetUniformScale(3000.0f);
+    t.Apply();
     AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
 
     pauseText.Draw();
+    hintText.Draw();
 }
 
 // ============================================================================
 // PausePage_Free
 // ============================================================================
-void PausePage_Free() {}
+// Removes buttons from mainPageObj then deletes them.
+// Must be called in Game_Free() before mainPageObj is cleared.
+// ============================================================================
+void PausePage_Free()
+{
+    if (resumeBtn)
+    {
+        mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(),
+            static_cast<GameObject*>(resumeBtn)), mainPageObj.end());
+        delete resumeBtn;
+        resumeBtn = nullptr;
+    }
+    if (restartBtn)
+    {
+        mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(),
+            static_cast<GameObject*>(restartBtn)), mainPageObj.end());
+        delete restartBtn;
+        restartBtn = nullptr;
+    }
+    if (menuBtn)
+    {
+        mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(),
+            static_cast<GameObject*>(menuBtn)), mainPageObj.end());
+        delete menuBtn;
+        menuBtn = nullptr;
+    }
+}
 
 // ============================================================================
 // PausePage_Unload
@@ -97,5 +154,4 @@ void PausePage_Free() {}
 void PausePage_Unload()
 {
     AEGfxDestroyFont(fontPath);
-    Meshes::FreeMeshes();
 }

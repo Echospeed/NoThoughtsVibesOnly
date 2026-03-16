@@ -8,8 +8,8 @@
 //
 // --- STEP 1: GLOBAL SETUP (do this once in GamePage.cpp) ---
 //
-//   Game_Load()   -> ParticleSystem::LoadSharedMesh();
-//   Game_Unload() -> ParticleSystem::FreeSharedMesh();
+//   Game_Load()   -> Meshes::CreateCircleMesh();   // already called - no extra step needed
+//   Game_Unload() -> Meshes::FreeMeshes();          // already called - no extra step needed
 //
 // --- STEP 2: DECLARE A PARTICLE SYSTEM (in your class .hpp) ---
 //
@@ -103,59 +103,20 @@
 //               freeParticles. This keeps removal O(1).
 //
 //   On Render(): iterate activeParticles and draw each live particle using
-//               the single shared circle mesh (s_Mesh). Colour and alpha are
-//               applied via AEGfxSetColorToAdd so no texture is needed.
+//               Meshes::pCircleMesh (shared with the rest of the game).
+//               Colour and alpha are applied via AEGfxSetColorToAdd so no
+//               texture is needed.
 //
 // SHARED MESH:
-//   All ParticleSystem instances share ONE AEGfxVertexList* (s_Mesh).
-//   This avoids creating a new mesh for every effect in the game.
-//   Call LoadSharedMesh() once in Game_Load(), FreeSharedMesh() in Game_Unload().
+//   Particles reuse Meshes::pCircleMesh from Util.hpp - no separate mesh needed.
+//   Just make sure Meshes::CreateCircleMesh() is called in Game_Load() as usual.
 // ============================================================================
 
 #include "pch.hpp"
 #include "Particles.hpp"
+#include "Util.hpp"
 #include <cstdlib>
 #include <cmath>
-
-// One circle mesh shared across ALL ParticleSystem instances in the game.
-// nullptr until LoadSharedMesh() is called.
-AEGfxVertexList* ParticleSystem::s_Mesh = nullptr;
-
-// ============================================================================
-// LoadSharedMesh / FreeSharedMesh
-// ============================================================================
-// Builds a unit circle mesh made of 20 triangles fanning out from the centre.
-// All particle systems use this same mesh, scaled per-particle at render time.
-// ============================================================================
-void ParticleSystem::LoadSharedMesh()
-{
-    if (s_Mesh) return; // Guard: don't rebuild if already loaded
-
-    const int segments = 20;                     // More segments = rounder circle, higher cost
-    const f32 step = (PI * 2.0f) / segments;     // Angle between each triangle slice
-
-    AEGfxMeshStart();
-    for (int i = 0; i < segments; ++i)
-    {
-        const f32 t1 = i * step;             // Start angle of this slice
-        const f32 t2 = (i + 1) * step;      // End angle of this slice
-
-        // Each triangle: centre vertex + two rim vertices.
-        // UVs map so the centre is (0.5, 0.5) and the rim maps to [0,1].
-        AEGfxTriAdd(
-            0.0f, 0.0f, 0xFFFFFFFF, 0.5f, 0.5f,               // Centre
-            cosf(t1) * 0.5f, sinf(t1) * 0.5f, 0xFFFFFFFF, (cosf(t1) + 1) * 0.5f, (sinf(t1) + 1) * 0.5f,  // Rim t1
-            cosf(t2) * 0.5f, sinf(t2) * 0.5f, 0xFFFFFFFF, (cosf(t2) + 1) * 0.5f, (sinf(t2) + 1) * 0.5f   // Rim t2
-        );
-    }
-    s_Mesh = AEGfxMeshEnd(); // Finalise and upload the mesh to the GPU
-}
-
-void ParticleSystem::FreeSharedMesh()
-{
-    // Safe to call even if LoadSharedMesh() was never called
-    if (s_Mesh) { AEGfxMeshFree(s_Mesh); s_Mesh = nullptr; }
-}
 
 // ============================================================================
 // RandRange
@@ -240,7 +201,7 @@ void ParticleSystem::Emit(const AEVec2& position)
     p.position = position;
     p.velocity = { RandRange(minVelX, maxVelX), RandRange(minVelY, maxVelY) };
     p.maxLifetime = RandRange(minLifetime, maxLifetime); // Total lifespan
-    p.lifetime = p.maxLifetime;                       // Countdown timer starts full
+    p.lifetime = p.maxLifetime;                          // Countdown timer starts full
     p.startSize = startSize;
     p.endSize = endSize;
     p.size = startSize;  // Visual size starts at birth value
@@ -334,11 +295,12 @@ void ParticleSystem::Update(f32 dt)
 // Draws every active particle as a colour-tinted circle.
 // Colour and alpha are driven by per-particle lerp values via ColorToAdd.
 // No texture is needed - the mesh vertex colour is zeroed out by ColorToMultiply.
+// Reuses Meshes::pCircleMesh to avoid allocating a separate mesh.
 // ============================================================================
 void ParticleSystem::Render()
 {
-    // Early out: skip if the shared mesh wasn't loaded or there's nothing alive
-    if (!s_Mesh || activeParticles.empty()) return;
+    // Early out: skip if the circle mesh isn't ready or there's nothing alive
+    if (!Meshes::pCircleMesh || activeParticles.empty()) return;
 
     // COLOR mode: vertex colours are irrelevant; we set colour manually each draw
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
@@ -375,7 +337,7 @@ void ParticleSystem::Render()
         AEMtx33Concat(&transform, &tr, &sc);             // T * S: scale first, then translate
         AEGfxSetTransform(transform.m);
 
-        AEGfxMeshDraw(s_Mesh, AE_GFX_MDM_TRIANGLES);
+        AEGfxMeshDraw(Meshes::pCircleMesh, AE_GFX_MDM_TRIANGLES);
     }
 }
 
@@ -383,13 +345,10 @@ void ParticleSystem::Render()
 // Free
 // ============================================================================
 // Clears all particle data. Safe to call multiple times.
-// Does NOT touch s_Mesh - that is shared and owned globally.
+// Does NOT touch Meshes::pCircleMesh - that is owned by Util/Meshes.
 // ============================================================================
 void ParticleSystem::Free()
 {
-    // IMPORTANT: do NOT free s_Mesh here.
-    // s_Mesh is shared across all ParticleSystem instances and must outlive them all.
-    // It is freed only when Game_Unload() calls ParticleSystem::FreeSharedMesh().
     particles.clear();
     activeParticles.clear();
     freeParticles.clear();
@@ -399,8 +358,8 @@ void ParticleSystem::Free()
 // MakeSmoke - preset for the player's gun smoke puff
 // ============================================================================
 // Behaviour : gentle upward drift, decelerates quickly, shrinks and fades out
-// Colours   : mid grey -> dark grey
-// Lifetime  : 0.4 - 0.8 seconds  |  Max 30 simultaneous particles
+// Colours   : ash green -> dark ash green
+// Lifetime  : 0.8 - 1.2 seconds  |  Max 30 simultaneous particles
 //
 // Tuning tips:
 //   More spread    : widen velX range (e.g. -50 to 50)
@@ -411,13 +370,13 @@ ParticleSystem ParticleSystem::MakeSmoke()
 {
     ParticleSystem ps;
     ps.Init(
-        30,             // maxParticles  - cap on simultaneous smoke puffs
-        -25.0f, 25.0f,  // velX          - slight horizontal spread
-        30.0f, 80.0f,  // velY          - drifts upward
-        0.8f, 1.2f,   // lifetime      - short-lived puffs
-        24.0f, 4.0f,   // size          - visibly shrinks as it fades
+        30,               // maxParticles  - cap on simultaneous smoke puffs
+        -25.0f, 25.0f,   // velX          - slight horizontal spread
+        30.0f, 80.0f,   // velY          - drifts upward
+        0.8f, 1.2f,    // lifetime      - short-lived puffs
+        24.0f, 4.0f,    // size          - visibly shrinks as it fades
         0.1f, 0.6f, 0.6f, // start colour: mid ash green
-        0.1f, 0.2f, 0.2f, // end colour:   dark ash green (combined with alpha fade = transparent)
+        0.1f, 0.2f, 0.2f, // end colour:   dark ash green
         0.0f,   // gravity=0: smoke floats upward, not pulled down
         1.5f    // drag=1.5:  velocity halves fast, puffs hang rather than fly
     );

@@ -35,14 +35,14 @@ void PausePage_Unload();     // Unload resources (fonts, textures)
 // Use these to control pausing from anywhere in your game
 // ============================================================================
 
-// Check if game is currently paused
-bool IsPaused();
-
-// Pause the game
-void PauseGame();
-
-// Unpause the game
-void UnpauseGame();
-
-// Toggle pause state
-void TogglePause();
+//// Check if game is currently paused
+//bool IsPaused();
+//
+//// Pause the game
+//void PauseGame();
+//
+//// Unpause the game
+//void UnpauseGame();
+//
+//// Toggle pause state
+//void TogglePause();

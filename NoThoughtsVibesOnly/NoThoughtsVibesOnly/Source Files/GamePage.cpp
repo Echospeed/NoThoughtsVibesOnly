@@ -53,6 +53,7 @@
 #include "Audio.hpp"
 #include "Particles.hpp"
 #include "LevelConfig.hpp"
+#include "PausePage.hpp"
 
 // ============================================================================
 // World constants
@@ -110,7 +111,7 @@ std::vector<GameObject*> gamePageObj;
 // ============================================================================
 GameObject* pPlayer{ nullptr };   // Owning pointer to the player object
 int availableBullets = 0;       // Count of inactive player bullets (shown in HUD)
-static bool isPaused = false;   // True while the in-game pause overlay is shown
+bool isPaused = false;   // True while the in-game pause overlay is shown
 
 // ============================================================================
 // Systems
@@ -123,8 +124,6 @@ GameUI        gameUI;           // All HUD rendering
 // Font / HUD text
 // ============================================================================
 s8           gameFont = 0;      // Font handle reused across all HUD text
-TextRenderer pauseText;
-TextRenderer hint;
 TextRenderer ammoText;          // "Ammo: X / 500" display
 char         ammoBuffer[500];   // Scratch buffer for ammo string formatting
 
@@ -187,7 +186,8 @@ void Game_Load()
     Meshes::CreateCircleMesh();
 
     NPC_LoadTextures(); // Load shared NPC texture cache once
-    ParticleSystem::LoadSharedMesh(); // Shared mesh for all particle systems
+
+    PausePage_Load();
 
     gameFont = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
 
@@ -277,6 +277,8 @@ void Game_Init()
 
     // Auto-start the first wave immediately
     waveSystem.StartNextWave();
+
+    PausePage_Init();
 }
 
 // ============================================================================
@@ -302,17 +304,23 @@ void Game_Update()
     {
         isPaused = !isPaused;
         if (isPaused) { if (bgMusic) bgMusic->Pause(); }
-        else { if (bgMusic) bgMusic->Resume(); }
+        else { if (bgMusic) bgMusic->Resume();
+        Player* p = dynamic_cast<Player*>(pPlayer);
+        if (p) p->suppressShootOneFrame = true; // prevent shoot on resume
+        }
         return;
     }
 
-    if (isPaused)
-    {
-        // Allow restart/quit while paused
-        if (AEInputCheckTriggered(AEVK_TAB)) { isPaused = false; StateManagerChangeState(STATE_RESTART); return; }
-        if (AEInputCheckTriggered(AEVK_Q)) { isPaused = false; StateManagerChangeState(STATE_MENU);    return; }
-        return; // Freeze everything else while paused
-    }
+    // FREEZE everything while paused - just return early
+    if (isPaused) return;
+     
+    //if (isPaused)
+    //{
+    //    // Allow restart/quit while paused
+    //    if (AEInputCheckTriggered(AEVK_TAB)) { isPaused = false; StateManagerChangeState(STATE_RESTART); return; }
+    //    if (AEInputCheckTriggered(AEVK_Q)) { isPaused = false; StateManagerChangeState(STATE_MENU);    return; }
+    //    return; // Freeze everything else while paused
+    //}
 
     const f32 dt = (f32)AEFrameRateControllerGetFrameTime();
     s_GameTime += dt; // Drives all time-based animations (boss glow, border pulse)
@@ -773,20 +781,8 @@ void Game_Draw()
     // -----------------------------------------------------------------------
     if (isPaused)
     {
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-        AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.7f);
-        tf.SetPosition(0.0f, 0.0f);
-        tf.SetUniformScale(3000.0f);
-        tf.Apply();
-        AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
-
-        pauseText = TextRenderer(gameFont, 1.0f, { 0.0f, 200.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-        pauseText << "PAUSED";
-        pauseText.Draw();
-
-        hint = TextRenderer(gameFont, 0.8f, { 0.0f, -50.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-        hint << "ESC-Resume  R-Restart  Q-Menu";
-        hint.Draw();
+        PausePage_Draw();
+        PausePage_Update();
     }
 
     // Restore world camera for next frame
@@ -802,6 +798,7 @@ void Game_Draw()
 void Game_Free()
 {
     waveSystem.Cleanup();
+    PausePage_Free();
 
     for (auto& obj : gamePageObj)
     {
@@ -825,9 +822,9 @@ void Game_Free()
 void Game_Unload()
 {
     Meshes::FreeMeshes();
-    ParticleSystem::FreeSharedMesh(); // Release shared particle mesh
     NPC_UnloadTextures(); // Release shared NPC texture cache
     AEGfxDestroyFont(gameFont);
+    PausePage_Unload();
     //levelupSFX = nullptr;
     //bgMusic = nullptr;
     //shootSFX = nullptr;
