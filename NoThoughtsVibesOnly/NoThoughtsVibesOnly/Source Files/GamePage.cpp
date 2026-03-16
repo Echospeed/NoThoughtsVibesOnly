@@ -357,10 +357,29 @@ void Game_Update()
     }
 
     // ------------------------------------------------------------------
-    // 4. Camera: smooth lerp toward player position
+    // 4. Camera: smooth lerp toward player position with Deadzone
     // ------------------------------------------------------------------
-    sCamX += (pPlayer->transform.position.x - sCamX) * CAM_SPEED * dt;
-    sCamY += (pPlayer->transform.position.y - sCamY) * CAM_SPEED * dt;
+    const f32 CAM_DEADZONE_RADIUS = 100.0f; // Tweak this to make the invisible circle bigger or smaller
+
+    // Calculate distance between player and current camera position
+    f32 dx = pPlayer->transform.position.x - sCamX;
+    f32 dy = pPlayer->transform.position.y - sCamY;
+    f32 dist = sqrtf(dx * dx + dy * dy);
+
+    // Only move the camera if the player is outside the deadzone
+    if (dist > CAM_DEADZONE_RADIUS)
+    {
+        // Calculate how far the player has pushed past the boundary
+        f32 excess = dist - CAM_DEADZONE_RADIUS;
+
+        // Get the normalized direction vector (length of 1) pointing from camera to player
+        f32 nx = dx / dist;
+        f32 ny = dy / dist;
+
+        // Move the camera along that direction to catch up
+        sCamX += (nx * excess) * CAM_SPEED * dt;
+        sCamY += (ny * excess) * CAM_SPEED * dt;
+    }
 
     // Wave announcement banner
     {
