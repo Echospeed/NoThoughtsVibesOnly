@@ -392,10 +392,10 @@ void Game_Update()
     f32 halfScreenHeight = (AEGfxGetWinMaxY() - AEGfxGetWinMinY()) / 2.0f;
 
     // Calculate the absolute maximum and minimum camera coordinates
-    f32 minCamX = -(WORLD_WIDTH / 2.0f) + halfScreenWidth;
-    f32 maxCamX = (WORLD_WIDTH / 2.0f) - halfScreenWidth;
-    f32 minCamY = -(WORLD_HEIGHT / 2.0f) + halfScreenHeight;
-    f32 maxCamY = (WORLD_HEIGHT / 2.0f) - halfScreenHeight;
+    f32 minCamX = -(WORLD_WIDTH / 2.0f) + halfScreenWidth - 30.0f;
+    f32 maxCamX = (WORLD_WIDTH / 2.0f) - halfScreenWidth + 30.0f;
+    f32 minCamY = -(WORLD_HEIGHT / 2.0f) + halfScreenHeight - 30.0f;
+    f32 maxCamY = (WORLD_HEIGHT / 2.0f) - halfScreenHeight + 30.0f;
 
     // Use Alpha Engine's AEClamp to lock the camera coordinates inside the safe zone
     sCamX = AEClamp(sCamX, minCamX, maxCamX);
