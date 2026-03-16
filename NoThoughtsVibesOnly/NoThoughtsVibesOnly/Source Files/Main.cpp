@@ -51,7 +51,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
     // --- Engine initialisation ---
     AESysInit(hInstance, nCmdShow,
-        1600, 900,   // Window width, height
+        1600, 900,    // Window width, height
         1,            // Fullscreen (0 = windowed)
         60,           // Target FPS
         false,        // Use default window proc

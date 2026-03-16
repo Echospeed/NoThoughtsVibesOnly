@@ -57,8 +57,8 @@
 // ============================================================================
 // World constants
 // ============================================================================
-const f32 WORLD_WIDTH = 2000.0f;
-const f32 WORLD_HEIGHT = 2000.0f;
+const f32 WORLD_WIDTH = 2500.0f;
+const f32 WORLD_HEIGHT = 2500.0f;
 
 // ============================================================================
 // Starfield - Two-layer parallax
@@ -359,7 +359,7 @@ void Game_Update()
     // ------------------------------------------------------------------
     // 4. Camera: smooth lerp toward player position with Deadzone
     // ------------------------------------------------------------------
-    const f32 CAM_DEADZONE_RADIUS = 100.0f; // Tweak this to make the invisible circle bigger or smaller
+    const f32 CAM_DEADZONE_RADIUS = 150.0f;
 
     // Calculate distance between player and current camera position
     f32 dx = pPlayer->transform.position.x - sCamX;
@@ -369,17 +369,29 @@ void Game_Update()
     // Only move the camera if the player is outside the deadzone
     if (dist > CAM_DEADZONE_RADIUS)
     {
-        // Calculate how far the player has pushed past the boundary
         f32 excess = dist - CAM_DEADZONE_RADIUS;
-
-        // Get the normalized direction vector (length of 1) pointing from camera to player
         f32 nx = dx / dist;
         f32 ny = dy / dist;
 
-        // Move the camera along that direction to catch up
         sCamX += (nx * excess) * CAM_SPEED * dt;
         sCamY += (ny * excess) * CAM_SPEED * dt;
     }
+
+    // --- Clamp Camera to World Bounds ---
+
+    // Get half the screen dimensions so the *edge* of the screen stops at the border
+    f32 halfScreenWidth = (AEGfxGetWinMaxX() - AEGfxGetWinMinX()) / 2.0f;
+    f32 halfScreenHeight = (AEGfxGetWinMaxY() - AEGfxGetWinMinY()) / 2.0f;
+
+    // Calculate the absolute maximum and minimum camera coordinates
+    f32 minCamX = -(WORLD_WIDTH / 2.0f) + halfScreenWidth;
+    f32 maxCamX = (WORLD_WIDTH / 2.0f) - halfScreenWidth;
+    f32 minCamY = -(WORLD_HEIGHT / 2.0f) + halfScreenHeight;
+    f32 maxCamY = (WORLD_HEIGHT / 2.0f) - halfScreenHeight;
+
+    // Use Alpha Engine's AEClamp to lock the camera coordinates inside the safe zone
+    sCamX = AEClamp(sCamX, minCamX, maxCamX);
+    sCamY = AEClamp(sCamY, minCamY, maxCamY);
 
     // Wave announcement banner
     {

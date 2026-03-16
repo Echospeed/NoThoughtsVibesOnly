@@ -21,7 +21,7 @@
 // ============================================================================
 // Minimap Constants
 // ============================================================================
-static const f32 MINI_WORLD_REF_WIDTH = 2000.0f; // World width the map represents
+static const f32 MINI_WORLD_REF_WIDTH = 2500.0f; // World width the map represents
 static const f32 MINI_SIZE = 200.0f;   // Minimap display size (px)
 static const f32 MINI_X = 650.0f;   // Screen-space X offset from center
 static const f32 MINI_Y = -300.0f;   // Screen-space Y offset from center
