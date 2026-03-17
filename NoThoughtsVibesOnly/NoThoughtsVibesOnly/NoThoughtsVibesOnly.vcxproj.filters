@@ -96,9 +96,6 @@
     <ClInclude Include="Header Files\WinPage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header Files\Audio.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Header Files\Leaderboard.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -198,9 +195,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source Files\WinPage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source Files\Audio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source Files\LevelSelectPage.cpp">

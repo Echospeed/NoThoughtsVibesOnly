@@ -42,7 +42,7 @@
 #include "PowerUpSystem.hpp"
 
 extern PowerUpSystem powerUpSystem; // Owned by GamePage.cpp
-extern Audio* shootSFX;             // Declared in GamePage.cpp
+
 
 // ============================================================================
 // Shared NPC texture cache

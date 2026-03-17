@@ -1,82 +1,144 @@
 #include "pch.hpp"
 #include "AudioManager.hpp"
-#include "AEAudio.h"
-#include "AETypes.h"
 #include <iostream>
 
-std::string AudioManager::audioNames[AUDIO_COUNT]{ "MenuMusic" , "test1" , "test2", "test3"};
-AEAudio AudioManager::audioResource[AUDIO_COUNT];
-AEAudioGroup AudioManager::group[AUDIO_COUNT];
-float AudioManager::masterVolume = 1.0f;
+std::unordered_map<std::string, AudioManager::AudioBundle> AudioManager::s_AudioMap;
+std::string AudioManager::s_CurrentMusicName = "";
+float AudioManager::s_MasterVolume = 1.0f;
 
 void AudioManager::Init()
 {
-	audioResource[0] = AEAudioLoadMusic("Assets/Audio/BATTLE-MILITARY_GEN-HDF-03135.wav");
-	group[0] = AEAudioCreateGroup();
+    LoadAudio("MenuMusic", "Assets/Audio/MainMenusfx.wav", true);
+    LoadAudio("GameMusic", "Assets/Audio/GameBGsfx.wav", true);
+    LoadAudio("Shoot", "Assets/Audio/ShootingSound.wav", false);
+    LoadAudio("LevelUp", "Assets/Audio/Powerupsfx.wav", false);
 
-	audioResource[1] = AEAudioLoadSound("Assets/Audio/BATTLE-MILITARY_GEN-HDF-03135.wav");
-	group[1] = AEAudioCreateGroup();
-
-	audioResource[2] = AEAudioLoadSound("Assets/Audio/SCI-FI-LASER_GEN-HDF-20715.wav");
-	group[2] = AEAudioCreateGroup();
-
-	audioResource[3] = AEAudioLoadSound("Assets/Audio/SCI-FI-LASER_GEN-HDF-20715.wav");
-	group[3] = AEAudioCreateGroup();
+    std::cout << "[AudioManager] Native AEAudio assets and groups loaded.\n";
 }
 
-void AudioManager::Free()
+void AudioManager::LoadAudio(const std::string& name, const char* filepath, bool isMusic)
 {
-	for (int i = 0; i < AUDIO_COUNT; ++i)
-	{
-		AEAudioUnloadAudio(audioResource[i]);
-		AEAudioUnloadAudioGroup(group[i]);
-	}
+    if (s_AudioMap.find(name) != s_AudioMap.end()) return;
+
+    AEAudio audio;
+    if (isMusic) audio = AEAudioLoadMusic(filepath);
+    else         audio = AEAudioLoadSound(filepath);
+
+    if (AEAudioIsValidAudio(audio))
+    {
+        AEAudioGroup group = AEAudioCreateGroup();
+        s_AudioMap[name] = { audio, group };
+    }
+    else
+    {
+        std::cout << "[AudioManager] ERROR: Alpha Engine failed to load: " << filepath << "\n";
+    }
 }
 
 void AudioManager::PlaySFX(const std::string& name)
 {
-	for (int i = 0; i < AUDIO_COUNT; ++i)
-	{
-		if (audioNames[i] == name)
-		{
-			AEAudioPlay(audioResource[i], group[i], masterVolume, 1.0f, 0);
-			return;
-		}
-	}
-	std::cout << "[AudioManager] ERROR: SFX '" << name << "' not found.\n";
+    auto it = s_AudioMap.find(name);
+    if (it != s_AudioMap.end())
+    {
+        AEAudioPlay(it->second.audio, it->second.group, s_MasterVolume, 1.0f, 0);
+    }
+    else
+    {
+        std::cout << "[AudioManager] WARNING: SFX '" << name << "' not loaded!\n";
+    }
 }
 
 void AudioManager::PlayMusic(const std::string& name)
 {
-	for (int i = 0; i < AUDIO_COUNT; ++i)
-	{
-		if (audioNames[i] == name)
-		{
-			AEAudioPlay(audioResource[i], group[i], masterVolume, 1.0f, -1);
-			return;
-		}
-	}
-	std::cout << "[AudioManager] ERROR: Music '" << name << "' not found.\n";
+    auto it = s_AudioMap.find(name);
+    if (it != s_AudioMap.end())
+    {
+        StopMusic();
+
+        s_CurrentMusicName = name;
+        AEAudioPlay(it->second.audio, it->second.group, s_MasterVolume * 0.5f, 1.0f, -1);
+    }
+    else
+    {
+        std::cout << "[AudioManager] WARNING: Music '" << name << "' not loaded!\n";
+    }
+}
+
+void AudioManager::PauseMusic(const std::string& name)
+{
+    const std::string targetName = name.empty() ? s_CurrentMusicName : name;
+    if (targetName.empty()) return;
+
+    auto it = s_AudioMap.find(targetName);
+    if (it != s_AudioMap.end() && AEAudioIsValidGroup(it->second.group))
+    {
+        AEAudioPauseGroup(it->second.group);
+    }
+}
+
+void AudioManager::ResumeMusic(const std::string& name)
+{
+    const std::string targetName = name.empty() ? s_CurrentMusicName : name;
+    if (targetName.empty()) return;
+
+    auto it = s_AudioMap.find(targetName);
+    if (it != s_AudioMap.end() && AEAudioIsValidGroup(it->second.group))
+    {
+        AEAudioResumeGroup(it->second.group);
+    }
 }
 
 void AudioManager::StopMusic(const std::string& name)
 {
-	for (int i = 0; i < AUDIO_COUNT; ++i)
-	{
-		if (audioNames[i] == name)
-		{
-			AEAudioStopGroup(group[i]);
-			return;
-		}
-	}
-	std::cout << "[AudioManager] ERROR: Music '" << name << "' not found.\n";
+    std::string targetName = name.empty() ? s_CurrentMusicName : name;
+    if (targetName.empty()) return;
+
+    auto it = s_AudioMap.find(targetName);
+    if (it != s_AudioMap.end())
+    {
+        if (AEAudioIsValidGroup(it->second.group))
+        {
+            AEAudioStopGroup(it->second.group);
+        }
+    }
+    else
+    {
+        std::cout << "[AudioManager] WARNING: Cannot stop '" << targetName << "', not found!\n";
+    }
+
+    if (s_CurrentMusicName == targetName)
+    {
+        s_CurrentMusicName = "";
+    }
 }
 
-void AudioManager::SetMasterVolume(f32 volume)
+void AudioManager::Free()
 {
-	masterVolume = (volume < 0.0f) ? 0.0f : (volume > 1.0f) ? 1.0f : volume;
-	for (int i = 0; i < AUDIO_COUNT; ++i)
-	{
-		AEAudioSetGroupVolume(group[i], masterVolume);
-	}
+    StopMusic();
+
+    for (auto& pair : s_AudioMap)
+    {
+        if (AEAudioIsValidAudio(pair.second.audio)) {
+            AEAudioUnloadAudio(pair.second.audio);
+        }
+        if (AEAudioIsValidGroup(pair.second.group)) {
+            AEAudioUnloadAudioGroup(pair.second.group);
+        }
+    }
+    s_AudioMap.clear();
+    std::cout << "[AudioManager] Native AEAudio resources and groups freed.\n";
+}
+
+void AudioManager::SetMasterVolume(float volume)
+{
+    s_MasterVolume = volume;
+
+    if (!s_CurrentMusicName.empty())
+    {
+        auto it = s_AudioMap.find(s_CurrentMusicName);
+        if (it != s_AudioMap.end() && AEAudioIsValidGroup(it->second.group))
+        {
+            AEAudioSetGroupVolume(it->second.group, s_MasterVolume * 0.5f);
+        }
+    }
 }

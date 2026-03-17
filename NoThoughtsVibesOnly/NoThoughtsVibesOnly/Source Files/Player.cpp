@@ -28,7 +28,6 @@
 #include "Input.hpp"
 #include "PowerUpSystem.hpp"
 
-extern Audio* shootSFX; // Declared and owned by GamePage.cpp
 
 // ============================================================================
 // Start
@@ -44,6 +43,7 @@ void Player::Start()
 
     // Red square appearance
     spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f };
+
 
     // Small initial cooldown prevents accidental shots at spawn
     shootCooldown = 0.3f;
@@ -191,7 +191,7 @@ void Player::Update(f32 deltaTime)
     {
         Shoot(mouseDir);
         shootCooldown = 0.10f; // 10 shots per second
-        if (shootSFX) shootSFX->Play();
+        AudioManager::PlaySFX("Shoot");
 
         // Emit a small smoke puff at the player's position
         smokePS.Emit(transform.position);

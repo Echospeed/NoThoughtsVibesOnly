@@ -19,12 +19,10 @@
 #include "Util.hpp"
 #include "Button.hpp"
 #include "Input.hpp"
-#include "Audio.hpp"
 #include "MenuPage.hpp"
 
 // Shared with GamePage.cpp
 extern bool   isPaused;
-extern Audio* bgMusic;
 extern GameObject* pPlayer;
 
 // ============================================================================
@@ -61,7 +59,7 @@ void PausePage_Init()
     hintText << "ESC to resume  |  TAB to restart";
 
     resumeBtn = new Button(fontPath, { 0.0f,  50.0f }, { 300.0f, 75.0f },
-        []() { isPaused = false; if (bgMusic) bgMusic->Resume();
+        []() { isPaused = false;            AudioManager::ResumeMusic();
         Player* p = dynamic_cast<Player*>(pPlayer);
         if (p) p->suppressShootOneFrame = true; },
         { 0.0f, 0.6f, 0.0f, 1.0f }, "RESUME");

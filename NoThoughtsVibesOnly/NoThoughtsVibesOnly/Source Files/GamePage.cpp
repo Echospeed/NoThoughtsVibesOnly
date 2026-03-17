@@ -50,7 +50,6 @@
 #include "WaveSystem.hpp"
 #include "PowerUpSystem.hpp"
 #include "GameUI.hpp"
-#include "Audio.hpp"
 #include "Particles.hpp"
 #include "LevelConfig.hpp"
 #include "PausePage.hpp"
@@ -164,12 +163,7 @@ static u32  s_WaveAnnounceNum = 0;
 static u32  s_PrevWaveNum = 0;
 static const f32 WAVE_ANNOUNCE_DURATION = 2.5f;
 
-// ============================================================================
-// Audio
-// ============================================================================
-Audio* bgMusic = nullptr;      // Background music (looping)
-Audio* shootSFX = nullptr;      // Shoot sound effect
-Audio* levelupSFX = nullptr;
+
 bool levelUpSFXFlag = true;
 
 // ============================================================================
@@ -191,10 +185,7 @@ void Game_Load()
 
     gameFont = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
 
-    // Audio: music loops forever (-1), SFX plays once (0)
-    bgMusic = new Audio("Assets/Audio/BATTLE-MILITARY_GEN-HDF-03135.wav", -1, 0.5f, 1.0f, AudioType::MUSIC);
-    shootSFX = new Audio("Assets/Audio/SCI-FI-LASER_GEN-HDF-20715.wav", 0, 1.0f, 1.0f, AudioType::SOUND);
-    levelupSFX = new Audio("Assets/Audio/SCI-FI-POWER-UP_GEN-HDF-20769.wav", 0, 1.0f, 1.0f, AudioType::SOUND);
+
 }
 
 // ============================================================================
@@ -265,7 +256,7 @@ void Game_Init()
     for (auto& obj : gamePageObj)
         obj->Start();
 
-    if (bgMusic) bgMusic->Play();
+    AudioManager::PlayMusic("GameMusic");
 
     // Reset visual polish state
     s_GameTime = 0.0f;
@@ -303,8 +294,8 @@ void Game_Update()
     if (AEInputCheckTriggered(AEVK_ESCAPE))
     {
         isPaused = !isPaused;
-        if (isPaused) { if (bgMusic) bgMusic->Pause(); }
-        else { if (bgMusic) bgMusic->Resume();
+        if (isPaused) { AudioManager::PauseMusic("GameMusic"); }
+        else { AudioManager::ResumeMusic("GameMusic");
         Player* p = dynamic_cast<Player*>(pPlayer);
         if (p) p->suppressShootOneFrame = true; // prevent shoot on resume
         }
@@ -332,7 +323,7 @@ void Game_Update()
     {
         const PowerUp* choices = powerUpSystem.GetPowerUpChoices();
         Player* player = dynamic_cast<Player*>(pPlayer);
-        if (levelupSFX && levelUpSFXFlag) { levelupSFX->Play(); levelUpSFXFlag = false; };
+        if (levelUpSFXFlag) { AudioManager::PlaySFX("LevelUp"); levelUpSFXFlag = false; };
         if (AEInputCheckTriggered(AEVK_1)) powerUpSystem.ApplyPowerUp(choices[0].type, player);
         else if (AEInputCheckTriggered(AEVK_2)) powerUpSystem.ApplyPowerUp(choices[1].type, player);
         else if (AEInputCheckTriggered(AEVK_3)) powerUpSystem.ApplyPowerUp(choices[2].type, player);
@@ -453,7 +444,7 @@ void Game_Update()
                 ? g_FinalWaveCount * 150   // endless: 150 pts per round
                 : g_FinalWaveCount * 100;  // normal:  100 pts per wave
 
-            if (bgMusic) bgMusic->Stop();
+            AudioManager::StopMusic("GameMusic");
             StateManagerChangeState(STATE_FINISH);
             return;
         }
@@ -472,7 +463,7 @@ void Game_Update()
             ? g_FinalWaveCount * 150
             : g_FinalWaveCount * 100;
 
-        if (bgMusic) bgMusic->Stop();
+        AudioManager::StopMusic("GameMusic");
         StateManagerChangeState(STATE_WIN);
         return;
     }
@@ -828,7 +819,5 @@ void Game_Unload()
     //levelupSFX = nullptr;
     //bgMusic = nullptr;
     //shootSFX = nullptr;
-    if (bgMusic) { bgMusic->Free();    delete bgMusic;    bgMusic = nullptr; }
-    if (levelupSFX) { levelupSFX->Free(); delete levelupSFX; levelupSFX = nullptr; }
-    if (shootSFX) { shootSFX->Free();   delete shootSFX;   shootSFX = nullptr; }
+
 }

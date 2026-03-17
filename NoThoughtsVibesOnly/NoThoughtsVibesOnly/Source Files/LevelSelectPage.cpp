@@ -97,7 +97,6 @@ void LevelSelect_Load()
 // ============================================================================
 void LevelSelect_Init()
 {
-    AudioManager::PlaySFX("test3");
     AEGfxSetCamPosition(0.0f, 0.0f);
     AEGfxSetBackgroundColor(0.0f, 0.0f, 0.02f);
 
@@ -161,6 +160,7 @@ void LevelSelect_Free()
     delete endlessButton;         endlessButton = nullptr;
     delete levelSelectBackButton; levelSelectBackButton = nullptr;
 
+    AudioManager::StopMusic("MenuMusic");
     levelSelectPageObj.clear();
     levelSelectPageObj.shrink_to_fit();
 }

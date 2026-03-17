@@ -33,7 +33,6 @@
 #include <iostream>
 #include "Button.hpp"
 #include "Input.hpp"
-#include "Audio.hpp"
 #include "SplashPage.hpp"
 
 // ============================================================================
@@ -81,7 +80,6 @@ TextRenderer infoText;     // Body text for info pages
 // ============================================================================
 SpriteRenderer creditsImg;
 Transform      creditTransform;
-Audio* g_MenuMusic = nullptr;
 static f32 s_TitleTime = 0.0f; // Drives title text animation (scale pulse + colour cycle)
 
 // ============================================================================
@@ -97,7 +95,6 @@ static void GoToLevelSelect() { StateManagerChangeState(STATE_LEVEL_SELECT); }
 // ============================================================================
 void Main_Load()
 {
-    g_MenuMusic = new Audio("Assets/Audio/MainMenusfx.wav", -1, 0.5f, 1.0f, AudioType::MUSIC);
     fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
     Meshes::CreateSquareCenterOriginMesh();
     Meshes::CreateCircleMesh(); // Required by StarBackground
@@ -132,7 +129,7 @@ void Main_Init()
     InitSpriteRenderer(creditsImg, "Assets/Credits_NTOV.png", 1600.0f, 900.0f, MESH_SQUARE);
     creditTransform = { {0.0f, 0.0f}, {1600.0f, 900.0f}, {0.0f} };
 
-    if (g_MenuMusic) g_MenuMusic->Play();
+    AudioManager::PlayMusic("MenuMusic");
 }
 
 // ============================================================================
@@ -240,7 +237,6 @@ void Main_Draw()
 // ============================================================================
 void Main_Free()
 {
-    if (g_MenuMusic) g_MenuMusic->Stop();
 
     for (auto* obj : mainPageObj)
         delete obj;
@@ -259,5 +255,4 @@ void Main_Unload()
 {
     AEGfxDestroyFont(fontPath);
     Meshes::FreeMeshes();
-    if (g_MenuMusic) { g_MenuMusic->Free();    delete g_MenuMusic;    g_MenuMusic = nullptr; }
 }
