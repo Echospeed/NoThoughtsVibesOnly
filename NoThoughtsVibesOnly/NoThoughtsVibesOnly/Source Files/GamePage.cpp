@@ -277,7 +277,7 @@ void Game_Update()
             if (obj && obj->ObjectType == NP && obj->isActive)
             {
                 NPC* npc = dynamic_cast<NPC*>(obj);
-                if (npc) { npc->health = 0.0f; std::cout << "[DEBUG] Killed NPC\n"; }
+                if (npc) { npc->health = 0.0f; } //std::cout << "[DEBUG] Killed NPC\n"; }
             }
         }
     }
