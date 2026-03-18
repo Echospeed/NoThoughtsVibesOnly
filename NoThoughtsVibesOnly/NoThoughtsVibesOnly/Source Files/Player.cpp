@@ -37,25 +37,23 @@
 // ============================================================================
 void Player::Start()
 {
+    const auto& pc = GameConfig::Player();
+
     transform.position = { 0.0f, 0.0f };
-    transform.scale = { 50.0f, 50.0f };
+    transform.scale = { pc.scaleX, pc.scaleY };
     transform.rotation = 0.0f;
 
-    // Red square appearance
     spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f };
 
-
-    // Small initial cooldown prevents accidental shots at spawn
-    shootCooldown = 0.3f;
+    shootCooldown = pc.shootSuppressCooldown;
+    reloadDuration = pc.reloadDuration;
     isReloading = false;
-    ammoInMagazine = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount : 10;
+    ammoInMagazine = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount
+        : GameConfig::Player().startingAmmo;
 
     smokePS = ParticleSystem::MakeSmoke();
 
-    //spriteRenderer.customMesh = CreateSpriteSheetMesh(480.0f, 500.0f, 2000.0f, 2500.0f);
-
-    playerSpritesheet = AEGfxTextureLoad("Assets/shipYellow_manned.png");
-
+    playerSpritesheet = AEGfxTextureLoad(pc.texture.c_str());
     spriteRenderer.texture = playerSpritesheet;
 
     idleAnim = Animation(0.2f, true);
@@ -166,7 +164,8 @@ void Player::Update(f32 deltaTime)
                 b->transform.position = { -1000.0f, -1000.0f };
             }
             // Restore magazine count from the power-up system
-            ammoInMagazine = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount : 10;
+            ammoInMagazine = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount
+                : GameConfig::Player().startingAmmo;
             isReloading = false;
         }
     }
@@ -184,13 +183,13 @@ void Player::Update(f32 deltaTime)
     if (suppressShootOneFrame)
     {
         suppressShootOneFrame = false;
-        shootCooldown = 0.3f; // Small delay before shooting resumes after picking a power-up
+        shootCooldown = GameConfig::Player().shootSuppressCooldown;
     }
     else if (!isReloading && AEInputCheckCurr(AEVK_LBUTTON) && shootCooldown <= 0.0f
         && !(powerUpSystem && powerUpSystem->IsWaitingForUpgrade()))
     {
         Shoot(mouseDir);
-        shootCooldown = 0.10f; // 10 shots per second
+        shootCooldown = GameConfig::Player().shootCooldown;
         AudioManager::PlaySFX("Shoot");
 
         // Emit a small smoke puff at the player's position
@@ -252,33 +251,26 @@ void Player::Update(f32 deltaTime)
             f32 contactDamage = 0.0f;
             f32 knockbackForce = 0.0f;
 
+            const auto& wc = GameConfig::Wave();
             switch (np->type)
             {
             case NPC_MELEE:
-                contactDamage = 50.0f * deltaTime;   // High damage
-                knockbackForce = 300.0f;
+                contactDamage = wc.contactDamage.melee * deltaTime;
+                knockbackForce = wc.knockback.melee;
                 break;
-
             case NPC_BOSS:
-                contactDamage = 100.0f * deltaTime;  // Massive damage
-                knockbackForce = 500.0f;
-
-                // Log boss contact at most every 0.2s to avoid spam
+                contactDamage = wc.contactDamage.boss * deltaTime;
+                knockbackForce = wc.knockback.boss;
                 {
                     static f32 flashTimer = 0.0f;
                     flashTimer += deltaTime;
-                    if (flashTimer > 0.2f)
-                    {
-                        std::cout << "[BOSS] Contact! 100 dmg/sec\n";
-                        flashTimer = 0.0f;
-                    }
+                    if (flashTimer > 0.2f) { std::cout << "[BOSS] Contact! dmg/sec\n"; flashTimer = 0.0f; }
                 }
                 break;
-
             case NPC_WALK:
             case NPC_RANGER:
-                contactDamage = 20.0f * deltaTime;  // Light damage
-                knockbackForce = 200.0f;
+                contactDamage = wc.contactDamage.walkRanger * deltaTime;
+                knockbackForce = wc.knockback.walkRanger;
                 break;
             }
 
@@ -385,7 +377,8 @@ void Player::Shoot(AEVec2 dir)
 // ============================================================================
 void Player::TriggerReload()
 {
-    const int maxAmmo = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount : 10;
+    const int maxAmmo = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount
+        : GameConfig::Player().startingAmmo;
     if (isReloading || ammoInMagazine == maxAmmo) return;
     isReloading = true;
     reloadTimer = reloadDuration;
@@ -400,22 +393,26 @@ void Player::TriggerReload()
 
 f32 Player::GetSpeed() const
 {
-    return powerUpSystem ? powerUpSystem->GetStats().GetTotalSpeed() : 2000.0f;
+    return powerUpSystem ? powerUpSystem->GetStats().GetTotalSpeed()
+        : GameConfig::Player().baseSpeed;
 }
 
 f32 Player::GetBulletDamage() const
 {
-    return powerUpSystem ? powerUpSystem->GetStats().GetTotalBulletDamage() : 100.0f;
+    return powerUpSystem ? powerUpSystem->GetStats().GetTotalBulletDamage()
+        : GameConfig::PowerUp().baseBulletDamage;
 }
 
 f32 Player::GetAoeDamage() const
 {
-    return powerUpSystem ? powerUpSystem->GetStats().GetTotalAoeDamage() : 100.0f;
+    return powerUpSystem ? powerUpSystem->GetStats().GetTotalAoeDamage()
+        : GameConfig::PowerUp().baseAoeDamage;
 }
 
 f32 Player::GetAoeRadius() const
 {
-    return powerUpSystem ? powerUpSystem->GetStats().GetTotalAoeRadius() : 100.0f;
+    return powerUpSystem ? powerUpSystem->GetStats().GetTotalAoeRadius()
+        : GameConfig::PowerUp().baseAoeRadius;
 }
 
 void Player::Free()

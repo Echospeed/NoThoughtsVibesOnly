@@ -1,0 +1,27 @@
+{
+    "minimap": {
+        "worldRefWidth":    2500.0,
+        "size":             200.0,
+        "screenOffsetX":    650.0,
+        "screenOffsetY":    -300.0,
+        "playerDotSize":    12.0,
+        "npcDotSize":       5.0
+    },
+    "world": {
+        "width":    2500.0,
+        "height":   2500.0
+    },
+    "bullet": {
+        "playerSpeed":      1500.0,
+        "enemySpeed":       800.0,
+        "maxLifeTime":      4.0,
+        "enemyDamage":      25.0,
+        "defaultScale":     10.0
+    },
+    "playerBulletPoolSize": 10,
+    "enemyBulletPoolSize":  60,
+    "scorePerWaveNormal":   100,
+    "scorePerWaveEndless":  150,
+    "invulnDuration":       3.0,
+    "invulnCooldown":       30.0
+}

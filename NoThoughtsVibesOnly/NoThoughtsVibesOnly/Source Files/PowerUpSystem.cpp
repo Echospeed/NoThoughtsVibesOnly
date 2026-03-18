@@ -37,7 +37,16 @@
 // ============================================================================
 void PowerUpSystem::Init()
 {
-    stats = PlayerStats{};  // Reset to default values
+    const auto& pc = GameConfig::PowerUp();
+
+    stats = PlayerStats{};
+    stats.baseSpeed = pc.baseSpeed;
+    stats.baseBulletDamage = pc.baseBulletDamage;
+    stats.baseAoeRadius = pc.baseAoeRadius;
+    stats.baseAoeDamage = pc.baseAoeDamage;
+    stats.bulletCount = (u32)pc.startingBulletCount;
+    stats.expToNextLevel = pc.expToFirstLevel;
+
     waitingForUpgrade = false;
 
     std::cout << "[PowerUp] Initialised. Level 1, 0/"
@@ -77,7 +86,7 @@ bool PowerUpSystem::CheckLevelUp()
 
     // Carry over surplus XP so it isn't wasted
     stats.currentExp -= stats.expToNextLevel;
-    stats.expToNextLevel *= 1.3f;    // Each level requires 30% more XP
+    stats.expToNextLevel *= GameConfig::PowerUp().expScalePerLevel;
     ++stats.level;
 
     std::cout << "\n============================================\n"
@@ -113,30 +122,32 @@ PowerUp PowerUpSystem::CreatePowerUp(PowerUpType type)
     PowerUp p{};
     p.type = type;
 
+    const auto& pc = GameConfig::PowerUp();
+
     switch (type)
     {
     case POWERUP_SPEED:
         p.name = "SPEED BOOST";
         p.description = "+200 Movement Speed";
-        p.value = 200.0f;
+        p.value = pc.speedUpgradeBonus;
         break;
 
     case POWERUP_BULLET_DAMAGE:
         p.name = "BULLET POWER";
         p.description = "+25 Bullet Damage  +5 Bullets";
-        p.value = 25.0f;
+        p.value = pc.bulletDamageBonus;
         break;
 
     case POWERUP_AOE_DAMAGE:
         p.name = "AoE MASTERY";
         p.description = "+20 AoE Radius  +25 Damage/sec";
-        p.value = 20.0f;
+        p.value = pc.aoeRadiusBonus;
         break;
 
     case POWERUP_LIFESTEAL:
         p.name = "LIFESTEAL";
-        p.description = "+10 HP healed per kill"; // Stacks with base 5 HP heal on kill
-        p.value = 10.0f;
+        p.description = "+10 HP healed per kill";
+        p.value = pc.lifestealBonus;
         break;
     }
 
@@ -153,28 +164,27 @@ void PowerUpSystem::ApplyPowerUp(PowerUpType type, Player* player)
 {
     if (!player) return;
 
+    const auto& pc = GameConfig::PowerUp();
     switch (type)
     {
     case POWERUP_SPEED:
-        stats.speedBonus += 200.0f;
+        stats.speedBonus += pc.speedUpgradeBonus;
         ++stats.speedUpgrades;
         std::cout << "[Upgrade] Speed -> " << stats.GetTotalSpeed() << "\n";
         break;
 
     case POWERUP_BULLET_DAMAGE:
-        stats.bulletDamageBonus += 25.0f;
+        stats.bulletDamageBonus += pc.bulletDamageBonus;
         ++stats.bulletDamageUpgrades;
-        stats.bulletCount += 5;
-        // Spawn 5 new bullet pool slots immediately into the live object list.
-        // Game_Free() will delete them in its normal loop - no double-delete risk.
-        for (int i = 0; i < 5; ++i)
+        stats.bulletCount += (u32)pc.bulletCountBonus;
+        for (int i = 0; i < pc.bulletCountBonus; ++i)
         {
             Bullet* b = new Bullet();
-            b->startPos = player; // Player-owned bullet
+            b->startPos = player;
             b->isActive = false;
-            b->spent = false;  // ready to fire
+            b->spent = false;
             b->owner = BulletOwner::PLAYER;
-            b->spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 0.0f }; // Hidden
+            b->spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 0.0f };
             b->Start();
         }
         std::cout << "[Upgrade] Bullet damage -> " << stats.GetTotalBulletDamage()
@@ -182,22 +192,21 @@ void PowerUpSystem::ApplyPowerUp(PowerUpType type, Player* player)
         break;
 
     case POWERUP_AOE_DAMAGE:
-        stats.aoeRadiusBonus += 25.0f;
-        stats.aoeDamageBonus += 25.0f;
+        stats.aoeRadiusBonus += pc.aoeRadiusBonus;
+        stats.aoeDamageBonus += pc.aoeDamageBonus;
         ++stats.aoeUpgrades;
         std::cout << "[Upgrade] AoE radius -> " << stats.GetTotalAoeRadius()
             << "  damage -> " << stats.GetTotalAoeDamage() << "/sec\n";
         break;
 
     case POWERUP_LIFESTEAL:
-        // Adds +10 to lifestealBonus. Total heal per kill = 5 (base) + lifestealBonus.
-        // Boss kills use 15 (base) + lifestealBonus instead. See NPC.cpp death block.
-        stats.lifestealBonus += 10.0f;
-        std::cout << "[Upgrade] Lifesteal -> +" << (5.0f + stats.lifestealBonus) << " HP per kill\n";
+        stats.lifestealBonus += pc.lifestealBonus;
+        std::cout << "[Upgrade] Lifesteal -> +"
+            << (pc.lifestealBaseHealPerKill + stats.lifestealBonus) << " HP per kill\n";
         break;
     }
 
-    waitingForUpgrade = false; // Resume gameplay
+    waitingForUpgrade = false;
 }
 
 // ============================================================================
@@ -207,16 +216,19 @@ void PowerUpSystem::ApplyPowerUp(PowerUpType type, Player* player)
 
 f32 PowerUpSystem::GetRangerDamageForRound(u32 round) const
 {
-    return 25.0f + (round * 5.0f); // +5 damage per round
+    const auto& es = GameConfig::PowerUp().enemyScaling;
+    return es.rangerBaseDamage + (round * es.rangerDamagePerRound);
 }
 
 f32 PowerUpSystem::GetMeleeSpeedForRound(u32 round) const
 {
-    const f32 speed = 250.0f + (round * 10.0f);
-    return speed > 400.0f ? 400.0f : speed; // Capped at 400
+    const auto& es = GameConfig::PowerUp().enemyScaling;
+    const f32 speed = es.meleeBaseSpeed + (round * es.meleeSpeedPerRound);
+    return speed > es.meleeSpeedCap ? es.meleeSpeedCap : speed;
 }
 
 f32 PowerUpSystem::GetMeleeDamageForRound(u32 round) const
 {
-    return 50.0f + (round * 5.0f); // +5 damage per round
+    const auto& es = GameConfig::PowerUp().enemyScaling;
+    return es.meleeBaseDamage + (round * es.meleeDamagePerRound);
 }

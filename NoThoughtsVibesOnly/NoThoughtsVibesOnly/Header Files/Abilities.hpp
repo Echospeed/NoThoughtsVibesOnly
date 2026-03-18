@@ -29,9 +29,7 @@ public:
         {
             currentCooldown -= dt;
             if (currentCooldown <= 0.0f)
-            {
                 currentCooldown = 0.0f;
-            }
         }
     }
 
@@ -45,8 +43,8 @@ public:
         return false;
     }
 
-    bool IsActive() const { return currentDuration > 0.0f; }
-    bool IsOnCooldown() const { return currentCooldown > 0.0f; }
+    bool IsActive()             const { return currentDuration > 0.0f; }
+    bool IsOnCooldown()         const { return currentCooldown > 0.0f; }
     f32  GetCooldownRemaining() const { return currentCooldown; }
 
 protected:
@@ -57,12 +55,21 @@ protected:
 };
 
 // ============================================================================
-// Specific Invulnerability Ability
+// InvulnerabilityAbility
+// ============================================================================
+// Duration and cooldown are read from gameplay_config.json
+// ("invulnDuration" and "invulnCooldown") via GameConfig::Gameplay().
+// Fallback defaults (3s / 30s) match the original hardcoded values and
+// are used only if the JSON file is missing.
 // ============================================================================
 class InvulnerabilityAbility : public Ability
 {
 public:
-    InvulnerabilityAbility() : Ability(3.0f, 30.0f)
+    InvulnerabilityAbility()
+        : Ability(
+            GameConfig::Gameplay().invulnDuration,   // was hardcoded 3.0f
+            GameConfig::Gameplay().invulnCooldown    // was hardcoded 30.0f
+        )
     {
     }
 };

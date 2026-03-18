@@ -1,0 +1,16 @@
+{
+    "startHealth":          100.0,
+    "maxHealth":            100.0,
+    "baseSpeed":            200.0,
+    "rotationSpeed":        3.0,
+    "scaleX":               50.0,
+    "scaleY":               50.0,
+    "shootCooldown":        0.10,
+    "shootSuppressCooldown":0.30,
+    "reloadDuration":       2.0,
+    "startingAmmo":         10,
+    "bulletLifeTime":       4.0,
+    "bulletSpeed":          1500.0,
+    "spawnClearRadius":     100.0,
+    "texture":              "Assets/shipYellow_manned.png"
+}

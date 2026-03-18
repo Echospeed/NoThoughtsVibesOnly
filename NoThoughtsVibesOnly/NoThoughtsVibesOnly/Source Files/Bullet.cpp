@@ -28,11 +28,12 @@ void Bullet::Start()
     transform.position = startPos ? startPos->transform.position
         : AEVec2{ -1000.0f, -1000.0f };
 
-    transform.scale = { 10.0f, 10.0f };
+    transform.scale = { GameConfig::Gameplay().bullet.defaultScale,
+                        GameConfig::Gameplay().bullet.defaultScale };
     transform.rotation = 0.0f;
 
-    spriteRenderer.width = 0.0f;
-    spriteRenderer.height = 0.0f;
+    lifeTime = 0.0f;
+    maxLifeTime = GameConfig::Gameplay().bullet.maxLifeTime;
     spriteRenderer.texture = nullptr;
     spriteRenderer.meshType = MESH_CIRCLE;
 
@@ -132,7 +133,7 @@ void Bullet::Update(f32 deltaTime)
                 // ONLY take damage if the invulnerability ability is NOT active
                 if (!player->invulnAbility.IsActive())
                 {
-                    player->health -= 25.0f; // Enemy bullet deals 25 damage
+                    player->health -= GameConfig::Gameplay().bullet.enemyDamage;
                 }
             }
 
@@ -159,9 +160,9 @@ void Bullet::Activate(GameObject* shooter, AEVec2 direction, BulletOwner newOwne
 
     // Set speed based on owner
     if (owner == BulletOwner::PLAYER)
-        speed = 1500.0f;  // Player bullet speed
+        speed = GameConfig::Gameplay().bullet.playerSpeed;
     else
-        speed = 800.0f;   // Enemy bullet speed (slower)
+        speed = GameConfig::Gameplay().bullet.enemySpeed;
 
     // Spawn at shooter's current position
     if (shooter) transform.position = shooter->transform.position;

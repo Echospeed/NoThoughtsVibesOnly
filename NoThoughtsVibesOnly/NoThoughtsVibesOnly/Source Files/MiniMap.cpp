@@ -19,15 +19,6 @@
 #include "NPC.hpp"
 
 // ============================================================================
-// Minimap Constants
-// ============================================================================
-static const f32 MINI_WORLD_REF_WIDTH = 2500.0f; // World width the map represents
-static const f32 MINI_SIZE = 200.0f;   // Minimap display size (px)
-static const f32 MINI_X = 650.0f;   // Screen-space X offset from center
-static const f32 MINI_Y = -300.0f;   // Screen-space Y offset from center
-static const f32 MINI_SCALE = MINI_SIZE / MINI_WORLD_REF_WIDTH;
-
-// ============================================================================
 // DrawMinimap
 // ============================================================================
 // objs : All game objects to render (player + enemies + bullets)
@@ -36,8 +27,11 @@ static const f32 MINI_SCALE = MINI_SIZE / MINI_WORLD_REF_WIDTH;
 // ============================================================================
 void DrawMinimap(const std::vector<GameObject*>& objs, f32 camX, f32 camY)
 {
-    // The minimap background is positioned relative to the camera so it
-    // stays fixed in screen space while the world camera moves
+    const auto& mm = GameConfig::Gameplay().minimap;
+    const f32 MINI_SIZE = mm.size;
+    const f32 MINI_X = mm.screenOffsetX;
+    const f32 MINI_Y = mm.screenOffsetY;
+    const f32 MINI_SCALE = MINI_SIZE / mm.worldRefWidth;
     const f32 mapWorldX = MINI_X + camX;
     const f32 mapWorldY = MINI_Y + camY;
 
@@ -64,7 +58,7 @@ void DrawMinimap(const std::vector<GameObject*>& objs, f32 camX, f32 camY)
             // Dynamically pull the player's current color
             // Dynamically pull the player's current color
             CreateSquare(Meshes::pSquareCOriMesh, &transform, &scale, &rot, &trans,
-                px, py, 12.0f, 12.0f, 0.0f,
+                px, py, mm.playerDotSize, mm.playerDotSize, 0.0f,
                 entity->spriteRenderer.colour.r,
                 entity->spriteRenderer.colour.g,
                 entity->spriteRenderer.colour.b,
@@ -84,7 +78,7 @@ void DrawMinimap(const std::vector<GameObject*>& objs, f32 camX, f32 camY)
 
         // Small dot for visible NPCs, matching their specific type color
         CreateSquare(Meshes::pCircleMesh, &transform, &scale, &rot, &trans,
-            ex, ey, 5.0f, 5.0f, 0.0f,
+            ex, ey, mm.npcDotSize, mm.npcDotSize, 0.0f,
             npc->baseColour.r,
             npc->baseColour.g,
             npc->baseColour.b,

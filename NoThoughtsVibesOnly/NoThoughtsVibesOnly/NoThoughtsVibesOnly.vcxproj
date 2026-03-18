@@ -18,6 +18,7 @@
     <ClInclude Include="Header Files\Collider.hpp" />
     <ClInclude Include="Header Files\Colour.hpp" />
     <ClInclude Include="Header Files\FinishPage.hpp" />
+    <ClInclude Include="Header Files\GameConfig.hpp" />
     <ClInclude Include="Header Files\GameObject.hpp" />
     <ClInclude Include="Header Files\GameObjectType.hpp" />
     <ClInclude Include="Header Files\GamePage.hpp" />
@@ -47,6 +48,7 @@
     <ClInclude Include="Header Files\WinPage.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GameConfig.cpp" />
     <ClCompile Include="Source Files\AudioManager.cpp" />
     <ClCompile Include="Source Files\Bullet.cpp" />
     <ClCompile Include="Source Files\Button.cpp" />

@@ -67,7 +67,7 @@ bool WaveSystem::IsLevelComplete() const
     // Endless mode never completes via wave count
     if (levelConfig.type == LevelType::ENDLESS)
         return false;
-    
+
     // Level complete when we've cleared the final wave and no enemies remain
     return currentWave >= levelConfig.numWaves && IsWaveComplete() && !inWaveBreak;
 }
@@ -101,7 +101,7 @@ void WaveSystem::Update(f32 deltaTime)
     {
         std::cout << "\n==============================================\n"
             << "    WAVE " << currentWave << " CLEARED!\n";
-        
+
         // Show different message for final wave vs continuing
         if (levelConfig.type != LevelType::ENDLESS && currentWave >= levelConfig.numWaves)
         {
@@ -115,7 +115,7 @@ void WaveSystem::Update(f32 deltaTime)
             inWaveBreak = true;
             waveBreakTimer = WAVE_BREAK_DURATION;
         }
-        
+
         std::cout << "==============================================\n\n";
     }
 }
@@ -134,11 +134,11 @@ void WaveSystem::StartNextWave()
 
     std::cout << "\n==============================================\n"
         << "    WAVE " << currentWave;
-    
+
     // Show wave progress for non-endless levels
     if (levelConfig.type != LevelType::ENDLESS)
         std::cout << " / " << levelConfig.numWaves;
-    
+
     std::cout << "  (Round " << currentRound << ")\n"
         << "    Walkers: " << config.walkerCount
         << "  Melee: " << config.meleeCount
@@ -172,32 +172,30 @@ bool WaveSystem::IsWaveComplete() const
 WaveConfig WaveSystem::GenerateWaveConfig() const
 {
     WaveConfig config{};
-    const u32  base = GetEnemyCountForRound();
+    const auto& wc = GameConfig::Wave();
+    const u32   base = GetEnemyCountForRound();
 
-    if (currentRound <= 3)
+    if (currentRound <= (u32)wc.earlyRoundThreshold)
     {
-        // Early rounds: walkers only, with a few melee
         config.walkerCount = base;
-        config.meleeCount = currentRound; // 1, 2, or 3
+        config.meleeCount = currentRound;
         config.rangerCount = 0;
     }
-    else if (currentRound <= 7)
+    else if (currentRound <= (u32)wc.midRoundThreshold)
     {
-        // Mid rounds: mixed composition
-        config.walkerCount = base / 2;
-        config.meleeCount = base / 3;
-        config.rangerCount = base / 4;
+        config.walkerCount = base / wc.midWalkerDivisor;
+        config.meleeCount = base / wc.midMeleeDivisor;
+        config.rangerCount = base / wc.midRangerDivisor;
     }
     else
     {
-        // Late rounds: rangers dominate
-        config.walkerCount = base / 3;
-        config.meleeCount = base / 3;
-        config.rangerCount = base / 2;
+        config.walkerCount = base / wc.lateWalkerDivisor;
+        config.meleeCount = base / wc.lateMeleeDivisor;
+        config.rangerCount = base / wc.lateRangerDivisor;
     }
 
     config.hasBoss = ShouldSpawnBoss();
-    config.expReward = 50.0f + (currentRound * 25.0f);
+    config.expReward = wc.expRewardBase + (currentRound * wc.expRewardPerRound);
     return config;
 }
 
@@ -236,13 +234,13 @@ void WaveSystem::SpawnWave(const WaveConfig& config)
     {
         NPC* ranger = SpawnNPC(NPC_RANGER);
 
-        for (int b = 0; b < 6; ++b)
+        for (int b = 0; b < GameConfig::Npc().ranger.bulletsAssigned; ++b)
         {
             Bullet* bullet = new Bullet();
-            bullet->owner    = BulletOwner::ENEMY;
+            bullet->owner = BulletOwner::ENEMY;
             bullet->startPos = ranger;
             bullet->isActive = false;
-            bullet->spent    = false;
+            bullet->spent = false;
             bullet->spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 0.0f }; // Hidden
             bullet->Start();
         }
@@ -275,17 +273,17 @@ void WaveSystem::SpawnBoss()
 
     NPC* boss = new NPC();
     boss->ObjectType = NP;
-    boss->type       = NPC_BOSS;
-    boss->target     = playerRef;
+    boss->type = NPC_BOSS;
+    boss->target = playerRef;
     boss->Start();
 
-    for (int b = 0; b < 24; ++b)
+    for (int b = 0; b < GameConfig::Npc().boss.bulletsAssigned; ++b)
     {
         Bullet* bullet = new Bullet();
-        bullet->owner    = BulletOwner::ENEMY;
+        bullet->owner = BulletOwner::ENEMY;
         bullet->startPos = boss;
         bullet->isActive = false;
-        bullet->spent    = false;
+        bullet->spent = false;
         bullet->spriteRenderer.colour = { 1.0f, 0.0f, 1.0f, 0.0f }; // Hidden (magenta when fired)
         bullet->Start();
     }
@@ -300,8 +298,9 @@ void WaveSystem::SpawnBoss()
 // ============================================================================
 u32 WaveSystem::GetEnemyCountForRound() const
 {
-    const u32 count = 5 + (currentRound * 2);
-    return count > 20 ? 20 : count;
+    const auto& wc = GameConfig::Wave();
+    const u32 count = (u32)wc.baseEnemyCount + (currentRound * (u32)wc.enemyCountPerRound);
+    return count > (u32)wc.maxEnemyCount ? (u32)wc.maxEnemyCount : count;
 }
 
 // ============================================================================
@@ -317,11 +316,11 @@ bool WaveSystem::ShouldSpawnBoss() const
     // If level config says no boss, never spawn one
     if (!levelConfig.hasBoss)
         return false;
-    
+
     // For non-endless levels with boss enabled, spawn boss on final wave
     if (levelConfig.type != LevelType::ENDLESS)
         return currentWave >= levelConfig.numWaves;
-    
+
     // Endless mode: boss every 5 rounds
     return (currentRound % 5) == 0;
 }

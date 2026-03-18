@@ -5,6 +5,13 @@
 // Uses RapidJSON for all file I/O.
 // Scores are kept sorted highest-first and capped at MAX_ENTRIES (10).
 //
+// NAME FILTER:
+// ----------------------------------------------------------------------------
+//   LoadBlocklist() reads Assets/blocklist.txt once (one word per line).
+//   IsNameBlocked() lowercases the input and checks if any blocked word
+//   appears as a substring - catches words hidden inside longer names.
+//   Submit() calls IsNameBlocked() and returns false if the name is rejected.
+//
 // JSON STRUCTURE written by Save():
 // ----------------------------------------------------------------------------
 //   {
@@ -16,20 +23,89 @@
 // ============================================================================
 #include "Leaderboard.hpp"
 
-// RapidJSON includes (Warning suppressions removed by request)
 #include "include/rapidjson/document.h"
 #include "include/rapidjson/istreamwrapper.h"
 #include "include/rapidjson/ostreamwrapper.h"
 #include "include/rapidjson/prettywriter.h"
 
 #include <algorithm>
+#include <cctype>
+#include <fstream>
 #include <iostream>
-#include <fstream> // Using modern C++ file streams
 
 namespace Leaderboard
 {
     static std::vector<LeaderboardEntry> s_Entries;
     static bool s_Loaded = false;
+
+    // ========================================================================
+    // Blocklist
+    // ========================================================================
+    static std::vector<std::string> s_Blocklist;
+    static bool s_BlocklistLoaded = false;
+
+    // Loads Assets/blocklist.txt into s_Blocklist.
+    // Each non-empty line is treated as one banned word (stored lowercase).
+    // Called automatically the first time IsNameBlocked() runs.
+    static void LoadBlocklist()
+    {
+        s_BlocklistLoaded = true; // Set first so a missing file doesn't retry every frame
+        s_Blocklist.clear();
+
+        std::ifstream ifs(BLOCKLIST_PATH);
+        if (!ifs.is_open())
+        {
+            std::cout << "[Leaderboard] WARNING: '" << BLOCKLIST_PATH
+                << "' not found - name filter is disabled.\n";
+            return;
+        }
+
+        std::string line;
+        while (std::getline(ifs, line))
+        {
+            // Trim trailing carriage return (Windows line endings)
+            if (!line.empty() && line.back() == '\r')
+                line.pop_back();
+
+            // Lowercase the word so comparison is case-insensitive
+            std::transform(line.begin(), line.end(), line.begin(),
+                [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+            if (!line.empty())
+                s_Blocklist.push_back(line);
+        }
+
+        std::cout << "[Leaderboard] Blocklist loaded: "
+            << s_Blocklist.size() << " entries from " << BLOCKLIST_PATH << "\n";
+    }
+
+    // ========================================================================
+    // IsNameBlocked
+    // ========================================================================
+    // Returns true if 'name' contains any blocked word as a substring.
+    // The check is fully case-insensitive.
+    // ========================================================================
+    bool IsNameBlocked(const std::string& name)
+    {
+        if (!s_BlocklistLoaded) LoadBlocklist();
+        if (s_Blocklist.empty()) return false;
+
+        // Lowercase copy of the submitted name for comparison
+        std::string lower = name;
+        std::transform(lower.begin(), lower.end(), lower.begin(),
+            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+        for (const auto& blocked : s_Blocklist)
+        {
+            if (lower.find(blocked) != std::string::npos)
+            {
+                std::cout << "[Leaderboard] Name '" << name
+                    << "' rejected - matched blocked word.\n";
+                return true;
+            }
+        }
+        return false;
+    }
 
     // ========================================================================
     // Load
@@ -38,7 +114,6 @@ namespace Leaderboard
     {
         s_Entries.clear();
 
-        // Using std::ifstream for safe C++ file reading
         std::ifstream ifs(SAVE_PATH);
         if (!ifs.is_open())
         {
@@ -47,7 +122,6 @@ namespace Leaderboard
             return;
         }
 
-        // Wrap the standard input stream for RapidJSON to process
         rapidjson::IStreamWrapper isw(ifs);
         rapidjson::Document doc;
         doc.ParseStream(isw);
@@ -73,13 +147,13 @@ namespace Leaderboard
             s_Entries.push_back(e);
         }
 
-        // Ensure sorted order after load using the C++ standard algorithm
         std::sort(s_Entries.begin(), s_Entries.end(),
             [](const LeaderboardEntry& a, const LeaderboardEntry& b)
             { return a.score > b.score; });
 
         s_Loaded = true;
-        std::cout << "[Leaderboard] Loaded " << s_Entries.size() << " entries from " << SAVE_PATH << "\n";
+        std::cout << "[Leaderboard] Loaded " << s_Entries.size()
+            << " entries from " << SAVE_PATH << "\n";
     }
 
     // ========================================================================
@@ -87,7 +161,6 @@ namespace Leaderboard
     // ========================================================================
     void Save()
     {
-        // Using std::ofstream for safe C++ file writing
         std::ofstream ofs(SAVE_PATH);
         if (!ofs.is_open())
         {
@@ -95,7 +168,6 @@ namespace Leaderboard
             return;
         }
 
-        // Build the JSON document
         rapidjson::Document doc;
         doc.SetObject();
         auto& alloc = doc.GetAllocator();
@@ -106,9 +178,6 @@ namespace Leaderboard
         {
             rapidjson::Value obj(rapidjson::kObjectType);
 
-            // rapidjson::StringRef requires the string to outlive the document,
-            // so we copy strings using the allocator.
-            // Using static_cast to safely match RapidJSON's expected SizeType.
             rapidjson::Value name(e.name.c_str(), static_cast<rapidjson::SizeType>(e.name.size()), alloc);
             rapidjson::Value level(e.level.c_str(), static_cast<rapidjson::SizeType>(e.level.size()), alloc);
 
@@ -122,22 +191,28 @@ namespace Leaderboard
 
         doc.AddMember("entries", arr, alloc);
 
-        // Write with pretty formatting so the file is human-readable.
-        // OStreamWrapper bridges RapidJSON with std::ofstream.
         rapidjson::OStreamWrapper osw(ofs);
         rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
         doc.Accept(writer);
 
-        std::cout << "[Leaderboard] Saved " << s_Entries.size() << " entries to " << SAVE_PATH << "\n";
+        std::cout << "[Leaderboard] Saved " << s_Entries.size()
+            << " entries to " << SAVE_PATH << "\n";
     }
 
     // ========================================================================
     // Submit
     // ========================================================================
-    void Submit(const std::string& name, int score,
+    // Returns false (and does NOT save) if the name is blocked.
+    // Returns true if the name is clean and the score was saved.
+    // ========================================================================
+    bool Submit(const std::string& name, int score,
         const std::string& levelName, int waveReached)
     {
         if (!s_Loaded) Load();
+
+        // --- Name filter ---
+        if (IsNameBlocked(name))
+            return false; // Caller should show an error message to the player
 
         LeaderboardEntry e;
         e.name = name.empty() ? "Player" : name;
@@ -147,13 +222,10 @@ namespace Leaderboard
 
         s_Entries.push_back(e);
 
-        // Sort highest first
         std::sort(s_Entries.begin(), s_Entries.end(),
             [](const LeaderboardEntry& a, const LeaderboardEntry& b)
             { return a.score > b.score; });
 
-        // Keep only top MAX_ENTRIES.
-        // static_cast applied to safely compare sizes.
         if (static_cast<int>(s_Entries.size()) > MAX_ENTRIES)
             s_Entries.resize(MAX_ENTRIES);
 
@@ -163,6 +235,7 @@ namespace Leaderboard
             << " | Wave " << e.wave << "\n";
 
         Save();
+        return true;
     }
 
     // ========================================================================

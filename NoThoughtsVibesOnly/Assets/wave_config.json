@@ -1,0 +1,31 @@
+{
+    "waveBreakDuration":        2.0,
+    "baseEnemyCount":           5,
+    "enemyCountPerRound":       2,
+    "maxEnemyCount":            20,
+
+    "earlyRoundThreshold":      3,
+    "midRoundThreshold":        7,
+
+    "earlyMeleeCount":          "currentRound",
+    "midWalkerDivisor":         2,
+    "midMeleeDivisor":          3,
+    "midRangerDivisor":         4,
+    "lateWalkerDivisor":        3,
+    "lateMeleeDivisor":         3,
+    "lateRangerDivisor":        2,
+
+    "expRewardBase":            50.0,
+    "expRewardPerRound":        25.0,
+
+    "contactDamage": {
+        "melee":        50.0,
+        "boss":         100.0,
+        "walkRanger":   20.0
+    },
+    "knockbackForce": {
+        "melee":        300.0,
+        "boss":         500.0,
+        "walkRanger":   200.0
+    }
+}

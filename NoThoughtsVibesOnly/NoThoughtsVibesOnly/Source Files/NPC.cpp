@@ -4,31 +4,12 @@
 // Four enemy types, each with distinct movement and attack behaviour:
 //
 //   NPC_WALK   (Blue Ship)      : Wanders randomly. No shooting.
-//   NPC_MELEE  (Green Ship)     : Charges directly at the player. Explodes on contact for 40 damage.
+//   NPC_MELEE  (Green Ship)     : Charges directly at the player. Explodes on contact.
 //   NPC_RANGER (Pink Ship)      : Keeps distance; fires single bullets.
 //   NPC_BOSS   (Beige Ship)     : Orbits the player; fires 8-way bullet volleys.
 //
-// INTERACTION WITH WAVESYSTEM:
-// ----------------------------------------------------------------------------
-//   WaveSystem::SpawnWave() creates NPC instances with new NPC() and calls
-//   NPC::Start() to randomise position and set type-specific stats.
-//   Enemy bullets from the pool are assigned to Ranger/Boss in WaveSystem.
-//
-// INTERACTION WITH POWERSYSTEM:
-// ----------------------------------------------------------------------------
-//   On death, the NPC awards XP via powerUpSystem.AddExperience().
-//   On death, the NPC also heals the player: 5 HP base (15 for boss) +
-//   powerUpSystem.GetStats().lifestealBonus (upgraded via POWERUP_LIFESTEAL).
-//
-// EXPLOSION PARTICLE LIFECYCLE:
-// ----------------------------------------------------------------------------
-//   Constructor : explosionParticles is configured via MakeExplosion() preset
-//   Start()     : explosionParticles is re-initialised (in case of reuse)
-//   Update()    : explosionParticles.Update() runs EVERY frame, even after death,
-//                 so the burst can finish playing out after the NPC is removed.
-//                 The guard is: if (!isActive && !hasExploded) skip AI, else tick particles.
-//   Death block : EmitBurst fires all particles at once, hasExploded = true.
-//   GamePage    : Render() is called when hasExploded==true regardless of isActive.
+// All stats (health, speed, scale, fireRate, colours, heal, burst counts, etc.)
+// are now sourced entirely from GameConfig / npc_config.json.
 // ============================================================================
 
 #include "pch.hpp"
@@ -50,6 +31,7 @@ extern PowerUpSystem powerUpSystem; // Owned by GamePage.cpp
 // Textures are loaded ONCE in Game_Load() via NPC_LoadTextures() and freed
 // in Game_Unload() via NPC_UnloadTextures(). Each NPC::Start() points its
 // spriteRenderer.texture at the appropriate cached pointer - no per-NPC load.
+// Texture paths are read from npc_config.json via GameConfig::Npc().
 // ============================================================================
 static AEGfxTexture* s_TexWalk = nullptr;
 static AEGfxTexture* s_TexMelee = nullptr;
@@ -58,16 +40,15 @@ static AEGfxTexture* s_TexBoss = nullptr;
 
 void NPC_LoadTextures()
 {
-    // Load each ship texture once for the whole game session
-    s_TexWalk = AEGfxTextureLoad("Assets/shipBlue_manned.png");
-    s_TexMelee = AEGfxTextureLoad("Assets/shipGreen_manned.png");
-    s_TexRanger = AEGfxTextureLoad("Assets/shipPink_manned.png");
-    s_TexBoss = AEGfxTextureLoad("Assets/shipBeige_manned.png");
+    const auto& nc = GameConfig::Npc();
+    s_TexWalk = AEGfxTextureLoad(nc.walk.texture.c_str());
+    s_TexMelee = AEGfxTextureLoad(nc.melee.texture.c_str());
+    s_TexRanger = AEGfxTextureLoad(nc.ranger.texture.c_str());
+    s_TexBoss = AEGfxTextureLoad(nc.boss.texture.c_str());
 }
 
 void NPC_UnloadTextures()
 {
-    // Null-check before unloading - safe to call even if Load was never called
     if (s_TexWalk) { AEGfxTextureUnload(s_TexWalk);   s_TexWalk = nullptr; }
     if (s_TexMelee) { AEGfxTextureUnload(s_TexMelee);  s_TexMelee = nullptr; }
     if (s_TexRanger) { AEGfxTextureUnload(s_TexRanger); s_TexRanger = nullptr; }
@@ -77,9 +58,6 @@ void NPC_UnloadTextures()
 // ============================================================================
 // NPC Constructor
 // ============================================================================
-// Sets up the explosion particle system using the MakeExplosion preset.
-// This runs before Start() so the system is ready by the time the NPC spawns.
-// ============================================================================
 NPC::NPC()
 {
     explosionParticles = ParticleSystem::MakeExplosion();
@@ -87,9 +65,6 @@ NPC::NPC()
 
 // ============================================================================
 // NPC Destructor
-// ============================================================================
-// Nulls the texture pointer without unloading it - the texture is owned by
-// the shared cache (s_TexWalk etc.) and freed in NPC_UnloadTextures().
 // ============================================================================
 NPC::~NPC()
 {
@@ -101,12 +76,13 @@ NPC::~NPC()
 // ============================================================================
 // Start
 // ============================================================================
-// Spawns the NPC at a random world position at least 100 units from the player.
-// Sets type-specific appearance, stats, and re-initialises explosion particles.
-// Called by WaveSystem after setting NPC::type and NPC::target.
+// Spawns the NPC at a random world position, then applies ALL type-specific
+// stats from npc_config.json via GameConfig::Npc().
 // ============================================================================
 void NPC::Start()
 {
+    const auto& nc = GameConfig::Npc();
+
     // --- Random spawn: keep trying until we're far enough from the player ---
     f32 rX{ 0.0f }, rY{ 0.0f };
     AEVec2 spawnPos{};
@@ -115,27 +91,29 @@ void NPC::Start()
         rX = ((f32)rand() / RAND_MAX) * WORLD_WIDTH - WORLD_WIDTH / 2.0f;
         rY = ((f32)rand() / RAND_MAX) * WORLD_HEIGHT - WORLD_HEIGHT / 2.0f;
         spawnPos = { rX, rY };
-    } while (AEVec2Distance(&spawnPos, &target->transform.position) < 100.0f);
+    } while (AEVec2Distance(&spawnPos, &target->transform.position) < GameConfig::Player().spawnClearRadius);
 
     transform.position = { rX, rY };
-    transform.scale = { 50.0f, 50.0f }; // Same size as player by default
     transform.rotation = 0.0f;
 
     // Reset death/explosion state in case this NPC slot is reused
     hasExploded = false;
 
-    // Re-initialise explosion system - ensures a clean burst even if Start() is called twice
+    // Re-initialise explosion system
     explosionParticles = ParticleSystem::MakeExplosion();
 
-    // --- Type-specific appearance: point texture at the shared cached texture ---
+    // --- Type-specific setup: all values from GameConfig ---
     switch (type)
     {
     case NPC_WALK:
-        NPCSpritesheet = s_TexWalk; // Shared - do not free in destructor
+        NPCSpritesheet = s_TexWalk;
         spriteRenderer.texture = NPCSpritesheet;
         spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
-        baseColour = { 0.0f, 0.0f, 1.0f, 1.0f };
+        transform.scale = { nc.walk.scaleX, nc.walk.scaleY };
+        health = nc.walk.health;
+        speed = nc.walk.speed;
+        baseColour = { nc.walk.colourR,   nc.walk.colourG,   nc.walk.colourB,   1.0f };
         break;
 
     case NPC_MELEE:
@@ -143,7 +121,10 @@ void NPC::Start()
         spriteRenderer.texture = NPCSpritesheet;
         spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
-        baseColour = { 0.0f, 1.0f, 0.0f, 1.0f };
+        transform.scale = { nc.melee.scaleX, nc.melee.scaleY };
+        health = nc.melee.health;
+        speed = nc.melee.speed;
+        baseColour = { nc.melee.colourR,  nc.melee.colourG,  nc.melee.colourB,  1.0f };
         break;
 
     case NPC_RANGER:
@@ -151,8 +132,11 @@ void NPC::Start()
         spriteRenderer.texture = NPCSpritesheet;
         spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
-        fireRate = 2.0f;
-        baseColour = { 1.0f, 0.753f, 0.796f, 1.0f };
+        transform.scale = { nc.ranger.scaleX, nc.ranger.scaleY };
+        health = nc.ranger.health;
+        speed = nc.ranger.speed;
+        fireRate = nc.ranger.fireRate;          // was hardcoded 2.0f
+        baseColour = { nc.ranger.colourR, nc.ranger.colourG, nc.ranger.colourB, 1.0f };
         std::cout << "[NPC] Ranger spawned at ("
             << transform.position.x << ", " << transform.position.y << ")\n";
         break;
@@ -160,13 +144,13 @@ void NPC::Start()
     case NPC_BOSS:
         NPCSpritesheet = s_TexBoss;
         spriteRenderer.texture = NPCSpritesheet;
-        transform.scale = { 150.0f, 150.0f }; // 3x player size
         spriteRenderer.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
         spriteRenderer.meshType = MESH_SQUARE;
-        baseColour = { 0.961f, 0.961f, 0.863f, 1.0f };
-        health = 1000.0f; // 10x normal health
-        speed = 150.0f;  // Slightly slower
-        fireRate = 0.5f;    // Fires twice per second
+        transform.scale = { nc.boss.scaleX, nc.boss.scaleY };   // was hardcoded {150,150}
+        health = nc.boss.health;                        // was hardcoded 1000.0f
+        speed = nc.boss.speed;                         // was hardcoded 150.0f
+        fireRate = nc.boss.fireRate;                      // was hardcoded 0.5f
+        baseColour = { nc.boss.colourR,  nc.boss.colourG,  nc.boss.colourB,  1.0f };
         std::cout << "[BOSS] Boss spawned at ("
             << transform.position.x << ", " << transform.position.y << ")\n";
         break;
@@ -176,50 +160,35 @@ void NPC::Start()
 // ============================================================================
 // Update
 // ============================================================================
-// Called each frame from GamePage Game_Update().
-//
-// KEY DESIGN: explosionParticles.Update() runs unconditionally at the top,
-// BEFORE any isActive/isVisibleToPlayer guards. This is intentional:
-//   - When the NPC dies, isActive becomes false and isVisibleToPlayer becomes false.
-//   - GamePage only calls Update() when isActive==true (see Game_Update).
-//   - But GamePage.cpp calls npc->Update(dt) only if isActive.
-//   - So we need particles to update even after death.
-//
-// SOLUTION: GamePage.cpp must call npc->Update(dt) OR npc->explosionParticles.Update(dt)
-// even when isActive==false. The cleanest approach is to always call Update()
-// for NPCs regardless of isActive, and guard the AI inside this function.
-// See the note in GamePage.cpp Game_Update() section 7.
-// ============================================================================
 void NPC::Update(f32 deltaTime)
 {
     // Always tick explosion particles regardless of death/visibility state.
-    // The burst is fired on the death frame; subsequent frames let it play out.
     explosionParticles.Update(deltaTime);
 
-    // If the NPC is dead (invisible), skip all AI - just let particles finish
     if (!isVisibleToPlayer) return;
 
     // --- Death check ---
     if (health <= 0.0f)
     {
-        // Hide and deactivate the NPC sprite
         isVisibleToPlayer = false;
         isActive = false;
         spriteRenderer.colour.a = 0.0f;
 
-        // Award XP to the player
-        powerUpSystem.AddExperience(25.0f);
+        // Award XP - read from config per type
+        const auto& nc = GameConfig::Npc();
+        const f32 xpReward = (type == NPC_BOSS) ? nc.boss.xpReward
+            : (type == NPC_MELEE) ? nc.melee.xpReward
+            : (type == NPC_RANGER) ? nc.ranger.xpReward
+            : nc.walk.xpReward;
+        powerUpSystem.AddExperience(xpReward);
 
-        // Heal the player on kill.
-        // Base heal is 5 HP. lifestealBonus is added per POWERUP_LIFESTEAL upgrade.
-        // Boss kills give 3x the heal as a reward for the extra difficulty.
-        // Heal is always capped at maxHealth.
+        // Heal the player on kill - base heal from config, capped at maxHealth
         if (target)
         {
             Player* player = dynamic_cast<Player*>(target);
             if (player)
             {
-                const f32 baseHeal = (type == NPC_BOSS) ? 15.0f : 5.0f;
+                const f32 baseHeal = (type == NPC_BOSS) ? nc.boss.baseHeal : nc.walk.baseHeal;
                 const f32 healAmount = baseHeal + powerUpSystem.GetStats().lifestealBonus;
                 player->health += healAmount;
                 if (player->health > player->maxHealth)
@@ -227,19 +196,18 @@ void NPC::Update(f32 deltaTime)
             }
         }
 
-        // Fire the explosion burst - EmitBurst spawns all particles at once.
-        // Boss gets 40 (fills the pool), normal enemies get 20.
+        // Explosion burst - count from config
         if (!hasExploded)
         {
-            hasExploded = true; // Mark so GamePage.cpp knows to call Render()
-            const int burstCount = (type == NPC_BOSS) ? 40 : 20;
+            hasExploded = true;
+            const int burstCount = (type == NPC_BOSS) ? nc.boss.burstCount : nc.walk.burstCount;
             explosionParticles.EmitBurst(transform.position, burstCount);
 
             if (type == NPC_BOSS)
                 std::cout << "[BOSS] Boss defeated!\n";
         }
 
-        return; // Skip AI this frame
+        return;
     }
 
     // --- Dispatch to type-specific AI ---
@@ -255,22 +223,12 @@ void NPC::Update(f32 deltaTime)
 // ============================================================================
 // BomberNPCs (NPC_MELEE)
 // ============================================================================
-// Charges directly toward the player at full speed.
-// Bounces off world boundaries.
-//
-// CONTACT EXPLOSION:
-// ----------------------------------------------------------------------------
-//   When within collision range of the player, the melee NPC explodes:
-//     - Deals MELEE_EXPLOSION_DAMAGE instantly to the player (if not invulnerable)
-//     - Fires its own explosion particle burst
-//     - Kills itself (health = 0 triggers the death block on the next Update)
-//   This makes melee NPCs a genuine threat - one touch is a significant hit.
-// ============================================================================
 void NPC::BomberNPCs(f32 deltaTime)
 {
     if (!target || health <= 0.0f) return;
 
-    // Move straight toward the player
+    const auto& nc = GameConfig::Npc();
+
     AEVec2 dir{};
     AEVec2 disp = {
         target->transform.position.x - transform.position.x,
@@ -287,12 +245,12 @@ void NPC::BomberNPCs(f32 deltaTime)
     const f32 hw = transform.scale.x / 2.0f;
     const f32 hh = transform.scale.y / 2.0f;
 
-    if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw;  velocity.x = -velocity.x; }
-    if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw;  velocity.x = -velocity.x; }
-    if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh;  velocity.y = -velocity.y; }
-    if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh;  velocity.y = -velocity.y; }
+    if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw; velocity.x = -velocity.x; }
+    if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw; velocity.x = -velocity.x; }
+    if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh; velocity.y = -velocity.y; }
+    if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh; velocity.y = -velocity.y; }
 
-    // --- Contact explosion: blow up on touching the player ---
+    // --- Contact explosion ---
     const f32 dx = target->transform.position.x - transform.position.x;
     const f32 dy = target->transform.position.y - transform.position.y;
     const f32 dist = sqrtf(dx * dx + dy * dy);
@@ -301,25 +259,20 @@ void NPC::BomberNPCs(f32 deltaTime)
 
     if (dist < playerRadius + selfRadius)
     {
-        // Deal explosion damage to the player (bypassed if invulnerable)
         Player* player = dynamic_cast<Player*>(target);
         if (player && !player->invulnAbility.IsActive())
         {
-            const f32 MELEE_EXPLOSION_DAMAGE = 40.0f; // One-shot burst damage on contact
-            player->health -= MELEE_EXPLOSION_DAMAGE;
+            player->health -= nc.melee.explosionDamage;
             if (player->health < 0.0f) player->health = 0.0f;
-            std::cout << "[Melee] Contact explosion! -" << MELEE_EXPLOSION_DAMAGE << " HP to player\n";
+            std::cout << "[Melee] Contact explosion! -" << nc.melee.explosionDamage << " HP to player\n";
         }
 
-        // Trigger explosion burst immediately (death block will also fire it,
-        // but hasExploded guard ensures it only emits once)
         if (!hasExploded)
         {
             hasExploded = true;
-            explosionParticles.EmitBurst(transform.position, 20);
+            explosionParticles.EmitBurst(transform.position, nc.melee.explosionBurst);
         }
 
-        // Kill self - death block in Update() handles cleanup next frame
         health = 0.0f;
     }
 }
@@ -327,13 +280,11 @@ void NPC::BomberNPCs(f32 deltaTime)
 // ============================================================================
 // RangerNPCs (NPC_RANGER)
 // ============================================================================
-// Maintains distance from the player (retreats when closer than 250 units).
-// Changes random wander direction every 2 seconds.
-// Fires one bullet from its assigned pool at the player on fireCooldown.
-// ============================================================================
 void NPC::RangerNPCs(f32 deltaTime)
 {
     if (!target || health <= 0.0f) return;
+
+    const auto& rc = GameConfig::Npc().ranger;
 
     // --- Periodic random direction change ---
     changeDirTimer -= deltaTime;
@@ -342,16 +293,15 @@ void NPC::RangerNPCs(f32 deltaTime)
         f32 randX = ((f32)rand() / RAND_MAX) * 2.0f - 1.0f;
         f32 randY = ((f32)rand() / RAND_MAX) * 2.0f - 1.0f;
         f32 len = sqrtf(randX * randX + randY * randY);
-
         if (len > 0.0f)
         {
             velocity.x = (randX / len) * speed;
             velocity.y = (randY / len) * speed;
         }
-        changeDirTimer = 2.0f;
+        changeDirTimer = rc.changeDirInterval;
     }
 
-    // --- Movement: apply velocity, then override if too close to player ---
+    // --- Movement ---
     transform.position.x += velocity.x * deltaTime;
     transform.position.y += velocity.y * deltaTime;
 
@@ -361,17 +311,15 @@ void NPC::RangerNPCs(f32 deltaTime)
     };
     const f32 dist = sqrtf(toPlayer.x * toPlayer.x + toPlayer.y * toPlayer.y);
 
-    if (dist < 250.0f)
+    if (dist < rc.retreatDistance)
     {
-        // Too close - retreat directly away from player
         velocity.x = -(toPlayer.x / dist) * speed;
         velocity.y = -(toPlayer.y / dist) * speed;
     }
     else
     {
-        // Gradually slow random wander so ranger doesn't rocket off
-        velocity.x *= 0.95f;
-        velocity.y *= 0.95f;
+        velocity.x *= rc.velocityDamping;
+        velocity.y *= rc.velocityDamping;
     }
 
     transform.position.x += velocity.x * deltaTime;
@@ -383,33 +331,31 @@ void NPC::RangerNPCs(f32 deltaTime)
     const f32 hw = transform.scale.x / 2.0f;
     const f32 hh = transform.scale.y / 2.0f;
 
-    if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw;  velocity.x = -velocity.x; }
-    if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw;  velocity.x = -velocity.x; }
-    if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh;  velocity.y = -velocity.y; }
-    if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh;  velocity.y = -velocity.y; }
+    if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw; velocity.x = -velocity.x; }
+    if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw; velocity.x = -velocity.x; }
+    if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh; velocity.y = -velocity.y; }
+    if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh; velocity.y = -velocity.y; }
 
-    // --- Shooting: find an inactive bullet assigned to this NPC ---
+    // --- Shooting ---
     fireCooldown -= deltaTime;
     if (fireCooldown <= 0.0f)
     {
         for (auto& obj : gamePageObj)
         {
             if (obj->ObjectType != SHOT) continue;
-
             Bullet* b = dynamic_cast<Bullet*>(obj);
             if (!b || b->owner != BulletOwner::ENEMY) continue;
             if (b->isActive || b->startPos != this)   continue;
 
-            // Aim directly at the player using the cached toPlayer direction
             AEVec2 dir = toPlayer;
             const f32 mag = sqrtf(dir.x * dir.x + dir.y * dir.y);
             if (mag > 0.0f) { dir.x /= mag; dir.y /= mag; }
 
             b->Activate(this, dir, BulletOwner::ENEMY);
-            b->spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f }; // Red bullet
+            b->spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f };
 
             std::cout << "[Ranger] Fired!\n";
-            break; // One bullet per fire tick
+            break;
         }
         fireCooldown = fireRate;
     }
@@ -418,27 +364,24 @@ void NPC::RangerNPCs(f32 deltaTime)
 // ============================================================================
 // WalkNPCs (NPC_WALK)
 // ============================================================================
-// Wanders randomly by picking a new velocity direction every 2 seconds.
-// Bounces off world boundaries.
-// ============================================================================
 void NPC::WalkNPCs(f32 deltaTime)
 {
     if (!target || health <= 0.0f) return;
 
-    // Pick a new random direction every changeDirTimer seconds
+    const auto& wc = GameConfig::Npc().walk;
+
     changeDirTimer -= deltaTime;
     if (changeDirTimer <= 0.0f)
     {
         f32 randX = ((f32)rand() / RAND_MAX) * 2.0f - 1.0f;
         f32 randY = ((f32)rand() / RAND_MAX) * 2.0f - 1.0f;
         f32 len = sqrtf(randX * randX + randY * randY);
-
         if (len > 0.0f)
         {
             velocity.x = (randX / len) * speed;
             velocity.y = (randY / len) * speed;
         }
-        changeDirTimer = 2.0f;
+        changeDirTimer = wc.changeDirInterval;
     }
 
     transform.position.x += velocity.x * deltaTime;
@@ -450,25 +393,20 @@ void NPC::WalkNPCs(f32 deltaTime)
     const f32 hw = transform.scale.x / 2.0f;
     const f32 hh = transform.scale.y / 2.0f;
 
-    if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw;  velocity.x = -velocity.x; }
-    if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw;  velocity.x = -velocity.x; }
-    if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh;  velocity.y = -velocity.y; }
-    if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh;  velocity.y = -velocity.y; }
+    if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw; velocity.x = -velocity.x; }
+    if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw; velocity.x = -velocity.x; }
+    if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh; velocity.y = -velocity.y; }
+    if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh; velocity.y = -velocity.y; }
 }
 
 // ============================================================================
 // BossNPCs (NPC_BOSS)
 // ============================================================================
-// Orbits the player at ~300 units, adjusting velocity to maintain distance:
-//   dist > orbitDist + margin : Moves straight toward player (closing in)
-//   dist < orbitDist - margin : Backs away (too close)
-//   otherwise                 : Moves perpendicular (circular orbit)
-//
-// Fires 8 bullets in a ring pattern every fireRate seconds.
-// ============================================================================
 void NPC::BossNPCs(f32 deltaTime)
 {
     if (!target || health <= 0.0f) return;
+
+    const auto& bc = GameConfig::Npc().boss;
 
     // --- Orbit movement ---
     AEVec2 toPlayer = {
@@ -476,30 +414,26 @@ void NPC::BossNPCs(f32 deltaTime)
         target->transform.position.y - transform.position.y
     };
     const f32 dist = sqrtf(toPlayer.x * toPlayer.x + toPlayer.y * toPlayer.y);
-    const f32 orbitDist = 300.0f;
-    const f32 orbitMargin = 50.0f;
+    const f32 orbitDist = bc.orbitDistance;   // was hardcoded 300.0f
+    const f32 orbitMargin = bc.orbitMargin;      // was hardcoded 50.0f
 
     if (dist > 0.0f)
     {
-        toPlayer.x /= dist; // Normalise in-place
+        toPlayer.x /= dist;
         toPlayer.y /= dist;
 
         if (dist > orbitDist + orbitMargin)
         {
-            // Too far - close in directly
             velocity.x = toPlayer.x * speed;
             velocity.y = toPlayer.y * speed;
         }
         else if (dist < orbitDist - orbitMargin)
         {
-            // Too close - back off
             velocity.x = -toPlayer.x * speed;
             velocity.y = -toPlayer.y * speed;
         }
         else
         {
-            // In orbit band - move perpendicular for circular motion
-            // Rotating toPlayer 90deg: (-y, x)
             velocity.x = -toPlayer.y * speed;
             velocity.y = toPlayer.x * speed;
         }
@@ -514,40 +448,37 @@ void NPC::BossNPCs(f32 deltaTime)
     const f32 hw = transform.scale.x / 2.0f;
     const f32 hh = transform.scale.y / 2.0f;
 
-    if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw;  velocity.x = -velocity.x; }
-    if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw;  velocity.x = -velocity.x; }
-    if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh;  velocity.y = -velocity.y; }
-    if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh;  velocity.y = -velocity.y; }
+    if (transform.position.x > halfW - hw) { transform.position.x = halfW - hw; velocity.x = -velocity.x; }
+    if (transform.position.x < -halfW + hw) { transform.position.x = -halfW + hw; velocity.x = -velocity.x; }
+    if (transform.position.y > halfH - hh) { transform.position.y = halfH - hh; velocity.y = -velocity.y; }
+    if (transform.position.y < -halfH + hh) { transform.position.y = -halfH + hh; velocity.y = -velocity.y; }
 
-    // --- 8-way bullet volley ---
+    // --- 8-way bullet volley (volley count from config) ---
     fireCooldown -= deltaTime;
     if (fireCooldown <= 0.0f)
     {
         int bulletsFired = 0;
+        const int volleyCount = bc.bulletVolleyCount;   // was hardcoded 8
 
         for (auto& obj : gamePageObj)
         {
             if (obj->ObjectType != SHOT) continue;
-
             Bullet* b = dynamic_cast<Bullet*>(obj);
             if (!b || b->owner != BulletOwner::ENEMY) continue;
             if (b->isActive || b->startPos != this)   continue;
 
-            // Get the angle from boss to player
             const f32 baseAngle = atan2f(
                 target->transform.position.y - transform.position.y,
                 target->transform.position.x - transform.position.x
             );
-
-            // Spread 8 bullets evenly around that direction
-            const f32 angle = baseAngle + bulletsFired * (2.0f * 3.14159f / 8.0f);
+            const f32  angle = baseAngle + bulletsFired * (2.0f * 3.14159f / volleyCount);
             const AEVec2 dir = { cosf(angle), sinf(angle) };
 
             b->Activate(this, dir, BulletOwner::ENEMY);
-            b->spriteRenderer.colour = { 1.0f, 0.0f, 1.0f, 1.0f }; // Magenta
+            b->spriteRenderer.colour = { 1.0f, 0.0f, 1.0f, 1.0f };
 
             ++bulletsFired;
-            if (bulletsFired >= 8) break;
+            if (bulletsFired >= volleyCount) break;
         }
 
         if (bulletsFired > 0)
