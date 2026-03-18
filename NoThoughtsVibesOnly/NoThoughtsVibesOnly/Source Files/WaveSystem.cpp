@@ -52,9 +52,9 @@ void WaveSystem::Init(Player* player)
     waveBreakTimer = 0.0f;
     levelConfig = ::GetLevelConfig(LevelType::ENDLESS); // Default, will be overwritten by SetLevelConfig
 
-    std::cout << "\n==============================================\n"
-        << "    WAVE SYSTEM READY - Press C to begin!\n"
-        << "==============================================\n\n";
+    //std::cout << "\n==============================================\n"
+    //    << "    WAVE SYSTEM READY - Press C to begin!\n"
+    //    << "==============================================\n\n";
 }
 
 // ============================================================================
@@ -99,24 +99,24 @@ void WaveSystem::Update(f32 deltaTime)
 
     if (currentWave > 0 && IsWaveComplete())
     {
-        std::cout << "\n==============================================\n"
-            << "    WAVE " << currentWave << " CLEARED!\n";
+        //std::cout << "\n==============================================\n"
+        //    << "    WAVE " << currentWave << " CLEARED!\n";
 
         // Show different message for final wave vs continuing
-        if (levelConfig.type != LevelType::ENDLESS && currentWave >= levelConfig.numWaves)
-        {
-            std::cout << "    *** LEVEL COMPLETE! ***\n";
-            // Don't set inWaveBreak - let IsLevelComplete() return true
-        }
-        else
-        {
-            std::cout << "    Next wave in " << WAVE_BREAK_DURATION << "s...\n";
+        //if (levelConfig.type != LevelType::ENDLESS && currentWave >= levelConfig.numWaves)
+        //{
+        //    //std::cout << "    *** LEVEL COMPLETE! ***\n";
+        //    // Don't set inWaveBreak - let IsLevelComplete() return true
+        //}
+        //else
+        //{
+            //std::cout << "    Next wave in " << WAVE_BREAK_DURATION << "s...\n";
             ++currentRound;
             inWaveBreak = true;
             waveBreakTimer = WAVE_BREAK_DURATION;
-        }
+        //}
 
-        std::cout << "==============================================\n\n";
+        //std::cout << "==============================================\n\n";
     }
 }
 
@@ -132,19 +132,19 @@ void WaveSystem::StartNextWave()
 
     const WaveConfig config = GenerateWaveConfig();
 
-    std::cout << "\n==============================================\n"
-        << "    WAVE " << currentWave;
+    //std::cout << "\n==============================================\n"
+    //    << "    WAVE " << currentWave;
 
     // Show wave progress for non-endless levels
-    if (levelConfig.type != LevelType::ENDLESS)
-        std::cout << " / " << levelConfig.numWaves;
+    //if (levelConfig.type != LevelType::ENDLESS)
+    //    std::cout << " / " << levelConfig.numWaves;
 
-    std::cout << "  (Round " << currentRound << ")\n"
-        << "    Walkers: " << config.walkerCount
-        << "  Melee: " << config.meleeCount
-        << "  Rangers: " << config.rangerCount
-        << (config.hasBoss ? "  [BOSS WAVE!]" : "")
-        << "\n==============================================\n\n";
+    //std::cout << "  (Round " << currentRound << ")\n"
+    //    << "    Walkers: " << config.walkerCount
+    //    << "  Melee: " << config.meleeCount
+    //    << "  Rangers: " << config.rangerCount
+    //    << (config.hasBoss ? "  [BOSS WAVE!]" : "")
+    //    << "\n==============================================\n\n";
 
     SpawnWave(config);
 }
@@ -245,15 +245,15 @@ void WaveSystem::SpawnWave(const WaveConfig& config)
             bullet->Start();
         }
 
-        std::cout << "[WaveSystem] Ranger #" << (i + 1) << " spawned with 3 bullets\n";
+        //std::cout << "[WaveSystem] Ranger #" << (i + 1) << " spawned with 3 bullets\n";
     }
 
     // --- Boss ---
     if (config.hasBoss) SpawnBoss();
 
     const u32 totalSpawned = config.walkerCount + config.meleeCount + config.rangerCount;
-    std::cout << "[WaveSystem] Spawned " << totalSpawned << " enemies"
-        << (config.hasBoss ? " + BOSS" : "") << "\n";
+    //std::cout << "[WaveSystem] Spawned " << totalSpawned << " enemies"
+    //    << (config.hasBoss ? " + BOSS" : "") << "\n";
 }
 
 // ============================================================================
@@ -267,9 +267,9 @@ void WaveSystem::SpawnBoss()
 {
     if (!playerRef) return;
 
-    std::cout << "\n==============================================\n"
-        << "    *** BOSS INCOMING! ***\n"
-        << "==============================================\n\n";
+    //std::cout << "\n==============================================\n"
+    //    << "    *** BOSS INCOMING! ***\n"
+    //    << "==============================================\n\n";
 
     NPC* boss = new NPC();
     boss->ObjectType = NP;
@@ -288,7 +288,7 @@ void WaveSystem::SpawnBoss()
         bullet->Start();
     }
 
-    std::cout << "[WaveSystem] Boss spawned with 8 bullets\n";
+    //std::cout << "[WaveSystem] Boss spawned with 8 bullets\n";
 }
 
 // ============================================================================

@@ -264,7 +264,7 @@ void Player::Update(f32 deltaTime)
                 {
                     static f32 flashTimer = 0.0f;
                     flashTimer += deltaTime;
-                    if (flashTimer > 0.2f) { std::cout << "[BOSS] Contact! dmg/sec\n"; flashTimer = 0.0f; }
+                    //if (flashTimer > 0.2f) { std::cout << "[BOSS] Contact! dmg/sec\n"; flashTimer = 0.0f; }
                 }
                 break;
             case NPC_WALK:

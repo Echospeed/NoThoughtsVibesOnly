@@ -60,7 +60,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     AESysSetWindowTitle("Alpha Engine - Window");
     AESysReset();
 
-    printf("[Main] Engine initialised.\n");
+    //printf("[Main] Engine initialised.\n");
 
     AudioManager::Init();
 
@@ -144,6 +144,6 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     // --- Engine shutdown ---
     AESysExit();
 
-    printf("[Main] Engine shut down cleanly.\n");
+    //printf("[Main] Engine shut down cleanly.\n");
     return 0;
 }

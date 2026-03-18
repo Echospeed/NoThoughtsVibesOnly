@@ -13,7 +13,7 @@ void AudioManager::Init()
     LoadAudio("Shoot", "Assets/Audio/ShootingSound.wav", false);
     LoadAudio("LevelUp", "Assets/Audio/Powerupsfx.wav", false);
 
-    std::cout << "[AudioManager] Native AEAudio assets and groups loaded.\n";
+    //std::cout << "[AudioManager] Native AEAudio assets and groups loaded.\n";
 }
 
 void AudioManager::LoadAudio(const std::string& name, const char* filepath, bool isMusic)
@@ -31,7 +31,7 @@ void AudioManager::LoadAudio(const std::string& name, const char* filepath, bool
     }
     else
     {
-        std::cout << "[AudioManager] ERROR: Alpha Engine failed to load: " << filepath << "\n";
+        //std::cout << "[AudioManager] ERROR: Alpha Engine failed to load: " << filepath << "\n";
     }
 }
 
@@ -44,7 +44,7 @@ void AudioManager::PlaySFX(const std::string& name)
     }
     else
     {
-        std::cout << "[AudioManager] WARNING: SFX '" << name << "' not loaded!\n";
+        //std::cout << "[AudioManager] WARNING: SFX '" << name << "' not loaded!\n";
     }
 }
 
@@ -60,7 +60,7 @@ void AudioManager::PlayMusic(const std::string& name)
     }
     else
     {
-        std::cout << "[AudioManager] WARNING: Music '" << name << "' not loaded!\n";
+        //std::cout << "[AudioManager] WARNING: Music '" << name << "' not loaded!\n";
     }
 }
 
@@ -103,7 +103,7 @@ void AudioManager::StopMusic(const std::string& name)
     }
     else
     {
-        std::cout << "[AudioManager] WARNING: Cannot stop '" << targetName << "', not found!\n";
+        //std::cout << "[AudioManager] WARNING: Cannot stop '" << targetName << "', not found!\n";
     }
 
     if (s_CurrentMusicName == targetName)
@@ -126,7 +126,7 @@ void AudioManager::Free()
         }
     }
     s_AudioMap.clear();
-    std::cout << "[AudioManager] Native AEAudio resources and groups freed.\n";
+    //std::cout << "[AudioManager] Native AEAudio resources and groups freed.\n";
 }
 
 void AudioManager::SetMasterVolume(float volume)

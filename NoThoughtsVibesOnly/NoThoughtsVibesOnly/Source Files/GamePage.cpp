@@ -179,15 +179,15 @@ void Game_Init()
     waveSystem.SetLevelConfig(g_CurrentLevel);
     powerUpSystem.Init();
 
-    std::cout << "\n==============================================\n"
-        << "    LEVEL LOADED: ";
-    switch (g_CurrentLevel.type)
-    {
-    case LevelType::LEVEL_1: std::cout << "Level 1 (5 waves, no boss)";           break;
-    case LevelType::LEVEL_2: std::cout << "Level 2 (10 waves, boss on final wave)"; break;
-    case LevelType::ENDLESS: std::cout << "Endless Mode";                           break;
-    }
-    std::cout << "\n==============================================\n\n";
+    //std::cout << "\n==============================================\n"
+    //    << "    LEVEL LOADED: ";
+    //switch (g_CurrentLevel.type)
+    //{
+    //case LevelType::LEVEL_1: std::cout << "Level 1 (5 waves, no boss)";           break;
+    //case LevelType::LEVEL_2: std::cout << "Level 2 (10 waves, boss on final wave)"; break;
+    //case LevelType::ENDLESS: std::cout << "Endless Mode";                           break;
+    //}
+    //std::cout << "\n==============================================\n\n";
 
     Player* player = dynamic_cast<Player*>(pPlayer);
     if (player) player->powerUpSystem = &powerUpSystem;

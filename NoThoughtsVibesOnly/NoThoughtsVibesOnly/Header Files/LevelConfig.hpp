@@ -67,7 +67,7 @@ inline bool LoadLevelFromJson(const std::string& filepath, LevelConfig& cfg)
     std::ifstream ifs(filepath);
     if (!ifs.is_open())
     {
-        std::cout << "[LevelConfig] WARNING: Could not open '" << filepath << "' - using defaults.\n";
+        //std::cout << "[LevelConfig] WARNING: Could not open '" << filepath << "' - using defaults.\n";
         return false;
     }
 
@@ -78,7 +78,7 @@ inline bool LoadLevelFromJson(const std::string& filepath, LevelConfig& cfg)
 
     if (doc.HasParseError())
     {
-        std::cout << "[LevelConfig] WARNING: Parse error in '" << filepath << "' - using defaults.\n";
+        //std::cout << "[LevelConfig] WARNING: Parse error in '" << filepath << "' - using defaults.\n";
         return false;
     }
 
@@ -105,7 +105,7 @@ inline bool LoadLevelFromJson(const std::string& filepath, LevelConfig& cfg)
     if (doc.HasMember("description") && doc["description"].IsString())
         cfg.description = doc["description"].GetString();
 
-    std::cout << "[LevelConfig] Loaded '" << cfg.name << "' from " << filepath << "\n";
+    //std::cout << "[LevelConfig] Loaded '" << cfg.name << "' from " << filepath << "\n";
     return true;
 }
 

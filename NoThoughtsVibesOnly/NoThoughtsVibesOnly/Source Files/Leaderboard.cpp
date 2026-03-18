@@ -55,8 +55,8 @@ namespace Leaderboard
         std::ifstream ifs(BLOCKLIST_PATH);
         if (!ifs.is_open())
         {
-            std::cout << "[Leaderboard] WARNING: '" << BLOCKLIST_PATH
-                << "' not found - name filter is disabled.\n";
+            //std::cout << "[Leaderboard] WARNING: '" << BLOCKLIST_PATH
+            //    << "' not found - name filter is disabled.\n";
             return;
         }
 
@@ -75,8 +75,8 @@ namespace Leaderboard
                 s_Blocklist.push_back(line);
         }
 
-        std::cout << "[Leaderboard] Blocklist loaded: "
-            << s_Blocklist.size() << " entries from " << BLOCKLIST_PATH << "\n";
+        //std::cout << "[Leaderboard] Blocklist loaded: "
+        //    << s_Blocklist.size() << " entries from " << BLOCKLIST_PATH << "\n";
     }
 
     // ========================================================================
@@ -99,8 +99,8 @@ namespace Leaderboard
         {
             if (lower.find(blocked) != std::string::npos)
             {
-                std::cout << "[Leaderboard] Name '" << name
-                    << "' rejected - matched blocked word.\n";
+                //std::cout << "[Leaderboard] Name '" << name
+                //    << "' rejected - matched blocked word.\n";
                 return true;
             }
         }
@@ -117,7 +117,7 @@ namespace Leaderboard
         std::ifstream ifs(SAVE_PATH);
         if (!ifs.is_open())
         {
-            std::cout << "[Leaderboard] No save file found - starting fresh.\n";
+            //std::cout << "[Leaderboard] No save file found - starting fresh.\n";
             s_Loaded = true;
             return;
         }
@@ -128,7 +128,7 @@ namespace Leaderboard
 
         if (doc.HasParseError() || !doc.HasMember("entries") || !doc["entries"].IsArray())
         {
-            std::cout << "[Leaderboard] WARNING: Corrupt save file - starting fresh.\n";
+            //std::cout << "[Leaderboard] WARNING: Corrupt save file - starting fresh.\n";
             s_Loaded = true;
             return;
         }
@@ -152,8 +152,8 @@ namespace Leaderboard
             { return a.score > b.score; });
 
         s_Loaded = true;
-        std::cout << "[Leaderboard] Loaded " << s_Entries.size()
-            << " entries from " << SAVE_PATH << "\n";
+        //std::cout << "[Leaderboard] Loaded " << s_Entries.size()
+        //    << " entries from " << SAVE_PATH << "\n";
     }
 
     // ========================================================================
@@ -164,7 +164,7 @@ namespace Leaderboard
         std::ofstream ofs(SAVE_PATH);
         if (!ofs.is_open())
         {
-            std::cout << "[Leaderboard] ERROR: Could not write to " << SAVE_PATH << "\n";
+            //std::cout << "[Leaderboard] ERROR: Could not write to " << SAVE_PATH << "\n";
             return;
         }
 
@@ -195,8 +195,8 @@ namespace Leaderboard
         rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
         doc.Accept(writer);
 
-        std::cout << "[Leaderboard] Saved " << s_Entries.size()
-            << " entries to " << SAVE_PATH << "\n";
+        //std::cout << "[Leaderboard] Saved " << s_Entries.size()
+        //    << " entries to " << SAVE_PATH << "\n";
     }
 
     // ========================================================================
@@ -229,10 +229,10 @@ namespace Leaderboard
         if (static_cast<int>(s_Entries.size()) > MAX_ENTRIES)
             s_Entries.resize(MAX_ENTRIES);
 
-        std::cout << "[Leaderboard] New entry: " << e.name
-            << " | " << e.score << " pts"
-            << " | " << e.level
-            << " | Wave " << e.wave << "\n";
+        //std::cout << "[Leaderboard] New entry: " << e.name
+        //    << " | " << e.score << " pts"
+        //    << " | " << e.level
+        //    << " | Wave " << e.wave << "\n";
 
         Save();
         return true;
@@ -254,7 +254,7 @@ namespace Leaderboard
     {
         s_Entries.clear();
         Save();
-        std::cout << "[Leaderboard] Cleared.\n";
+        //std::cout << "[Leaderboard] Cleared.\n";
     }
 
 } // namespace Leaderboard

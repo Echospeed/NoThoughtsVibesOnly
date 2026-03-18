@@ -137,8 +137,8 @@ void NPC::Start()
         speed = nc.ranger.speed;
         fireRate = nc.ranger.fireRate;          // was hardcoded 2.0f
         baseColour = { nc.ranger.colourR, nc.ranger.colourG, nc.ranger.colourB, 1.0f };
-        std::cout << "[NPC] Ranger spawned at ("
-            << transform.position.x << ", " << transform.position.y << ")\n";
+        //std::cout << "[NPC] Ranger spawned at ("
+        //    << transform.position.x << ", " << transform.position.y << ")\n";
         break;
 
     case NPC_BOSS:
@@ -151,8 +151,8 @@ void NPC::Start()
         speed = nc.boss.speed;                         // was hardcoded 150.0f
         fireRate = nc.boss.fireRate;                      // was hardcoded 0.5f
         baseColour = { nc.boss.colourR,  nc.boss.colourG,  nc.boss.colourB,  1.0f };
-        std::cout << "[BOSS] Boss spawned at ("
-            << transform.position.x << ", " << transform.position.y << ")\n";
+        //std::cout << "[BOSS] Boss spawned at ("
+        //    << transform.position.x << ", " << transform.position.y << ")\n";
         break;
     }
 }
@@ -203,8 +203,8 @@ void NPC::Update(f32 deltaTime)
             const int burstCount = (type == NPC_BOSS) ? nc.boss.burstCount : nc.walk.burstCount;
             explosionParticles.EmitBurst(transform.position, burstCount);
 
-            if (type == NPC_BOSS)
-                std::cout << "[BOSS] Boss defeated!\n";
+            //if (type == NPC_BOSS)
+            //    std::cout << "[BOSS] Boss defeated!\n";
         }
 
         return;
@@ -264,7 +264,7 @@ void NPC::BomberNPCs(f32 deltaTime)
         {
             player->health -= nc.melee.explosionDamage;
             if (player->health < 0.0f) player->health = 0.0f;
-            std::cout << "[Melee] Contact explosion! -" << nc.melee.explosionDamage << " HP to player\n";
+            //std::cout << "[Melee] Contact explosion! -" << nc.melee.explosionDamage << " HP to player\n";
         }
 
         if (!hasExploded)
@@ -354,7 +354,7 @@ void NPC::RangerNPCs(f32 deltaTime)
             b->Activate(this, dir, BulletOwner::ENEMY);
             b->spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f };
 
-            std::cout << "[Ranger] Fired!\n";
+            //std::cout << "[Ranger] Fired!\n";
             break;
         }
         fireCooldown = fireRate;
@@ -481,8 +481,8 @@ void NPC::BossNPCs(f32 deltaTime)
             if (bulletsFired >= volleyCount) break;
         }
 
-        if (bulletsFired > 0)
-            std::cout << "[BOSS] Fired " << bulletsFired << " bullets!\n";
+        //if (bulletsFired > 0)
+        //    std::cout << "[BOSS] Fired " << bulletsFired << " bullets!\n";
 
         fireCooldown = fireRate;
     }

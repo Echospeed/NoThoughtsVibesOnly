@@ -34,7 +34,7 @@ void SplashPage_Load()
 {
     const char* path = "Assets/DigiPen_Singapore_WEB_RED.png";
     ss_DigiPen_Logo = AEGfxTextureLoad(path);
-    printf("[Splash] Loaded texture '%s' -> %p\n", path, (void*)ss_DigiPen_Logo);
+    //printf("[Splash] Loaded texture '%s' -> %p\n", path, (void*)ss_DigiPen_Logo);
 
     Meshes::CreateCircleMesh(); // Required by StarBackground
     StarBackground::Init();

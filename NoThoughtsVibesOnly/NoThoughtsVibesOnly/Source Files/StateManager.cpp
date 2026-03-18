@@ -186,7 +186,7 @@ IState* StateManager::CreateState(GameState state)
 // ============================================================================
 void StateManager::LoadCurrentState()
 {
-    printf("[StateManager] Loading state %d\n", current);
+    //printf("[StateManager] Loading state %d\n", current);
 
     delete currentState;
     currentState = CreateState(current);

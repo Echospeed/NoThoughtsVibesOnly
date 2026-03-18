@@ -49,8 +49,8 @@ void PowerUpSystem::Init()
 
     waitingForUpgrade = false;
 
-    std::cout << "[PowerUp] Initialised. Level 1, 0/"
-        << stats.expToNextLevel << " XP needed.\n";
+    //std::cout << "[PowerUp] Initialised. Level 1, 0/"
+    //    << stats.expToNextLevel << " XP needed.\n";
 }
 
 // ============================================================================
@@ -64,8 +64,8 @@ void PowerUpSystem::AddExperience(f32 amount)
 {
     stats.currentExp += amount;
 
-    std::cout << "[XP] +" << amount << " XP  ("
-        << stats.currentExp << " / " << stats.expToNextLevel << ")\n";
+    ////std::cout << "[XP] +" << amount << " XP  ("
+    //    << stats.currentExp << " / " << stats.expToNextLevel << ")\n";
 
     if (CheckLevelUp())
     {
@@ -89,10 +89,10 @@ bool PowerUpSystem::CheckLevelUp()
     stats.expToNextLevel *= GameConfig::PowerUp().expScalePerLevel;
     ++stats.level;
 
-    std::cout << "\n============================================\n"
-        << "           LEVEL UP! -> Level " << stats.level << "\n"
-        << "       Choose your power-up!\n"
-        << "============================================\n\n";
+    //std::cout << "\n============================================\n"
+    //    << "           LEVEL UP! -> Level " << stats.level << "\n"
+    //    << "       Choose your power-up!\n"
+    //    << "============================================\n\n";
 
     return true;
 }
@@ -170,7 +170,7 @@ void PowerUpSystem::ApplyPowerUp(PowerUpType type, Player* player)
     case POWERUP_SPEED:
         stats.speedBonus += pc.speedUpgradeBonus;
         ++stats.speedUpgrades;
-        std::cout << "[Upgrade] Speed -> " << stats.GetTotalSpeed() << "\n";
+        //std::cout << "[Upgrade] Speed -> " << stats.GetTotalSpeed() << "\n";
         break;
 
     case POWERUP_BULLET_DAMAGE:
@@ -187,22 +187,22 @@ void PowerUpSystem::ApplyPowerUp(PowerUpType type, Player* player)
             b->spriteRenderer.colour = { 1.0f, 1.0f, 0.0f, 0.0f };
             b->Start();
         }
-        std::cout << "[Upgrade] Bullet damage -> " << stats.GetTotalBulletDamage()
-            << "  Bullet count -> " << stats.bulletCount << "\n";
+        //std::cout << "[Upgrade] Bullet damage -> " << stats.GetTotalBulletDamage()
+        //    << "  Bullet count -> " << stats.bulletCount << "\n";
         break;
 
     case POWERUP_AOE_DAMAGE:
         stats.aoeRadiusBonus += pc.aoeRadiusBonus;
         stats.aoeDamageBonus += pc.aoeDamageBonus;
         ++stats.aoeUpgrades;
-        std::cout << "[Upgrade] AoE radius -> " << stats.GetTotalAoeRadius()
-            << "  damage -> " << stats.GetTotalAoeDamage() << "/sec\n";
+        //std::cout << "[Upgrade] AoE radius -> " << stats.GetTotalAoeRadius()
+        //    << "  damage -> " << stats.GetTotalAoeDamage() << "/sec\n";
         break;
 
     case POWERUP_LIFESTEAL:
         stats.lifestealBonus += pc.lifestealBonus;
-        std::cout << "[Upgrade] Lifesteal -> +"
-            << (pc.lifestealBaseHealPerKill + stats.lifestealBonus) << " HP per kill\n";
+        //std::cout << "[Upgrade] Lifesteal -> +"
+        //    << (pc.lifestealBaseHealPerKill + stats.lifestealBonus) << " HP per kill\n";
         break;
     }
 

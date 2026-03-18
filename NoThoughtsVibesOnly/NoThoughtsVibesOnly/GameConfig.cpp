@@ -25,14 +25,14 @@ namespace
         std::ifstream ifs(path);
         if (!ifs.is_open())
         {
-            std::cout << "[GameConfig] WARNING: '" << path << "' not found - using defaults.\n";
+            //std::cout << "[GameConfig] WARNING: '" << path << "' not found - using defaults.\n";
             return false;
         }
         rapidjson::IStreamWrapper isw(ifs);
         doc.ParseStream(isw);
         if (doc.HasParseError())
         {
-            std::cout << "[GameConfig] WARNING: Parse error in '" << path << "' - using defaults.\n";
+            //std::cout << "[GameConfig] WARNING: Parse error in '" << path << "' - using defaults.\n";
             return false;
         }
         return true;
@@ -245,7 +245,7 @@ void GameConfig::Load()
     }
 
     s_Loaded = true;
-    std::cout << "[GameConfig] All configs loaded.\n";
+    //std::cout << "[GameConfig] All configs loaded.\n";
 }
 
 // ============================================================================
