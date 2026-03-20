@@ -31,6 +31,7 @@
 #include "Particles.hpp"
 #include "LevelConfig.hpp"
 #include "PausePage.hpp"
+#include <random>
 
 // ============================================================================
 // World constants
@@ -48,29 +49,38 @@ struct Star
     f32 brightness;
     bool farLayer;
 };
-
+//============================================================================
+// Generate a fixed array of stars with random positions, sizes, and brightness.
+// Stars in the far layer are dimmer and smaller to enhance the parallax effect.
+//============================================================================
 static const int STAR_COUNT = 600;
 static Star      s_Stars[STAR_COUNT];
 
 static void GenerateStars()
 {
-    srand((unsigned int)AEGetTime(nullptr));
+    std::mt19937 rng(static_cast<unsigned int>(AEGetTime(nullptr)));
+    std::uniform_real_distribution<f32> distX(-WORLD_WIDTH / 2.0f, WORLD_WIDTH / 2.0f);
+    std::uniform_real_distribution<f32> distY(-WORLD_HEIGHT / 2.0f, WORLD_HEIGHT / 2.0f);
+    std::uniform_real_distribution<f32> distBright(0.35f, 1.0f);
+    std::uniform_real_distribution<f32> distSizeNear(1.5f, 3.0f);
+    std::uniform_real_distribution<f32> distSizeFar(0.8f, 2.0f);
+
     for (int i = 0; i < STAR_COUNT; ++i)
     {
-        s_Stars[i].x = ((f32)rand() / RAND_MAX) * WORLD_WIDTH - WORLD_WIDTH / 2.0f;
-        s_Stars[i].y = ((f32)rand() / RAND_MAX) * WORLD_HEIGHT - WORLD_HEIGHT / 2.0f;
-        s_Stars[i].brightness = 0.35f + ((f32)rand() / RAND_MAX) * 0.65f;
+        s_Stars[i].x = distX(rng);
+        s_Stars[i].y = distY(rng);
+        s_Stars[i].brightness = distBright(rng);
 
         if (i < 400)
         {
             s_Stars[i].farLayer = true;
-            s_Stars[i].size = 0.8f + ((f32)rand() / RAND_MAX) * 1.2f;
+            s_Stars[i].size = distSizeFar(rng);
             s_Stars[i].brightness *= 0.7f;
         }
         else
         {
             s_Stars[i].farLayer = false;
-            s_Stars[i].size = 1.5f + ((f32)rand() / RAND_MAX) * 1.5f;
+            s_Stars[i].size = distSizeNear(rng);
         }
     }
 }

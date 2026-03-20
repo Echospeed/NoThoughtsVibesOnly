@@ -251,7 +251,7 @@ void WaveSystem::SpawnWave(const WaveConfig& config)
     // --- Boss ---
     if (config.hasBoss) SpawnBoss();
 
-    const u32 totalSpawned = config.walkerCount + config.meleeCount + config.rangerCount;
+    //const u32 totalSpawned = config.walkerCount + config.meleeCount + config.rangerCount;
     //std::cout << "[WaveSystem] Spawned " << totalSpawned << " enemies"
     //    << (config.hasBoss ? " + BOSS" : "") << "\n";
 }

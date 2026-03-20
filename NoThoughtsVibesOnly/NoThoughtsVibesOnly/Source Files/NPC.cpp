@@ -17,9 +17,10 @@
 #include "NPCType.hpp"
 #include "Player.hpp"
 #include "GamePage.hpp"
-#include <math.h>
+#include <cmath>
 #include <iostream>
 #include "Bullet.hpp"
+#include <random>
 #include "PowerUpSystem.hpp"
 
 extern PowerUpSystem powerUpSystem; // Owned by GamePage.cpp
@@ -88,8 +89,11 @@ void NPC::Start()
     AEVec2 spawnPos{};
     do
     {
-        rX = ((f32)rand() / RAND_MAX) * WORLD_WIDTH - WORLD_WIDTH / 2.0f;
-        rY = ((f32)rand() / RAND_MAX) * WORLD_HEIGHT - WORLD_HEIGHT / 2.0f;
+        static std::mt19937 rng(std::random_device{}());
+        std::uniform_real_distribution<f32> distX(-WORLD_WIDTH / 2.0f, WORLD_WIDTH / 2.0f);
+        std::uniform_real_distribution<f32> distY(-WORLD_HEIGHT / 2.0f, WORLD_HEIGHT / 2.0f);
+        rX = distX(rng);
+        rY = distY(rng);
         spawnPos = { rX, rY };
     } while (AEVec2Distance(&spawnPos, &target->transform.position) < GameConfig::Player().spawnClearRadius);
 
@@ -290,8 +294,10 @@ void NPC::RangerNPCs(f32 deltaTime)
     changeDirTimer -= deltaTime;
     if (changeDirTimer <= 0.0f)
     {
-        f32 randX = ((f32)rand() / RAND_MAX) * 2.0f - 1.0f;
-        f32 randY = ((f32)rand() / RAND_MAX) * 2.0f - 1.0f;
+        static std::mt19937 rng(std::random_device{}());
+        std::uniform_real_distribution<f32> dist(-1.0f, 1.0f);
+        f32 randX = dist(rng);
+        f32 randY = dist(rng);
         f32 len = sqrtf(randX * randX + randY * randY);
         if (len > 0.0f)
         {
@@ -373,8 +379,10 @@ void NPC::WalkNPCs(f32 deltaTime)
     changeDirTimer -= deltaTime;
     if (changeDirTimer <= 0.0f)
     {
-        f32 randX = ((f32)rand() / RAND_MAX) * 2.0f - 1.0f;
-        f32 randY = ((f32)rand() / RAND_MAX) * 2.0f - 1.0f;
+        static std::mt19937 rng(std::random_device{}());
+        std::uniform_real_distribution<f32> dist(-1.0f, 1.0f);
+        f32 randX = dist(rng);
+        f32 randY = dist(rng);
         f32 len = sqrtf(randX * randX + randY * randY);
         if (len > 0.0f)
         {

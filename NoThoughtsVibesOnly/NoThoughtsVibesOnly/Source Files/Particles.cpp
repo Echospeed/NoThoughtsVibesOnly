@@ -117,6 +117,8 @@
 #include "Util.hpp"
 #include <cstdlib>
 #include <cmath>
+#include <random>
+
 
 // ============================================================================
 // RandRange
@@ -126,10 +128,11 @@
 // ============================================================================
 f32 ParticleSystem::RandRange(f32 lo, f32 hi) const
 {
-    if (lo >= hi) return lo;                                        // Degenerate range - just return lo
-    return lo + (static_cast<f32>(rand()) / RAND_MAX) * (hi - lo); // Scale [0,1] rand into [lo, hi]
+    if (lo >= hi) return lo;
+    static std::mt19937 rng(std::random_device{}());
+    std::uniform_real_distribution<f32> dist(lo, hi);
+    return dist(rng);
 }
-
 // ============================================================================
 // Init
 // ============================================================================

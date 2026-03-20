@@ -24,6 +24,7 @@
 // ============================================================================
 
 #include "pch.hpp"
+#include <random>
 #include "StarBackground.hpp"
 
 namespace StarBackground
@@ -43,22 +44,26 @@ namespace StarBackground
     void Init()
     {
         s_Time = 0.0f;
-        srand(42);
 
-        const float fieldW = 2400.0f;
-        const float fieldH = 1350.0f;
+        std::mt19937 rng(42); // fixed seed - same stars every run
+        std::uniform_real_distribution<float> distX(-1200.0f, 1200.0f);
+        std::uniform_real_distribution<float> distY(-675.0f, 675.0f);
+        std::uniform_real_distribution<float> distBright(0.3f, 1.0f);
+        std::uniform_real_distribution<float> distTwinkle(0.0f, 6.28f);
+        std::uniform_real_distribution<float> distSizeFar(0.8f, 2.0f);
+        std::uniform_real_distribution<float> distSizeNear(1.5f, 3.5f);
 
         for (int i = 0; i < STAR_COUNT; ++i)
         {
-            s_Stars[i].x = ((float)rand() / RAND_MAX) * fieldW - fieldW / 2.0f;
-            s_Stars[i].y = ((float)rand() / RAND_MAX) * fieldH - fieldH / 2.0f;
-            s_Stars[i].brightness = 0.3f + ((float)rand() / RAND_MAX) * 0.7f;
-            s_Stars[i].twinklePhase = ((float)rand() / RAND_MAX) * 6.28f;
+            s_Stars[i].x = distX(rng);
+            s_Stars[i].y = distY(rng);
+            s_Stars[i].brightness = distBright(rng);
+            s_Stars[i].twinklePhase = distTwinkle(rng);
 
             if (i < 400)
-                s_Stars[i].size = 0.8f + ((float)rand() / RAND_MAX) * 1.2f;
+                s_Stars[i].size = distSizeFar(rng);
             else
-                s_Stars[i].size = 1.5f + ((float)rand() / RAND_MAX) * 2.0f;
+                s_Stars[i].size = distSizeNear(rng);
         }
     }
 
