@@ -44,7 +44,7 @@ void PowerUpSystem::Init()
     stats.baseBulletDamage = pc.baseBulletDamage;
     stats.baseAoeRadius = pc.baseAoeRadius;
     stats.baseAoeDamage = pc.baseAoeDamage;
-    stats.bulletCount = (u32)pc.startingBulletCount;
+    stats.bulletCount = static_cast<u32>(pc.startingBulletCount);
     stats.expToNextLevel = pc.expToFirstLevel;
 
     waitingForUpgrade = false;
@@ -176,7 +176,7 @@ void PowerUpSystem::ApplyPowerUp(PowerUpType type, Player* player)
     case POWERUP_BULLET_DAMAGE:
         stats.bulletDamageBonus += pc.bulletDamageBonus;
         ++stats.bulletDamageUpgrades;
-        stats.bulletCount += (u32)pc.bulletCountBonus;
+        stats.bulletCount += static_cast<u32>(pc.bulletCountBonus);
         for (int i = 0; i < pc.bulletCountBonus; ++i)
         {
             Bullet* b = new Bullet();

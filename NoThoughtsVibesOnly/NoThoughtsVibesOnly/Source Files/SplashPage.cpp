@@ -59,11 +59,11 @@ void SplashPage_Init()
 // ============================================================================
 void SplashPage_Update()
 {
-    StarBackground::Update((f32)AEFrameRateControllerGetFrameTime());
+    StarBackground::Update(static_cast<f32>(AEFrameRateControllerGetFrameTime()));
     StarBackground::DrawBackground();
     StarBackground::Draw();
 
-    timer += (f32)AEFrameRateControllerGetFrameTime();
+    timer += static_cast<f32>(AEFrameRateControllerGetFrameTime());
 
     if (timer > 6.0f || AEInputCheckTriggered(AEVK_SPACE))
         StateManagerChangeState(STATE_MENU);

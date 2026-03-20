@@ -77,7 +77,7 @@ namespace Meshes
         AEGfxMeshStart();
 
         const int steps = 32;
-        const f32 angleStep = (2.0f * 3.14159f) / (f32)steps;
+        const f32 angleStep = (2.0f * 3.14159f) / static_cast<f32>(steps);
 
         for (int i = 0; i < steps; ++i)
         {

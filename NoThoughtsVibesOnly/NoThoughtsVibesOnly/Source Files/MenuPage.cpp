@@ -140,7 +140,7 @@ void Main_Init()
 // ============================================================================
 void Main_Update()
 {
-    const f32 dt = (f32)AEFrameRateControllerGetFrameTime();
+    const f32 dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
     s_TitleTime += dt; // Advance title animation
     StarBackground::Update(dt);
     StarBackground::DrawBackground();

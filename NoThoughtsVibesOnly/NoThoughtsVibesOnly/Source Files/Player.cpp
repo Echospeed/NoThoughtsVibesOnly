@@ -48,7 +48,7 @@ void Player::Start()
     shootCooldown = pc.shootSuppressCooldown;
     reloadDuration = pc.reloadDuration;
     isReloading = false;
-    ammoInMagazine = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount
+    ammoInMagazine = powerUpSystem ? static_cast<int>(powerUpSystem->GetStats().bulletCount)
         : GameConfig::Player().startingAmmo;
 
     smokePS = ParticleSystem::MakeSmoke();
@@ -164,7 +164,7 @@ void Player::Update(f32 deltaTime)
                 b->transform.position = { -1000.0f, -1000.0f };
             }
             // Restore magazine count from the power-up system
-            ammoInMagazine = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount
+            ammoInMagazine = powerUpSystem ? static_cast<int>(powerUpSystem->GetStats().bulletCount)
                 : GameConfig::Player().startingAmmo;
             isReloading = false;
         }
@@ -226,7 +226,7 @@ void Player::Update(f32 deltaTime)
 
             // Pulse alpha between 0.4 and 1.0 at ~4 Hz so the NPC visibly flickers,
             // indicating it is inside the AoE and taking damage.
-            const f32 pulse = 0.7f + 0.3f * sinf((f32)AEGetTime(nullptr) * 25.0f);
+            const f32 pulse = 0.7f + 0.3f * sinf(static_cast<f32>(AEGetTime(nullptr)) * 25.0f);
             np->spriteRenderer.colour = {
                 np->baseColour.r,
                 np->baseColour.g * 0.3f, // drain green/blue to tint red
@@ -264,7 +264,7 @@ void Player::Update(f32 deltaTime)
                 {
                     static f32 flashTimer = 0.0f;
                     flashTimer += deltaTime;
-                    //if (flashTimer > 0.2f) { std::cout << "[BOSS] Contact! dmg/sec\n"; flashTimer = 0.0f; }
+                    if (flashTimer > 0.2f) { std::cout << "[BOSS] Contact! dmg/sec\n"; flashTimer = 0.0f; }
                 }
                 break;
             case NPC_WALK:
@@ -328,8 +328,8 @@ void Player::Update(f32 deltaTime)
 
     Rect currentFrame = playerAnimator.GetCurrentFrameRect();
 
-    spriteRenderer.uOffset = (f32)currentFrame.x / 2000.0f;
-    spriteRenderer.vOffset = (f32)currentFrame.y / 2500.0f;
+    spriteRenderer.uOffset = static_cast<f32>(currentFrame.x) / 2000.0f;
+    spriteRenderer.vOffset = static_cast<f32>(currentFrame.y) / 2500.0f;
 
     playerAnimator.Update(deltaTime);
 }
@@ -377,7 +377,7 @@ void Player::Shoot(AEVec2 dir)
 // ============================================================================
 void Player::TriggerReload()
 {
-    const int maxAmmo = powerUpSystem ? (int)powerUpSystem->GetStats().bulletCount
+    const int maxAmmo = powerUpSystem ? static_cast<int>(powerUpSystem->GetStats().bulletCount)
         : GameConfig::Player().startingAmmo;
     if (isReloading || ammoInMagazine == maxAmmo) return;
     isReloading = true;

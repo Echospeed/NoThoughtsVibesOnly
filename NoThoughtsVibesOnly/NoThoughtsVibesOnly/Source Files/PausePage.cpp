@@ -87,7 +87,7 @@ void PausePage_Update()
     if (AEInputCheckTriggered(AEVK_TAB)) { isPaused = false; StateManagerChangeState(STATE_RESTART); return; }
     if (AEInputCheckTriggered(AEVK_Q)) { isPaused = false; StateManagerChangeState(STATE_MENU);    return; }
 
-    const f32 dt = (f32)AEFrameRateControllerGetFrameTime();
+    const f32 dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
     resumeBtn->Update(dt);
     restartBtn->Update(dt);
     menuBtn->Update(dt);

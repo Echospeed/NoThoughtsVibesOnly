@@ -23,7 +23,6 @@
 #include "NPC.hpp"
 #include "GameObjectType.hpp"
 #include <vector>
-#include <iostream>
 #include "Bullet.hpp"
 #include "WaveSystem.hpp"
 #include "PowerUpSystem.hpp"
@@ -262,7 +261,7 @@ void Game_Update()
 
     if (isPaused) return;
 
-    const f32 dt = (f32)AEFrameRateControllerGetFrameTime();
+    const f32 dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
     s_GameTime += dt;
 
     // Power-up selection
@@ -352,8 +351,8 @@ void Game_Update()
                 : GameConfig::Gameplay().scorePerWaveNormal;
 
             g_FinalWaveCount = (g_CurrentLevel.type == LevelType::ENDLESS)
-                ? (int)waveSystem.GetCurrentRound()
-                : (int)waveSystem.GetCurrentWave();
+                ? static_cast<s8>(waveSystem.GetCurrentRound())
+                : static_cast<s8>(waveSystem.GetCurrentWave());
             g_FinalScore = g_FinalWaveCount * scorePerWave;
 
             AudioManager::StopMusic("GameMusic");
@@ -370,8 +369,8 @@ void Game_Update()
             : GameConfig::Gameplay().scorePerWaveNormal;
 
         g_FinalWaveCount = (g_CurrentLevel.type == LevelType::ENDLESS)
-            ? (int)waveSystem.GetCurrentRound()
-            : (int)waveSystem.GetCurrentWave();
+            ? static_cast<s8>(waveSystem.GetCurrentRound())
+            : static_cast<s8>(waveSystem.GetCurrentWave());
         g_FinalScore = g_FinalWaveCount * scorePerWave;
 
         AudioManager::StopMusic("GameMusic");
@@ -419,8 +418,10 @@ void Game_Draw()
     if (s_ShakeTimer > 0.0f)
     {
         const f32 intensity = s_ShakeTimer / 0.2f;
-        shakeX = (((f32)rand() / RAND_MAX) * 2.0f - 1.0f) * s_ShakeMagnitude * intensity;
-        shakeY = (((f32)rand() / RAND_MAX) * 2.0f - 1.0f) * s_ShakeMagnitude * intensity;
+        static std::mt19937 shakeRng(std::random_device{}());
+        std::uniform_real_distribution<f32> shakeDist(-1.0f, 1.0f);
+        shakeX = shakeDist(shakeRng) * s_ShakeMagnitude * intensity;
+        shakeY = shakeDist(shakeRng) * s_ShakeMagnitude * intensity;
     }
     AEGfxSetCamPosition(sCamX + shakeX, sCamY + shakeY);
     AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
@@ -602,7 +603,7 @@ void Game_Draw()
         gameUI.DrawPowerUpScreen();
 
     if (AEInputCheckTriggered(AEVK_U))
-        powerUpSystem.AddExperience(100.0f);
+        powerUpSystem.AddExperience(200.0f);
 
     // Wave announcement banner
     if (s_WaveAnnounceTimer > 0.0f && !powerUpSystem.IsWaitingForUpgrade())

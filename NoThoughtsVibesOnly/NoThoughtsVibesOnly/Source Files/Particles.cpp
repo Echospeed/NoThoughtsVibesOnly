@@ -240,7 +240,7 @@ void ParticleSystem::Update(f32 dt)
 {
     // Backwards: when we remove element [i] via swap-and-pop, the new [i]
     // is the old last element - already processed since we go high->low.
-    for (int i = static_cast<int>(activeParticles.size()) - 1; i >= 0; --i)
+    for (int i = static_cast<s8>(activeParticles.size()) - 1; i >= 0; --i)
     {
         const int idx = activeParticles[i];
         Particle& p = particles[idx];
