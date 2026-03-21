@@ -269,13 +269,13 @@ void Game_Update()
     {
         const PowerUp* choices = powerUpSystem.GetPowerUpChoices();
         Player* player = dynamic_cast<Player*>(pPlayer);
-        if (levelUpSFXFlag) { AudioManager::PlaySFX("LevelUp"); levelUpSFXFlag = false; }
+        if (levelUpSFXFlag) { AudioManager::PlaySFX("LevelUp"); levelUpSFXFlag = false; AudioManager::PauseMusic("GameMusic");}
         if (AEInputCheckTriggered(AEVK_1)) powerUpSystem.ApplyPowerUp(choices[0].type, player);
         else if (AEInputCheckTriggered(AEVK_2)) powerUpSystem.ApplyPowerUp(choices[1].type, player);
         else if (AEInputCheckTriggered(AEVK_3)) powerUpSystem.ApplyPowerUp(choices[2].type, player);
         return;
     }
-    else { levelUpSFXFlag = true; }
+    else { levelUpSFXFlag = true;  AudioManager::ResumeMusic("GameMusic"); }
 
     waveSystem.Update(dt);
 

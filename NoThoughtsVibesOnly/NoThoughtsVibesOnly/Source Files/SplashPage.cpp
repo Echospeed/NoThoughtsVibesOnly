@@ -49,7 +49,7 @@ void SplashPage_Init()
 {
     //AEGfxSetBackgroundColor(0.1f, 0.1f, 0.15f);
     timer = 0.0f;
-    AudioManager::PlaySFX("MenuMusic");
+    AudioManager::PlayMusic("MenuMusic");
 }
 
 // ============================================================================
