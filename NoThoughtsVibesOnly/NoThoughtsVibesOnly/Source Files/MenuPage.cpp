@@ -149,7 +149,7 @@ void Main_Update()
     // Credits image draws here so it sits behind the back button
     if (currentMenuState == MENU_CREDITS)
     {
-        creditsImg.colour.a = 0.4f; // Semi-transparent so stars bleed through
+        creditsImg.colour.a = {1.0f}; // Semi-transparent so stars bleed through
         DrawSpriteRenderer(creditsImg, creditTransform);
     }
 
