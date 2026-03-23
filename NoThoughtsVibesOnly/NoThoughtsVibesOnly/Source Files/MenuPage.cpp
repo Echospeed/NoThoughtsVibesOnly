@@ -188,34 +188,72 @@ void Main_Draw()
     {
         controlsText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 300.0f }, { 1.0f, 0.0f, 0.0f });
+        // ---- LEFT SIDE: Player Controls ----
+        infoText = TextRenderer(fontPath, 0.8f, { -400.0f, 300.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+        infoText << "-- PLAYER --";
+        infoText.Draw();
+
+        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, 220.0f }, { 1.0f, 0.0f, 0.0f });
         infoText << "W, A, S, D  -  Move";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 200.0f }, { 1.0f, 0.498f, 1.0f });
+        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, 140.0f }, { 1.0f, 0.498f, 1.0f });
         infoText << "Left Click  -  Shoot";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 100.0f }, { 1.0f, 1.0f, 0.008f });
+        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, 60.0f }, { 1.0f, 1.0f, 0.008f });
         infoText << "E  -  Activate Invincibility";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.008f });
+        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, -20.0f }, { 0.0f, 1.0f, 0.008f });
         infoText << "ESC  -  Pause";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -100.0f }, { 0.0f, 1.0f, 1.0f });
-        infoText << "R  -  Restart";
+        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, -100.0f }, { 0.0f, 1.0f, 1.0f });
+        infoText << "R  -  Reload";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 1.0f, { 0.0f, -200.0f }, { 0.694f, 0.612f, 0.851f });
+        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, -180.0f }, { 0.694f, 0.612f, 0.851f });
         infoText << "Q  -  Menu";
         infoText.Draw();
 
-        // Sync all three parts of the back button so text/collider/visual align
-        backButton->transform.SetPosition(0.0f, -350.0f);
-        backButton->collider.position = { 0.0f, -350.0f };
-        backButton->textRenderer.SetPosition({ 0.0f, -350.0f });
+        // ---- RIGHT SIDE: Enemy Guide ----
+        infoText = TextRenderer(fontPath, 0.8f, { 400.0f, 300.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+        infoText << "-- ENEMIES --";
+        infoText.Draw();
+
+        infoText = TextRenderer(fontPath, 0.7f, { 400.0f, 220.0f }, { 0.0f, 0.8f, 1.0f, 1.0f });
+        infoText << "BLUE  -  Walker";
+        infoText.Draw();
+        infoText = TextRenderer(fontPath, 0.6f, { 400.0f, 160.0f }, { 0.7f, 0.7f, 0.7f, 1.0f });
+        infoText << "Wanders randomly";
+        infoText.Draw();
+
+        infoText = TextRenderer(fontPath, 0.7f, { 400.0f, 80.0f }, { 0.0f, 1.0f, 0.4f, 1.0f });
+        infoText << "GREEN  -  Melee";
+        infoText.Draw();
+        infoText = TextRenderer(fontPath, 0.6f, { 400.0f, 20.0f }, { 0.7f, 0.7f, 0.7f, 1.0f });
+        infoText << "Charges and explodes";
+        infoText.Draw();
+
+        infoText = TextRenderer(fontPath, 0.7f, { 400.0f, -60.0f }, { 1.0f, 0.4f, 0.8f, 1.0f });
+        infoText << "PINK  -  Ranger";
+        infoText.Draw();
+        infoText = TextRenderer(fontPath, 0.6f, { 400.0f, -120.0f }, { 0.7f, 0.7f, 0.7f, 1.0f });
+        infoText << "Keeps distance, shoots";
+        infoText.Draw();
+
+        infoText = TextRenderer(fontPath, 0.7f, { 400.0f, -200.0f }, { 1.0f, 0.9f, 0.6f, 1.0f });
+        infoText << "BEIGE  -  Boss";
+        infoText.Draw();
+        infoText = TextRenderer(fontPath, 0.6f, { 400.0f, -260.0f }, { 0.7f, 0.7f, 0.7f, 1.0f });
+        infoText << "Orbits, fires 8-way";
+        infoText.Draw();
+
+        // Back button centered at bottom
+        backButton->transform.SetPosition(0.0f, -380.0f);
+        backButton->collider.position = { 0.0f, -380.0f };
+        backButton->textRenderer.SetPosition({ 0.0f, -380.0f });
     }
     else if (currentMenuState == MENU_CREDITS)
     {

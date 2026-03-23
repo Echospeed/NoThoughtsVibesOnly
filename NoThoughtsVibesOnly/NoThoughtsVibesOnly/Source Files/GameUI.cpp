@@ -188,7 +188,7 @@ void GameUI::DrawHealthText()
     if (!player) return;
 
     playerHealth = TextRenderer(gameFont, 1.0f, { -500.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-    playerHealth << "HP: " << std::fixed << std::setprecision(0) << player->health << " / " << player->maxHealth;
+    playerHealth << "HP: " << static_cast<int>( player->health) << " / " << player->maxHealth;
     playerHealth.Draw();
 
     // ============================================================================
@@ -314,7 +314,7 @@ void GameUI::DrawXPBar()
 
     // Level and XP text
     playerXP = TextRenderer(gameFont, 0.8f, { barX, barY + 28.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-    playerXP << "LVL " << stats.level << "   " << (int)stats.currentExp << " / " << (int)stats.expToNextLevel << " XP";
+    playerXP << "LVL " << stats.level << "   " << static_cast<int>(stats.currentExp) << " / " << static_cast<int>(stats.expToNextLevel) << " XP";
     playerXP.Draw();
 }
 
