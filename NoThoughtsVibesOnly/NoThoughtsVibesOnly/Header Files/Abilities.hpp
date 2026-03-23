@@ -66,10 +66,15 @@ class InvulnerabilityAbility : public Ability
 {
 public:
     InvulnerabilityAbility()
-        : Ability(
-            GameConfig::Gameplay().invulnDuration,   // was hardcoded 3.0f
-            GameConfig::Gameplay().invulnCooldown    // was hardcoded 30.0f
-        )
+        : Ability(0.0f, 0.0f)
     {
+    }
+
+    void Update(f32 dt) override
+    {
+        maxDuration = GameConfig::Gameplay().invulnDuration;
+        maxCooldown = GameConfig::Gameplay().invulnCooldown;
+
+        Ability::Update(dt);
     }
 };

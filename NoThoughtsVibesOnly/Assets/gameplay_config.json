@@ -23,5 +23,5 @@
     "scorePerWaveNormal":   100,
     "scorePerWaveEndless":  150,
     "invulnDuration":       3.0,
-    "invulnCooldown":       30.0
+    "invulnCooldown":       10.0
 }

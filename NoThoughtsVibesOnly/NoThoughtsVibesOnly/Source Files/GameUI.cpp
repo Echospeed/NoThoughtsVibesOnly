@@ -455,31 +455,44 @@ void GameUI::DrawAbilities()
 
     const Ability& ability = player->invulnAbility;
 
-    // 1. Draw Background Box based on state
+    f32 r = 0.2f, g = 0.5f, b = 0.9f, a = 0.9f;  // Base: Deep Blue (Ready)
+    f32 ar = 0.5f, ag = 0.8f, ab = 1.0f, aa = 0.95f; // Accent: Bright Cyan
+
     if (ability.IsActive())
     {
-        // Gold / Yellow when active
-        DrawRect(boxX, boxY, boxW, boxH, 1.0f, 0.8f, 0.0f, 1.0f);
+        r = 0.8f, g = 0.6f, b = 0.0f, a = 1.0f;  // Base: Deep Gold
+        ar = 1.0f, ag = 0.9f, ab = 0.4f, aa = 1.0f;  // Accent: Bright Yellow
     }
     else if (ability.IsOnCooldown())
     {
-        // Dark gray and faded when on cooldown
-        DrawRect(boxX, boxY, boxW, boxH, 0.3f, 0.3f, 0.3f, 0.8f);
+        r = 0.2f, g = 0.2f, b = 0.2f, a = 0.8f;  // Base: Dark Gray
+        ar = 0.4f, ag = 0.4f, ab = 0.4f, aa = 0.8f;  // Accent: Light Gray
+    }
 
-        // Draw the countdown timer
+    // Top rim
+    DrawRect(boxX, boxY + 20.0f, 76.0f, 10.0f, r, g, b, a);
+    // Main upper body
+    DrawRect(boxX, boxY + 2.5f, 70.0f, 25.0f, r, g, b, a);
+    // Upper taper
+    DrawRect(boxX, boxY - 15.0f, 56.0f, 15.0f, r, g, b, a);
+    // Lower taper
+    DrawRect(boxX, boxY - 27.5f, 38.0f, 10.0f, r, g, b, a);
+    // Bottom tip
+    DrawRect(boxX, boxY - 37.5f, 16.0f, 12.0f, r, g, b, a);
+    // Draw the Inner Emblem
+    DrawRect(boxX, boxY - 5.0f, 12.0f, 45.0f, ar, ag, ab, aa);
+    DrawRect(boxX, boxY + 5.0f, 40.0f, 10.0f, ar, ag, ab, aa);
+
+    // Draw the countdown timer
+    if (ability.IsOnCooldown())
+    {
         abilityTimerText = TextRenderer(gameFont, 0.8f, { boxX, boxY }, { 1.0f, 1.0f, 1.0f, 1.0f });
-        abilityTimerText << static_cast<s8>(std::ceil(ability.GetCooldownRemaining())) << "s";
+        abilityTimerText << static_cast<int>(std::ceil(ability.GetCooldownRemaining())) << "s";
         abilityTimerText.Draw();
     }
-    else
-    {
-        // Bright Blue when ready to use
-        DrawRect(boxX, boxY, boxW, boxH, 0.2f, 0.6f, 1.0f, 0.9f);
-    }
 
-    // 2. Draw Label
-    abilityKeyText = TextRenderer(gameFont, 0.5f, { boxX, boxY - 60.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-    abilityKeyText << "[E] INVULN";
+    abilityKeyText = TextRenderer(gameFont, 0.8f, { boxX, boxY - 70.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    abilityKeyText << "[E]";
     abilityKeyText.Draw();
 }
 
