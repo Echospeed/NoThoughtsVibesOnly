@@ -41,6 +41,8 @@ namespace
     int         s_FinalScore = 0;     // Copied from g_FinalScore on Init
     std::string s_PlayerName = "";    // Name typed by the player
     bool        s_NameSubmitted = false; // True once Enter is pressed
+    bool s_NameRejected = false;  // True if Submit() rejected the name as inappropriate
+
 }
 
 TextRenderer WinText;
@@ -129,13 +131,22 @@ void WinPage_Update()
         // Enter confirms the name and submits the score to the leaderboard
         if (AEInputCheckTriggered(AEVK_RETURN) && !s_PlayerName.empty())
         {
-            // FIX: Use g_FinalWaveCount saved in Game_Update() so the leaderboard
-            //      entry accurately shows how far the player got this run.
-            Leaderboard::Submit(s_PlayerName, s_FinalScore,
+            // Submit() returns false if the name contains a blocked word
+            bool accepted = Leaderboard::Submit(s_PlayerName, s_FinalScore,
                 g_CurrentLevel.name,
                 g_FinalWaveCount);
-            s_ScoreSubmitted = true;
-            s_NameSubmitted = true;
+            if (accepted)
+            {
+                s_ScoreSubmitted = true;
+                s_NameSubmitted = true;
+                s_NameRejected = false;
+            }
+            else
+            {
+                // Name was blocked - clear it so player can try again
+                s_NameRejected = true;
+                s_PlayerName = "";
+            }
         }
 
         // Letter keys A-Z � build up the player's name one character at a time
@@ -182,6 +193,14 @@ void WinPage_Draw()
         TextRenderer hint(fontPath, 0.45f, { 0.0f, -250.0f }, { 0.6f, 0.6f, 0.6f, 1.0f });
         hint << "Press ENTER to confirm  |  BACKSPACE to delete";
         hint.Draw();
+
+        // Show rejection message if the last submission was blocked
+        if (s_NameRejected)
+        {
+            TextRenderer errMsg(fontPath, 0.65f, { 0.0f, -400.0f }, { 1.0f, 0.15f, 0.15f, 1.0f });
+            errMsg << "INVALID NAME - please choose another";
+            errMsg.Draw();
+        }
     }
 
     // -------------------------------------------------------------------------

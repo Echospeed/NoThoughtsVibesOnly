@@ -351,8 +351,8 @@ void Game_Update()
                 : GameConfig::Gameplay().scorePerWaveNormal;
 
             g_FinalWaveCount = (g_CurrentLevel.type == LevelType::ENDLESS)
-                ? static_cast<s8>(waveSystem.GetCurrentRound())
-                : static_cast<s8>(waveSystem.GetCurrentWave());
+                ? static_cast<int>(waveSystem.GetCurrentRound())
+                : static_cast<int>(waveSystem.GetCurrentWave());
             g_FinalScore = g_FinalWaveCount * scorePerWave;
 
             AudioManager::StopMusic("GameMusic");
@@ -369,8 +369,8 @@ void Game_Update()
             : GameConfig::Gameplay().scorePerWaveNormal;
 
         g_FinalWaveCount = (g_CurrentLevel.type == LevelType::ENDLESS)
-            ? static_cast<s8>(waveSystem.GetCurrentRound())
-            : static_cast<s8>(waveSystem.GetCurrentWave());
+            ? static_cast<int>(waveSystem.GetCurrentRound())
+            : static_cast<int>(waveSystem.GetCurrentWave());
         g_FinalScore = g_FinalWaveCount * scorePerWave;
 
         AudioManager::StopMusic("GameMusic");
