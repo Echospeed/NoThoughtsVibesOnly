@@ -2,7 +2,7 @@
     "waveBreakDuration":        2.0,
     "baseEnemyCount":           5,
     "enemyCountPerRound":       2,
-    "maxEnemyCount":            20,
+    "maxEnemyCount":            30,
 
     "earlyRoundThreshold":      3,
     "midRoundThreshold":        7,

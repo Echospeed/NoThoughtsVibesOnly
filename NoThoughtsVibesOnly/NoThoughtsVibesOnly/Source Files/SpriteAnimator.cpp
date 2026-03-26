@@ -53,7 +53,7 @@ void Animator::Update(float deltaTime)
 			}
 			else
 			{
-				currentFrameIndex = static_cast<s8>(currentAnimation->frames.size()) - 1;
+				currentFrameIndex = static_cast<int>(currentAnimation->frames.size()) - 1;
 			}
 		}
 	}

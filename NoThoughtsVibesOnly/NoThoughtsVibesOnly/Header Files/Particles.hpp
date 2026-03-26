@@ -68,7 +68,8 @@ public:
     // Preset factories
     static ParticleSystem MakeSmoke();
     static ParticleSystem MakeExplosion();
-
+    static ParticleSystem MakeHitSmoke();  
+    static ParticleSystem MakePlayerHit();
     bool HasActiveParticles() const { return !activeParticles.empty(); }
 
 private:

@@ -1,11 +1,11 @@
 {
     "walk": {
-        "health":           100.0,
-        "speed":            200.0,
+        "health":           80.0,
+        "speed":            220.0,
         "scaleX":           50.0,
         "scaleY":           50.0,
         "changeDirInterval":2.0,
-        "xpReward":         25.0,
+        "xpReward":         20.0,
         "baseHeal":         5.0,
         "burstCount":       20,
         "texture":          "Assets/shipBlue_manned.png",
@@ -14,14 +14,14 @@
         "colourB":          1.0
     },
     "melee": {
-        "health":               100.0,
-        "speed":                200.0,
+        "health":               150.0,
+        "speed":                260.0,
         "scaleX":               50.0,
         "scaleY":               50.0,
         "explosionDamage":      40.0,
         "explosionBurstCount":  20,
         "burstCount":           20,
-        "xpReward":             25.0,
+        "xpReward":             30.0,
         "baseHeal":             5.0,
         "texture":              "Assets/shipGreen_manned.png",
         "colourR":              0.0,
@@ -29,17 +29,17 @@
         "colourB":              0.0
     },
     "ranger": {
-        "health":           100.0,
-        "speed":            200.0,
+        "health":           70.0,
+        "speed":            160.0,
         "scaleX":           50.0,
         "scaleY":           50.0,
         "fireRate":         2.0,
-        "retreatDistance":  250.0,
+        "retreatDistance":  300.0,
         "velocityDamping":  0.95,
         "changeDirInterval":2.0,
         "bulletsPerRanger": 6,
         "burstCount":       20,
-        "xpReward":         25.0,
+        "xpReward":         35.0,
         "baseHeal":         5.0,
         "texture":          "Assets/shipPink_manned.png",
         "colourR":          1.0,
@@ -47,8 +47,8 @@
         "colourB":          0.796
     },
     "boss": {
-        "health":               1000.0,
-        "speed":                150.0,
+        "health":               3000.0,
+        "speed":                130.0,
         "scaleX":               150.0,
         "scaleY":               150.0,
         "fireRate":             0.5,
@@ -57,11 +57,12 @@
         "bulletVolleyCount":    8,
         "bulletsPerBoss":       24,
         "burstCount":           40,
-        "xpReward":             25.0,
-        "baseHeal":             15.0,
+        "xpReward":             200.0,
+        "baseHeal":             40.0,
         "texture":              "Assets/shipBeige_manned.png",
         "colourR":              0.961,
         "colourG":              0.961,
         "colourB":              0.863
     }
+   
 }

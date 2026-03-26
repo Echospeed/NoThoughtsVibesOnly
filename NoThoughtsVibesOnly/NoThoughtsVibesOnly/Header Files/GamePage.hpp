@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "GameObject.hpp"
+#include "Particles.hpp"
 
 void Game_Load();
 	 
@@ -20,3 +21,5 @@ extern f32 WORLD_HEIGHT;
 extern int availableBullets;
 extern int g_FinalScore;
 extern int g_FinalWaveCount;
+extern ParticleSystem g_EnemyHitPS;
+extern ParticleSystem g_PlayerHitPS;

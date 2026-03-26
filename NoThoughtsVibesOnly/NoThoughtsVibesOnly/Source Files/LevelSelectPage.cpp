@@ -123,7 +123,7 @@ void LevelSelect_Init()
 // ============================================================================
 void LevelSelect_Update()
 {
-    const f32 dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
+    const f32 dt = static_cast<float>(AEFrameRateControllerGetFrameTime());
     StarBackground::Update(dt);
     StarBackground::DrawBackground();
     StarBackground::Draw();

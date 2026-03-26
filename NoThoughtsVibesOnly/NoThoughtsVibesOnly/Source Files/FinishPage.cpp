@@ -106,7 +106,7 @@ void FinishPage_Update()
     AEGfxSetCamPosition(0.0f, 0.0f);
     GetMouseWorldPosition(worldMouse.position.x, worldMouse.position.y);
 
-    dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
+    dt = static_cast<float>(AEFrameRateControllerGetFrameTime());
     timer += dt;
     StarBackground::Update(dt);
     StarBackground::DrawBackground();
@@ -210,7 +210,7 @@ void FinishPage_Draw()
     lbTitle << "TOP SCORES";
     lbTitle.Draw();
 
-    for (int i = 0; i < static_cast<s8>(entries.size()) && i < 10; ++i)
+    for (int i = 0; i < static_cast<int>(entries.size()) && i < 10; ++i)
     {
         const f32 yPos = 200.0f - (i * 35.0f);
 

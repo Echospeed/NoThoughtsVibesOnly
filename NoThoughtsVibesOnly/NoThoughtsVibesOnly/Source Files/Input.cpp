@@ -36,8 +36,8 @@ void GetMouseWorldPosition(f32& outWorldX, f32& outWorldY)
     // Convert pixel -> NDC -> world:
     //   (mouseX - halfScreenW) = screen-center-relative X
     //   + camX = world offset
-    outWorldX = (static_cast<f32>(mouseX) - SCREEN_W / 2.0f) + camX;
-    outWorldY = -(static_cast<f32>(mouseY) - SCREEN_H / 2.0f) + camY; // Y is flipped
+    outWorldX = (static_cast<float>(mouseX) - SCREEN_W / 2.0f) + camX;
+    outWorldY = -(static_cast<float>(mouseY) - SCREEN_H / 2.0f) + camY; // Y is flipped
 }
 
 // ============================================================================
@@ -49,6 +49,6 @@ void GetMouseScreenPosition(f32& outScreenX, f32& outScreenY)
 {
     s32 mouseX, mouseY;
     AEInputGetCursorPosition(&mouseX, &mouseY);
-    outScreenX = static_cast<f32>(mouseX);
-    outScreenY = static_cast<f32>(mouseY);
+    outScreenX = static_cast<float>(mouseX);
+    outScreenY = static_cast<float>(mouseY);
 }

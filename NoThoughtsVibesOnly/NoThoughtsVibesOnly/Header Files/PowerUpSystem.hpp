@@ -62,7 +62,7 @@ struct PlayerStats
 
     // === Experience ===
     f32 currentExp{ 0.0f };
-    f32 expToNextLevel{ 100.0f };
+    f32 expToNextLevel{ 50.0f };
     u32 level{ 1 };
 
     // === Lifesteal ===

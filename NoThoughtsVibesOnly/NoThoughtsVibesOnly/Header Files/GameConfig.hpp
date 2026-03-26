@@ -45,7 +45,7 @@ struct PlayerConfig
     f32 shootCooldown{ 0.10f };
     f32 shootSuppressCooldown{ 0.30f };
     f32 reloadDuration{ 2.0f };
-    int   startingAmmo{ 10 };
+    int   startingAmmo{ 20 };
     f32 bulletLifeTime{ 4.0f };
     f32 bulletSpeed{ 1500.0f };
     f32 spawnClearRadius{ 100.0f };
@@ -110,7 +110,7 @@ struct PowerUpConfig
     f32 baseAoeDamage{ 100.0f };
     int   startingBulletCount{ 10 };
     f32 expToFirstLevel{ 100.0f };
-    f32 expScalePerLevel{ 1.3f };
+    f32 expScalePerLevel{ 1.1f };
     f32 speedUpgradeBonus{ 200.0f };
     f32 bulletDamageBonus{ 25.0f };
     int   bulletCountBonus{ 5 };

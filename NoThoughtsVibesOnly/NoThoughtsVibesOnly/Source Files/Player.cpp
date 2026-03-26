@@ -8,6 +8,7 @@
 //   W / A / S / D              : Move
 //   Left Arrow / Right Arrow   : Rotate
 //   Left Mouse Hold            : Shoot toward cursor (10 shots/sec)
+//   Right Mouse Click          : Shotgun blast in a cone toward cursor (0.3 sec cooldown)
 //
 // SYSTEMS USED:
 // ----------------------------------------------------------------------------
@@ -71,6 +72,15 @@ void Player::Start()
     //runAnim.AddFrames(1500, 1000, 500, 500);
 
     //playerAnimator.Play(&idleAnim);
+    std::cout << "[START] ammoInMagazine = " << ammoInMagazine << std::endl;
+
+    if (powerUpSystem)
+    {
+        std::cout << "[START] bulletCount = "
+            << powerUpSystem->GetStats().bulletCount << std::endl;
+    }
+    std::cout << "[START] startingAmmo = "
+        << GameConfig::Player().startingAmmo << std::endl;
 }
 
 // ============================================================================
@@ -195,6 +205,25 @@ void Player::Update(f32 deltaTime)
         // Emit a small smoke puff at the player's position
         smokePS.Emit(transform.position);
     }
+
+	// Shotgun upgrade: fires a burst of pellets in a spread pattern, with the same cooldown as regular shots
+    shotgunCooldown -= deltaTime;
+    if (!isReloading && AEInputCheckCurr(AEVK_RBUTTON) && shotgunCooldown <= 0.0f
+        && !(powerUpSystem && powerUpSystem->IsWaitingForUpgrade())
+        && !suppressShootOneFrame)
+    {
+        f32 baseAngle = atan2f(mouseDir.y, mouseDir.x);
+        for (int i = 0; i < SHOTGUN_PELLETS; ++i)
+        {
+            f32 offset = -SHOTGUN_SPREAD + (SHOTGUN_SPREAD * 2.0f / (SHOTGUN_PELLETS - 1)) * i;
+            AEVec2 pelletDir = { cosf(baseAngle + offset), sinf(baseAngle + offset) };
+            Shoot(pelletDir);
+        }
+        shotgunCooldown = SHOTGUN_COOLDOWN;
+        AudioManager::PlaySFX("Shoot");
+        smokePS.EmitBurst(transform.position, 8);
+    }
+
     smokePS.Update(deltaTime);   // Always tick, even when not shooting
 
     // ------------------------------------------------------------------
@@ -226,7 +255,7 @@ void Player::Update(f32 deltaTime)
 
             // Pulse alpha between 0.4 and 1.0 at ~4 Hz so the NPC visibly flickers,
             // indicating it is inside the AoE and taking damage.
-            const f32 pulse = 0.7f + 0.3f * sinf(static_cast<f32>(AEGetTime(nullptr)) * 25.0f);
+            const f32 pulse = 0.7f + 0.3f * sinf(static_cast<float>(AEGetTime(nullptr)) * 25.0f);
             np->spriteRenderer.colour = {
                 np->baseColour.r,
                 np->baseColour.g * 0.3f, // drain green/blue to tint red
@@ -328,8 +357,8 @@ void Player::Update(f32 deltaTime)
 
     Rect currentFrame = playerAnimator.GetCurrentFrameRect();
 
-    spriteRenderer.uOffset = static_cast<f32>(currentFrame.x) / 2000.0f;
-    spriteRenderer.vOffset = static_cast<f32>(currentFrame.y) / 2500.0f;
+    spriteRenderer.uOffset = static_cast<float>(currentFrame.x) / 2000.0f;
+    spriteRenderer.vOffset = static_cast<float>(currentFrame.y) / 2500.0f;
 
     playerAnimator.Update(deltaTime);
 }

@@ -134,7 +134,7 @@ namespace Leaderboard
         }
 
         const auto& arr = doc["entries"].GetArray();
-        for (rapidjson::SizeType i = 0; i < arr.Size() && static_cast<s8>(i) < MAX_ENTRIES; ++i)
+        for (rapidjson::SizeType i = 0; i < arr.Size() && static_cast<int>(i) < MAX_ENTRIES; ++i)
         {
             const auto& obj = arr[i];
             LeaderboardEntry e;

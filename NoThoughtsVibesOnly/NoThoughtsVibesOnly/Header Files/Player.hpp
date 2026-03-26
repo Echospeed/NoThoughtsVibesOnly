@@ -52,10 +52,15 @@ private:
     f32 shootCooldown = 0.0f;
     f32 rotationSpeed = 3.0f; // radians per second
 
+    f32 shotgunCooldown = 0.0f;  // ADD THIS
+    static constexpr int SHOTGUN_PELLETS = 3;       // ADD THIS
+    static constexpr f32 SHOTGUN_SPREAD = 0.4f;    // ADD THIS (radians)
+    static constexpr f32 SHOTGUN_COOLDOWN = 0.3f;   // ADD THIS
+
     // --- Reload system ---
     bool isReloading = false;
     f32  reloadTimer = 0.0f;
     f32  reloadDuration = 2.0f; // seconds to reload
-    int ammoInMagazine = 10; // starts with 10 bullets available
+    int ammoInMagazine = 20; // starts with 20 bullets available
 
 };

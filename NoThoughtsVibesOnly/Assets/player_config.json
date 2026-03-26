@@ -8,7 +8,7 @@
     "shootCooldown":        0.10,
     "shootSuppressCooldown":0.30,
     "reloadDuration":       2.0,
-    "startingAmmo":         10,
+    "startingAmmo":         20,
     "bulletLifeTime":       4.0,
     "bulletSpeed":          1500.0,
     "spawnClearRadius":     100.0,

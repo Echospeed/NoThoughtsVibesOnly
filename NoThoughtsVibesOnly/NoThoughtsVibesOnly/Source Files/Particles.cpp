@@ -240,7 +240,7 @@ void ParticleSystem::Update(f32 dt)
 {
     // Backwards: when we remove element [i] via swap-and-pop, the new [i]
     // is the old last element - already processed since we go high->low.
-    for (int i = static_cast<s8>(activeParticles.size()) - 1; i >= 0; --i)
+    for (int i = static_cast<int>(activeParticles.size()) - 1; i >= 0; --i)
     {
         const int idx = activeParticles[i];
         Particle& p = particles[idx];
@@ -373,14 +373,14 @@ ParticleSystem ParticleSystem::MakeSmoke()
 {
     ParticleSystem ps;
     ps.Init(
-        30,               // maxParticles  - cap on simultaneous smoke puffs
-        -25.0f, 25.0f,   // velX          - slight horizontal spread
+        50,               // maxParticles  - cap on simultaneous smoke puffs
+        -50.0f, 50.0f,   // velX          - slight horizontal spread
         30.0f, 80.0f,   // velY          - drifts upward
-        0.8f, 1.2f,    // lifetime      - short-lived puffs
+        2.4f, 1.2f,    // lifetime      - short-lived puffs
         24.0f, 4.0f,    // size          - visibly shrinks as it fades
         0.1f, 0.6f, 0.6f, // start colour: mid ash green
         0.1f, 0.2f, 0.2f, // end colour:   dark ash green
-        0.0f,   // gravity=0: smoke floats upward, not pulled down
+        0.1f,   // gravity=0: smoke floats upward, not pulled down
         1.5f    // drag=1.5:  velocity halves fast, puffs hang rather than fly
     );
     return ps;
@@ -404,14 +404,54 @@ ParticleSystem ParticleSystem::MakeExplosion()
     ParticleSystem ps;
     ps.Init(
         40,               // maxParticles  - 40 slots; boss uses all 40, others use 20
-        -300.0f, 300.0f,  // velX          - wide horizontal spray
-        -300.0f, 300.0f,  // velY          - equal vertical spray (omnidirectional burst)
-        0.3f, 0.7f,    // lifetime      - fast burst, gone quickly
-        20.0f, 0.0f,    // size          - shrinks completely to nothing at death
+        -500.0f, 500.0f,  // velX          - wide horizontal spray
+        -500.0f, 500.0f,  // velY          - equal vertical spray (omnidirectional burst)
+        0.4f, 0.7f,    // lifetime      - fast burst, gone quickly
+        35.0f, 0.0f,    // size          - shrinks completely to nothing at death
         1.0f, 0.5f, 0.0f, // start colour: bright orange
         0.8f, 0.0f, 0.0f, // end colour:   dark red
         80.0f,  // gravity=80: particles arc downward slightly (adds physical weight)
         2.0f    // drag=2:     velocity drops fast so particles don't travel too far
+    );
+    return ps;
+}
+
+// ============================================================================
+// MakeHitSmoke - preset for the smoke puff when an enemy is hit but not killed
+// ============================================================================
+ParticleSystem ParticleSystem::MakeHitSmoke()
+{
+    ParticleSystem ps;
+    ps.Init(
+        30,
+        -180.0f, 180.0f,
+        -180.0f, 180.0f,
+        0.2f, 0.5f,
+        14.0f, 0.0f,
+        0.9f, 0.9f, 0.9f,
+        0.3f, 0.3f, 0.3f,
+        30.0f,
+        3.0f
+    );
+    return ps;
+}
+
+// ============================================================================
+// MakePlayerHit - preset for the hit spark when the player takes damage
+// ============================================================================
+ParticleSystem ParticleSystem::MakePlayerHit()
+{
+    ParticleSystem ps;
+    ps.Init(
+        20,
+        -300.0f, 300.0f,
+        -300.0f, 300.0f,
+        0.15f, 0.35f,
+        10.0f, 0.0f,
+        1.0f, 0.3f, 0.0f,
+        0.8f, 0.0f, 0.0f,
+        60.0f,
+        2.5f
     );
     return ps;
 }

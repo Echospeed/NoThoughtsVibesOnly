@@ -85,7 +85,7 @@ inline bool LoadLevelFromJson(const std::string& filepath, LevelConfig& cfg)
     // Read each field with a safe HasMember check before accessing.
     // Explicit static_cast guarantees the JSON Int matches our uint32_t expectation.
     if (doc.HasMember("numWaves") && doc["numWaves"].IsInt())
-        cfg.numWaves = static_cast<uint32_t>(doc["numWaves"].GetInt());
+        cfg.numWaves = static_cast<unsigned int>(doc["numWaves"].GetInt());
 
     if (doc.HasMember("hasBoss") && doc["hasBoss"].IsBool())
         cfg.hasBoss = doc["hasBoss"].GetBool();

@@ -96,8 +96,7 @@ void NPC::Start()
         rY = distY(rng);
         spawnPos = { rX, rY };
     } while (AEVec2Distance(&spawnPos, &target->transform.position) < GameConfig::Player().spawnClearRadius);
-
-    transform.position = { rX, rY };
+    transform.position = {rX, rY};
     transform.rotation = 0.0f;
 
     // Reset death/explosion state in case this NPC slot is reused
@@ -159,6 +158,7 @@ void NPC::Start()
         //    << transform.position.x << ", " << transform.position.y << ")\n";
         break;
     }
+
 }
 
 // ============================================================================
@@ -206,9 +206,6 @@ void NPC::Update(f32 deltaTime)
             hasExploded = true;
             const int burstCount = (type == NPC_BOSS) ? nc.boss.burstCount : nc.walk.burstCount;
             explosionParticles.EmitBurst(transform.position, burstCount);
-
-            //if (type == NPC_BOSS)
-            //    std::cout << "[BOSS] Boss defeated!\n";
         }
 
         return;
@@ -494,4 +491,5 @@ void NPC::BossNPCs(f32 deltaTime)
 
         fireCooldown = fireRate;
     }
+
 }

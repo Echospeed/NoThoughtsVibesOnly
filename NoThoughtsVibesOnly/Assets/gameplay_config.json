@@ -13,13 +13,13 @@
     },
     "bullet": {
         "playerSpeed":      1500.0,
-        "enemySpeed":       800.0,
+        "enemySpeed":       700.0,
         "maxLifeTime":      4.0,
-        "enemyDamage":      25.0,
+        "enemyDamage":      20.0,
         "defaultScale":     10.0
     },
-    "playerBulletPoolSize": 10,
-    "enemyBulletPoolSize":  60,
+    "playerBulletPoolSize": 80,
+    "enemyBulletPoolSize":  80,
     "scorePerWaveNormal":   100,
     "scorePerWaveEndless":  150,
     "invulnDuration":       3.0,

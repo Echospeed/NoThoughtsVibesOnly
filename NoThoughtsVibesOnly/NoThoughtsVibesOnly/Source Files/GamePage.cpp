@@ -95,6 +95,7 @@ std::vector<GameObject*> gamePageObj;
 GameObject* pPlayer{ nullptr };
 int  availableBullets = 0;
 bool isPaused = false;
+static bool s_DebugEnabled = false;
 
 // ============================================================================
 // Systems
@@ -102,6 +103,8 @@ bool isPaused = false;
 PowerUpSystem powerUpSystem;
 WaveSystem    waveSystem;
 GameUI        gameUI;
+ParticleSystem g_EnemyHitPS;
+ParticleSystem g_PlayerHitPS;
 
 // ============================================================================
 // Font / HUD text
@@ -175,13 +178,14 @@ void Game_Init()
     WORLD_HEIGHT = GameConfig::Gameplay().world.height;
 
     GenerateStars();
-
+    g_EnemyHitPS = ParticleSystem::MakeHitSmoke();
+    g_PlayerHitPS = ParticleSystem::MakePlayerHit();
     // --- Player ---
     pPlayer = new Player();
     sCamX = pPlayer->transform.position.x;
     sCamY = pPlayer->transform.position.y;
     ammoText = TextRenderer(gameFont, 1.0f, { -500.0f, -400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-    ammoText << "Ammo: 10 / 10";
+    //ammoText << "Ammo: 20 / 20";
 
     // --- Systems ---
     waveSystem.Init(dynamic_cast<Player*>(pPlayer));
@@ -261,7 +265,7 @@ void Game_Update()
 
     if (isPaused) return;
 
-    const f32 dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
+    const f32 dt = static_cast<float>(AEFrameRateControllerGetFrameTime());
     s_GameTime += dt;
 
     // Power-up selection
@@ -278,18 +282,20 @@ void Game_Update()
     else { levelUpSFXFlag = true;  AudioManager::ResumeMusic("GameMusic"); }
 
     waveSystem.Update(dt);
+    g_EnemyHitPS.Update(dt);
+    g_PlayerHitPS.Update(dt);
 
-    if (AEInputCheckTriggered(AEVK_C))
-    {
-        for (auto& obj : gamePageObj)
-        {
-            if (obj && obj->ObjectType == NP && obj->isActive)
-            {
-                NPC* npc = dynamic_cast<NPC*>(obj);
-                if (npc) { npc->health = 0.0f; } //std::cout << "[DEBUG] Killed NPC\n"; }
-            }
-        }
-    }
+    //if (AEInputCheckTriggered(AEVK_C))
+    //{
+    //    for (auto& obj : gamePageObj)
+    //    {
+    //        if (obj && obj->ObjectType == NP && obj->isActive)
+    //        {
+    //            NPC* npc = dynamic_cast<NPC*>(obj);
+    //            if (npc) { npc->health = 0.0f; } //std::cout << "[DEBUG] Killed NPC\n"; }
+    //        }
+    //    }
+    //}
 
     // Camera
     const f32 CAM_DEADZONE_RADIUS = 150.0f;
@@ -401,11 +407,34 @@ void Game_Update()
             ammoText << "Ammo: " << (p ? p->GetAmmoInMagazine() : 0) << " / " << totalBullets;
     }
 
+    // Debug toggle
+    if (AEInputCheckTriggered(AEVK_LCTRL)) s_DebugEnabled = !s_DebugEnabled;
+
     // Debug hotkeys
-    if (AEInputCheckTriggered(AEVK_SPACE))  StateManagerChangeState(STATE_FINISH);
-    if (AEInputCheckTriggered(AEVK_RETURN)) StateManagerChangeState(STATE_WIN);
-    if (AEInputCheckTriggered(AEVK_TAB))    StateManagerChangeState(STATE_RESTART);
-    if (AEInputCheckTriggered(AEVK_Q))      StateManagerChangeState(STATE_MENU);
+    if (s_DebugEnabled)
+    {
+        if (AEInputCheckTriggered(AEVK_C))
+        {
+            for (auto& obj : gamePageObj)
+            {
+                if (obj && obj->ObjectType == NP && obj->isActive)
+                {
+                    NPC* npc = dynamic_cast<NPC*>(obj);
+                    if (npc) { npc->health = 0.0f; }
+                }
+            }
+        }
+        if (AEInputCheckTriggered(AEVK_SPACE))  StateManagerChangeState(STATE_FINISH);
+        if (AEInputCheckTriggered(AEVK_RETURN)) StateManagerChangeState(STATE_WIN);
+        if (AEInputCheckTriggered(AEVK_TAB))    StateManagerChangeState(STATE_RESTART);
+        if (AEInputCheckTriggered(AEVK_Q))      StateManagerChangeState(STATE_MENU);
+    }
+
+    //// Debug hotkeys
+    //if (AEInputCheckTriggered(AEVK_SPACE))  StateManagerChangeState(STATE_FINISH);
+    //if (AEInputCheckTriggered(AEVK_RETURN)) StateManagerChangeState(STATE_WIN);
+    //if (AEInputCheckTriggered(AEVK_TAB))    StateManagerChangeState(STATE_RESTART);
+    //if (AEInputCheckTriggered(AEVK_Q))      StateManagerChangeState(STATE_MENU);
 }
 
 // ============================================================================
@@ -577,6 +606,8 @@ void Game_Draw()
             if (npc && npc->hasExploded) npc->explosionParticles.Render();
         }
     }
+    g_EnemyHitPS.Render();
+    g_PlayerHitPS.Render();
 
     // 8. World-space health bars
     gameUI.DrawAllHealthBars();
@@ -602,8 +633,9 @@ void Game_Draw()
     if (powerUpSystem.IsWaitingForUpgrade())
         gameUI.DrawPowerUpScreen();
 
-    if (AEInputCheckTriggered(AEVK_U))
-        powerUpSystem.AddExperience(200.0f);
+	// Debug: Add XP
+    if (s_DebugEnabled && AEInputCheckTriggered(AEVK_U))
+        powerUpSystem.AddExperience(300.0f);
 
     // Wave announcement banner
     if (s_WaveAnnounceTimer > 0.0f && !powerUpSystem.IsWaitingForUpgrade())
@@ -629,6 +661,10 @@ void Game_Draw()
         waveBanner << "WAVE " << s_WaveAnnounceNum;
         waveBanner.Draw();
     }
+
+    if (AEInputCheckTriggered(AEVK_LSHIFT))
+        gameUI.ToggleStats();
+
 
     // Pause overlay
     if (isPaused)

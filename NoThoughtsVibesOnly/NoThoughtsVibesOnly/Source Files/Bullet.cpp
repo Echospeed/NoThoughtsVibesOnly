@@ -108,6 +108,9 @@ void Bullet::Update(f32 deltaTime)
                 // Apply upgraded damage from the firing player
                 Player* player = dynamic_cast<Player*>(startPos);
                 npc->health -= player ? player->GetBulletDamage() : 100.0f;
+                // Smoke puff at impact point (bigger burst for boss)
+                const int burstCount = (npc->type == NPC_BOSS) ? 25 : 12;
+                g_EnemyHitPS.EmitBurst(transform.position, burstCount);
                 HideBullet();
                 break; // One bullet hits one NPC
             }
@@ -134,6 +137,8 @@ void Bullet::Update(f32 deltaTime)
                 if (!player->invulnAbility.IsActive())
                 {
                     player->health -= GameConfig::Gameplay().bullet.enemyDamage;
+                    // Red spark burst only when damage actually lands
+                    g_PlayerHitPS.EmitBurst(transform.position, 10);
                 }
             }
 

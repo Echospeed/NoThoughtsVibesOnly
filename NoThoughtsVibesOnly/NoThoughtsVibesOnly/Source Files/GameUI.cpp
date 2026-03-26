@@ -87,7 +87,7 @@ void GameUI::DrawAllHealthBars()
 
     Transform tf;
 
-    const f32 dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
+    const f32 dt = static_cast<float>(AEFrameRateControllerGetFrameTime());
     // -------------------------------------------------------------------------
     // Player health bar (animated fill)
     // -------------------------------------------------------------------------
@@ -202,7 +202,7 @@ void GameUI::DrawHealthText()
     // ============================================================================
     if (powerUpSystem)
     {
-        const int totalAmmo = static_cast<s8>(powerUpSystem->GetStats().bulletCount);
+        const int totalAmmo = static_cast<int>(powerUpSystem->GetStats().bulletCount);
         const int currentAmmo = player->GetAmmoInMagazine();
         const bool reloading = player->IsReloading();
 
@@ -328,6 +328,7 @@ void GameUI::DrawCurrentStats()
 {
     if (!powerUpSystem) return;
     if (waveSystem && waveSystem->IsInBreak()) return;
+    if (!m_ShowStats) return;
 
     const PlayerStats& stats = powerUpSystem->GetStats();
 
@@ -343,10 +344,10 @@ void GameUI::DrawCurrentStats()
     playerStats.Draw();
 
     playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY }, { 1.0f, 1.0f, 1.0f, 1.0f });
-    playerStats << "SPD: " << static_cast<f32>(stats.GetTotalSpeed()) << "   DMG: " << static_cast<f32>(stats.GetTotalBulletDamage());
+    playerStats << "SPD: " << static_cast<float>(stats.GetTotalSpeed()) << "   DMG: " << static_cast<float>(stats.GetTotalBulletDamage());
     playerStats.Draw();
     playerStats = TextRenderer(gameFont, 0.5f, { panelX, panelY - 30.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
-    playerStats << "AOE: r=" << static_cast<f32>(stats.GetTotalAoeRadius()) << "  d=" << static_cast<f32>(stats.GetTotalAoeDamage()) << "/s";
+    playerStats << "AOE: r=" << static_cast<float>(stats.GetTotalAoeRadius()) << "  d=" << static_cast<float>(stats.GetTotalAoeDamage()) << "/s";
     playerStats.Draw();
 
     // -------------------------------------------------------------------------
@@ -450,8 +451,8 @@ void GameUI::DrawAbilities()
     // Positioned at the bottom center-ish
     const f32 boxX = 0.0f;
     const f32 boxY = -350.0f;
-    const f32 boxW = 80.0f;
-    const f32 boxH = 80.0f;
+    //const f32 boxW = 80.0f;
+    //const f32 boxH = 80.0f;
 
     const Ability& ability = player->invulnAbility;
 
@@ -576,13 +577,13 @@ void GameUI::DrawPowerUpScreen()
         if (choices[i].type == POWERUP_SPEED)
         {
             statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 55.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
-            statBuffText << "Current: " << static_cast<f32>(stats.GetTotalSpeed()) << " spd";
+            statBuffText << "Current: " << static_cast<float>(stats.GetTotalSpeed()) << " spd";
             statBuffText.Draw();
         }
         else if (choices[i].type == POWERUP_BULLET_DAMAGE)
         {
             statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 40.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
-            statBuffText << "Current: " << static_cast<f32>(stats.GetTotalBulletDamage()) << " dmg";
+            statBuffText << "Current: " << static_cast<float>(stats.GetTotalBulletDamage()) << " dmg";
             statBuffText.Draw();
             statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 60.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
             statBuffText << "Bullets: " << stats.bulletCount << "  ->  " << stats.bulletCount + 5;
@@ -594,10 +595,10 @@ void GameUI::DrawPowerUpScreen()
             statBuffText << "Current:";
             statBuffText.Draw();
             statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 45.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
-            statBuffText << "r=" << static_cast<f32>(stats.GetTotalAoeRadius());
+            statBuffText << "r=" << static_cast<float>(stats.GetTotalAoeRadius());
             statBuffText.Draw();
             statBuffText = TextRenderer(gameFont, 0.5f, { boxX[i], boxY - 65.0f }, { 0.55f, 0.55f, 0.55f, 0.8f });
-            statBuffText << "dmg=" << static_cast<f32>(stats.GetTotalAoeDamage()) << "/s";            statBuffText.Draw();
+            statBuffText << "dmg=" << static_cast<float>(stats.GetTotalAoeDamage()) << "/s";            statBuffText.Draw();
         }
         else if (choices[i].type == POWERUP_LIFESTEAL)
         {

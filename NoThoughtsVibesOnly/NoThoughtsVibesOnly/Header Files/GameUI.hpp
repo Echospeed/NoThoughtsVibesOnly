@@ -28,11 +28,13 @@ public:
     void DrawWaveTimer();           // Countdown between waves
     void DrawPowerUpScreen();       // Level-up overlay
     void DrawAbilities();           // Abilities display
+    void ToggleStats() { m_ShowStats = !m_ShowStats; }
 
 private:
     s8 gameFont{ 0 };
     WaveSystem* waveSystem{ nullptr };
     PowerUpSystem* powerUpSystem{ nullptr };
+    bool m_ShowStats{ true };
 
     // Text renderers
     TextRenderer playerHealth;

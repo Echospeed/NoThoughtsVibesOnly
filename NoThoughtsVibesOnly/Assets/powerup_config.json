@@ -1,27 +1,27 @@
 {
     "baseSpeed":            200.0,
-    "baseBulletDamage":     100.0,
-    "baseAoeRadius":        100.0,
-    "baseAoeDamage":        100.0,
-    "startingBulletCount":  10,
+    "baseBulletDamage":     50.0,
+    "baseAoeRadius":        80.0,
+    "baseAoeDamage":        15.0,
+    "startingBulletCount":  20,
     "expToFirstLevel":      100.0,
-    "expScalePerLevel":     1.3,
+    "expScalePerLevel":     1.1,
 
-    "speedUpgradeBonus":        200.0,
+    "speedUpgradeBonus":        80.0,
     "bulletDamageBonus":        25.0,
     "bulletCountBonus":         5,
-    "aoeRadiusBonus":           25.0,
-    "aoeDamageBonus":           25.0,
+    "aoeRadiusBonus":           20.0,
+    "aoeDamageBonus":           10.0,
     "lifestealBonus":           10.0,
     "lifestealBaseHealPerKill": 5.0,
 
     "enemyScaling": {
-        "rangerBaseDamage":     25.0,
-        "rangerDamagePerRound": 5.0,
-        "meleeBaseSpeed":       250.0,
-        "meleeSpeedPerRound":   10.0,
-        "meleeSpeedCap":        400.0,
-        "meleeBaseDamage":      50.0,
-        "meleeDamagePerRound":  5.0
+        "rangerBaseDamage":     20.0,
+        "rangerDamagePerRound": 3.0,
+        "meleeBaseSpeed":       260.0,
+        "meleeSpeedPerRound":   8.0,
+        "meleeSpeedCap":        420.0,
+        "meleeBaseDamage":      30.0,
+        "meleeDamagePerRound":  4.0
     }
 }

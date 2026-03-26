@@ -107,7 +107,7 @@ void WinPage_Update()
     AEGfxSetCamPosition(0.0f, 0.0f);
     GetMouseWorldPosition(worldMouse.position.x, worldMouse.position.y);
 
-    dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
+    dt = static_cast<float>(AEFrameRateControllerGetFrameTime());
     timer += dt;
     StarBackground::Update(dt);
     StarBackground::DrawBackground();

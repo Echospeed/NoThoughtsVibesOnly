@@ -25,7 +25,7 @@ void AudioManager::Init()
     LoadAudio("Shoot", "Assets/Audio/ShootingSound.wav", false);
     LoadAudio("LevelUp", "Assets/Audio/Powerupsfx.wav", false);
 
-    std::cout << "[AudioManager] All sounds are loaded into the dictionary!\n";
+    //std::cout << "[AudioManager] All sounds are loaded into the dictionary!\n";
 }
 
 // ============================================================================
