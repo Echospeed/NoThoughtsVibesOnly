@@ -154,7 +154,13 @@ void GameUI::DrawAllHealthBars()
         const f32 barY = npc->transform.position.y + 40.0f;
         const f32 barW = 30.0f;
         const f32 barH = 4.0f;
-        const f32 ratio = AEClamp(npc->health / 100.0f, 0.0f, 1.0f);
+
+        const auto& nc = GameConfig::Npc();
+        const f32 maxHealth = (npc->type == NPC_BOSS) ? nc.boss.health
+            : (npc->type == NPC_MELEE) ? nc.melee.health
+            : (npc->type == NPC_RANGER) ? nc.ranger.health
+            : nc.walk.health;
+        const f32 ratio = AEClamp(npc->health / maxHealth, 0.0f, 1.0f);
 
         // Red background
         AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 1.0f);
@@ -276,7 +282,7 @@ void GameUI::DrawHealthText()
 
             // "RELOADING" label above the bar
             TextRenderer reloadLabel(gameFont, 0.55f, { barX, barY + 14.0f }, { 1.0f, 0.6f, 0.1f, 1.0f });
-            reloadLabel << "RELOADING...";
+            //reloadLabel << "RELOADING...";
             reloadLabel.Draw();
         }
     }
