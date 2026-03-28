@@ -277,6 +277,7 @@ void Game_Update()
         if (AEInputCheckTriggered(AEVK_1)) powerUpSystem.ApplyPowerUp(choices[0].type, player);
         else if (AEInputCheckTriggered(AEVK_2)) powerUpSystem.ApplyPowerUp(choices[1].type, player);
         else if (AEInputCheckTriggered(AEVK_3)) powerUpSystem.ApplyPowerUp(choices[2].type, player);
+		else if (AEInputCheckTriggered(AEVK_4)) powerUpSystem.ApplyPowerUp(choices[3].type, player);
         return;
     }
     else { levelUpSFXFlag = true;  AudioManager::ResumeMusic("GameMusic"); }
@@ -635,7 +636,7 @@ void Game_Draw()
 
 	// Debug: Add XP
     if (s_DebugEnabled && AEInputCheckTriggered(AEVK_U))
-        powerUpSystem.AddExperience(300.0f);
+        powerUpSystem.AddExperience(100.0f);
 
     // Wave announcement banner
     if (s_WaveAnnounceTimer > 0.0f && !powerUpSystem.IsWaitingForUpgrade())
