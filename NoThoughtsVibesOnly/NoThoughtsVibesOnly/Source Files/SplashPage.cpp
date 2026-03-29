@@ -21,11 +21,16 @@
 // ============================================================================
 // File-scope state
 // ============================================================================
-static AEGfxTexture* ss_DigiPen_Logo = nullptr;
-static f32           timer = 0.0f;
 
 // Linear interpolation helper
-namespace { f32 Lerp(f32 a, f32 b, f32 t) { return a + t * (b - a); } }
+namespace {
+    AEGfxTexture* ss_DigiPen_Logo = nullptr;
+    f32 timer = 0.0f;
+
+    f32 Lerp(f32 a, f32 b, f32 t) {
+        return a + t * (b - a);
+    }
+}
 
 // ============================================================================
 // SplashPage_Load
