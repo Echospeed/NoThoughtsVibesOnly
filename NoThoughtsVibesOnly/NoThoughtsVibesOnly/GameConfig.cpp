@@ -242,6 +242,14 @@ void GameConfig::Load()
         s_Gameplay.scorePerWaveEndless = GetI(doc, "scorePerWaveEndless", s_Gameplay.scorePerWaveEndless);
         s_Gameplay.invulnDuration = GetF(doc, "invulnDuration", s_Gameplay.invulnDuration);
         s_Gameplay.invulnCooldown = GetF(doc, "invulnCooldown", s_Gameplay.invulnCooldown);
+        s_Gameplay.noDamageBonus = GetI(doc, "noDamageBonus", s_Gameplay.noDamageBonus);
+        s_Gameplay.bossKillBonus = GetI(doc, "bossKillBonus", s_Gameplay.bossKillBonus);
+        s_Gameplay.speedBonusMax = GetF(doc, "speedBonusMax", s_Gameplay.speedBonusMax);
+        s_Gameplay.waveParTimeSeconds = GetF(doc, "waveParTimeSeconds", s_Gameplay.waveParTimeSeconds);
+        s_Gameplay.killScoreWalker = GetI(doc, "killScoreWalker", s_Gameplay.killScoreWalker);
+        s_Gameplay.killScoreMelee = GetI(doc, "killScoreMelee", s_Gameplay.killScoreMelee);
+        s_Gameplay.killScoreRanger = GetI(doc, "killScoreRanger", s_Gameplay.killScoreRanger);
+        s_Gameplay.killScoreBoss = GetI(doc, "killScoreBoss", s_Gameplay.killScoreBoss);
     }
 
     s_Loaded = true;

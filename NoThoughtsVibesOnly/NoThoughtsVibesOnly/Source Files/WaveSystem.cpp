@@ -50,8 +50,8 @@ void WaveSystem::Init(Player* player)
     currentRound = 1;
     inWaveBreak = false;
     waveBreakTimer = 0.0f;
+    waveStartTime = 0.0f;
     levelConfig = ::GetLevelConfig(LevelType::ENDLESS); // Default, will be overwritten by SetLevelConfig
-
 }
 
 // ============================================================================
@@ -96,7 +96,6 @@ void WaveSystem::Update(f32 deltaTime)
 
     if (currentWave > 0 && IsWaveComplete())
     {
-
         // Show different message for final wave vs continuing
         if (levelConfig.type != LevelType::ENDLESS && currentWave >= levelConfig.numWaves)
         {
@@ -104,6 +103,7 @@ void WaveSystem::Update(f32 deltaTime)
         }
         else
         {
+            AccumulateWaveScore(waveTookDamage);
             ++currentRound;
             inWaveBreak = true;
             waveBreakTimer = WAVE_BREAK_DURATION;
@@ -120,9 +120,9 @@ void WaveSystem::StartNextWave()
 {
     ++currentWave;
     inWaveBreak = false;
+    waveStartTime = static_cast<float>(AEGetTime(nullptr));
 
     const WaveConfig config = GenerateWaveConfig();
-
     SpawnWave(config);
 }
 
@@ -294,6 +294,36 @@ bool WaveSystem::ShouldSpawnBoss() const
 }
 
 // ============================================================================
+// AccumulateWaveScore
+// ============================================================================
+// Called when a wave clears. Applies speed multiplier and no-damage bonus,
+// then adds to the running total exposed via GetAccumulatedScore().
+// ============================================================================
+void WaveSystem::AccumulateWaveScore(bool tookDamage)
+{
+    const auto& cfg = GameConfig::Gameplay();
+
+    const int base = (levelConfig.type == LevelType::ENDLESS)
+        ? cfg.scorePerWaveEndless
+        : cfg.scorePerWaveNormal;
+
+    // Speed multiplier: speedBonusMax at instant clear, 1.0x at par time, clamped
+    const float elapsed = static_cast<float>(AEGetTime(nullptr)) - waveStartTime;
+    const float par = cfg.waveParTimeSeconds;
+    const float ratio = (par > 0.0f) ? AEClamp(elapsed / par, 0.0f, 1.0f) : 1.0f;
+    const float speedMul = cfg.speedBonusMax + (1.0f - cfg.speedBonusMax) * ratio;
+
+    int waveScore = static_cast<int>(static_cast<float>(base) * speedMul);
+
+    // No-damage bonus (flat, after speed multiply)
+    if (!tookDamage)
+        waveScore += cfg.noDamageBonus;
+
+    accumulatedScore += waveScore;
+    waveTookDamage = false;  // Reset for next wave
+}
+
+// ============================================================================
 // Cleanup
 // ============================================================================
 // Resets all wave state. Call in Game_Free() before deleting game objects.
@@ -305,4 +335,8 @@ void WaveSystem::Cleanup()
     currentRound = 1;
     inWaveBreak = false;
     waveBreakTimer = 0.0f;
+    waveStartTime = 0.0f;
+    accumulatedScore = 0;
+    waveTookDamage = false;
+    waveTookDamage = false;
 }

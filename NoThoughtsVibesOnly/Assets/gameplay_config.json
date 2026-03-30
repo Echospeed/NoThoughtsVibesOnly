@@ -23,5 +23,13 @@
     "scorePerWaveNormal":   100,
     "scorePerWaveEndless":  150,
     "invulnDuration":       3.0,
-    "invulnCooldown":       10.0
+    "invulnCooldown":       10.0,
+    "noDamageBonus":        50,
+    "bossKillBonus":        500,
+    "speedBonusMax":        1.5,
+    "waveParTimeSeconds":   30.0,
+    "killScoreWalker":      10,
+    "killScoreMelee":       15,
+    "killScoreRanger":      25,
+    "killScoreBoss":        200
 }

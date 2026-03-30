@@ -192,17 +192,29 @@ struct GameplayConfig
     WorldConfig   world{};
     BulletConfig  bullet{};
 
-    // --- NEW: previously hardcoded in GamePage.cpp ---
-    int playerBulletPoolSize{ 10 };   // gameplay_config.json: "playerBulletPoolSize"
-    int enemyBulletPoolSize{ 60 };    // gameplay_config.json: "enemyBulletPoolSize"
+    // --- Pool sizes ---
+    int playerBulletPoolSize{ 10 };
+    int enemyBulletPoolSize{ 60 };
 
-    // --- NEW: previously hardcoded in GamePage.cpp ---
-    int scorePerWaveNormal{ 100 };    // gameplay_config.json: "scorePerWaveNormal"
-    int scorePerWaveEndless{ 150 };   // gameplay_config.json: "scorePerWaveEndless"
+    // --- Base wave scoring ---
+    int scorePerWaveNormal{ 100 };
+    int scorePerWaveEndless{ 150 };
 
-    // --- NEW: previously hardcoded in Abilities.hpp ---
-    f32 invulnDuration{ 3.0f };       // gameplay_config.json: "invulnDuration"
-    f32 invulnCooldown{ 30.0f };      // gameplay_config.json: "invulnCooldown"
+    // --- Ability timings ---
+    f32 invulnDuration{ 3.0f };
+    f32 invulnCooldown{ 30.0f };
+
+    // --- Skill-based scoring ---
+    int   noDamageBonus{ 50 };         // Flat bonus per clean wave (no damage taken)
+    int   bossKillBonus{ 500 };        // One-time flat bonus on boss death
+    f32   speedBonusMax{ 1.5f };       // Score multiplier at instant wave clear (1.0 = no bonus)
+    f32   waveParTimeSeconds{ 30.0f }; // Time at which speed multiplier reaches 1.0x
+
+    // --- Per-kill score ---
+    int   killScoreWalker{ 10 };
+    int   killScoreMelee{ 15 };
+    int   killScoreRanger{ 25 };
+    int   killScoreBoss{ 200 };
 };
 
 // ============================================================================

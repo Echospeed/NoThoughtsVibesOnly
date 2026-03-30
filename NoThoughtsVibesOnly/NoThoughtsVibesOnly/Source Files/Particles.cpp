@@ -377,7 +377,7 @@ ParticleSystem ParticleSystem::MakeSmoke()
         -50.0f, 50.0f,   // velX          - slight horizontal spread
         30.0f, 80.0f,   // velY          - drifts upward
         2.4f, 1.2f,    // lifetime      - short-lived puffs
-        24.0f, 4.0f,    // size          - visibly shrinks as it fades
+        8.0f, 4.0f,    // size          - visibly shrinks as it fades
         0.1f, 0.6f, 0.6f, // start colour: mid ash green
         0.1f, 0.2f, 0.2f, // end colour:   dark ash green
         0.1f,   // gravity=0: smoke floats upward, not pulled down

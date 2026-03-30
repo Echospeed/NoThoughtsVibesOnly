@@ -22,8 +22,10 @@
 #include "Bullet.hpp"
 #include <random>
 #include "PowerUpSystem.hpp"
+#include "WaveSystem.hpp"
 
 extern PowerUpSystem powerUpSystem; // Owned by GamePage.cpp
+extern WaveSystem    waveSystem;    // Owned by GamePage.cpp
 
 
 // ============================================================================
@@ -96,7 +98,7 @@ void NPC::Start()
         rY = distY(rng);
         spawnPos = { rX, rY };
     } while (AEVec2Distance(&spawnPos, &target->transform.position) < GameConfig::Player().spawnClearRadius);
-    transform.position = {rX, rY};
+    transform.position = { rX, rY };
     transform.rotation = 0.0f;
 
     // Reset death/explosion state in case this NPC slot is reused
@@ -185,6 +187,14 @@ void NPC::Update(f32 deltaTime)
             : (type == NPC_RANGER) ? nc.ranger.xpReward
             : nc.walk.xpReward;
         powerUpSystem.AddExperience(xpReward);
+
+        // Award kill score
+        const auto& sc = GameConfig::Gameplay();
+        const int killScore = (type == NPC_BOSS) ? sc.killScoreBoss
+            : (type == NPC_MELEE) ? sc.killScoreMelee
+            : (type == NPC_RANGER) ? sc.killScoreRanger
+            : sc.killScoreWalker;
+        waveSystem.AddKillScore(killScore);
 
         // Heal the player on kill - base heal from config, capped at maxHealth
         if (target)

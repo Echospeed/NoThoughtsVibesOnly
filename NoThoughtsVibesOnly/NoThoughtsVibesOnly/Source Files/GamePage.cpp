@@ -132,6 +132,11 @@ int g_FinalScore = 0;
 int g_FinalWaveCount = 0;
 
 // ============================================================================
+// Accumulated scoring state
+// ============================================================================
+static bool s_BossKilled = false;
+
+// ============================================================================
 // Screen Shake
 // ============================================================================
 static f32 s_ShakeTimer = 0.0f;
@@ -239,6 +244,7 @@ void Game_Init()
     s_WaveAnnounceTimer = 0.0f;
     s_WaveAnnounceNum = 0;
     s_PrevWaveNum = 0;
+    s_BossKilled = false;
 
     waveSystem.StartNextWave();
 
@@ -273,11 +279,11 @@ void Game_Update()
     {
         const PowerUp* choices = powerUpSystem.GetPowerUpChoices();
         Player* player = dynamic_cast<Player*>(pPlayer);
-        if (levelUpSFXFlag) { AudioManager::PlaySFX("LevelUp"); levelUpSFXFlag = false; AudioManager::PauseMusic("GameMusic");}
+        if (levelUpSFXFlag) { AudioManager::PlaySFX("LevelUp"); levelUpSFXFlag = false; AudioManager::PauseMusic("GameMusic"); }
         if (AEInputCheckTriggered(AEVK_1)) powerUpSystem.ApplyPowerUp(choices[0].type, player);
         else if (AEInputCheckTriggered(AEVK_2)) powerUpSystem.ApplyPowerUp(choices[1].type, player);
         else if (AEInputCheckTriggered(AEVK_3)) powerUpSystem.ApplyPowerUp(choices[2].type, player);
-		else if (AEInputCheckTriggered(AEVK_4)) powerUpSystem.ApplyPowerUp(choices[3].type, player);
+        else if (AEInputCheckTriggered(AEVK_4)) powerUpSystem.ApplyPowerUp(choices[3].type, player);
         return;
     }
     else { levelUpSFXFlag = true;  AudioManager::ResumeMusic("GameMusic"); }
@@ -327,10 +333,14 @@ void Game_Update()
         if (s_WaveAnnounceTimer > 0.0f) s_WaveAnnounceTimer -= dt;
     }
 
-    // Screen shake on damage
+    // Screen shake on damage + damage flag for scoring
     {
         Player* p = dynamic_cast<Player*>(pPlayer);
-        if (p && p->health < s_PrevPlayerHP) s_ShakeTimer = 0.2f;
+        if (p && p->health < s_PrevPlayerHP)
+        {
+            s_ShakeTimer = 0.2f;
+            waveSystem.NotifyPlayerDamaged();
+        }
         if (p) s_PrevPlayerHP = p->health;
     }
     if (s_ShakeTimer > 0.0f) s_ShakeTimer -= dt;
@@ -352,15 +362,13 @@ void Game_Update()
         Player* p = dynamic_cast<Player*>(pPlayer);
         if (p && p->health <= 0.0f)
         {
-            // Score per wave from config - was hardcoded 150/100
-            const int scorePerWave = (g_CurrentLevel.type == LevelType::ENDLESS)
-                ? GameConfig::Gameplay().scorePerWaveEndless
-                : GameConfig::Gameplay().scorePerWaveNormal;
-
             g_FinalWaveCount = (g_CurrentLevel.type == LevelType::ENDLESS)
                 ? static_cast<int>(waveSystem.GetCurrentRound())
                 : static_cast<int>(waveSystem.GetCurrentWave());
-            g_FinalScore = g_FinalWaveCount * scorePerWave;
+
+            g_FinalScore = waveSystem.GetAccumulatedScore();
+            if (s_BossKilled)
+                g_FinalScore += GameConfig::Gameplay().bossKillBonus;
 
             AudioManager::StopMusic("GameMusic");
             StateManagerChangeState(STATE_FINISH);
@@ -371,14 +379,13 @@ void Game_Update()
     // Win condition
     if (waveSystem.IsLevelComplete())
     {
-        const int scorePerWave = (g_CurrentLevel.type == LevelType::ENDLESS)
-            ? GameConfig::Gameplay().scorePerWaveEndless
-            : GameConfig::Gameplay().scorePerWaveNormal;
-
         g_FinalWaveCount = (g_CurrentLevel.type == LevelType::ENDLESS)
             ? static_cast<int>(waveSystem.GetCurrentRound())
             : static_cast<int>(waveSystem.GetCurrentWave());
-        g_FinalScore = g_FinalWaveCount * scorePerWave;
+
+        g_FinalScore = waveSystem.GetAccumulatedScore();
+        if (s_BossKilled)
+            g_FinalScore += GameConfig::Gameplay().bossKillBonus;
 
         AudioManager::StopMusic("GameMusic");
         StateManagerChangeState(STATE_WIN);
@@ -392,7 +399,14 @@ void Game_Update()
         if (obj->ObjectType == NP)
         {
             NPC* npc = dynamic_cast<NPC*>(obj);
-            if (npc) npc->Update(dt);
+            if (npc)
+            {
+                const bool wasBossAlive = (npc->type == NPC_BOSS && npc->isActive);
+                npc->Update(dt);
+                // Detect boss death this frame
+                if (wasBossAlive && !npc->isActive)
+                    s_BossKilled = true;
+            }
         }
         else { obj->Update(dt); }
     }
@@ -634,7 +648,7 @@ void Game_Draw()
     if (powerUpSystem.IsWaitingForUpgrade())
         gameUI.DrawPowerUpScreen();
 
-	// Debug: Add XP
+    // Debug: Add XP
     if (s_DebugEnabled && AEInputCheckTriggered(AEVK_U))
         powerUpSystem.AddExperience(100.0f);
 
