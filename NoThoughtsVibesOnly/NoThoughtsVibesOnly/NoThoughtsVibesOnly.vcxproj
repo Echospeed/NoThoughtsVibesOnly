@@ -170,7 +170,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmodL.dll" "$(OutDir)" /s /r /y /q</
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <AdditionalIncludeDirectories>;C:\Users\user\Desktop\Y1T2\1451 gam150\NTOV_git_repo\NoThoughtsVibesOnly\NoThoughtsVibesOnly\NoThoughtsVibesOnly\Header Files\include;C:\Users\user\Desktop\Y1T2\1451 gam150\NTOV_git_repo\NoThoughtsVibesOnly\NoThoughtsVibesOnly\NoThoughtsVibesOnly\Header Files\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>

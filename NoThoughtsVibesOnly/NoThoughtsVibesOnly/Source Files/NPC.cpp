@@ -325,8 +325,8 @@ void NPC::RangerNPCs(f32 deltaTime)
         velocity.y *= rc.velocityDamping;
     }
 
-    transform.position.x += velocity.x * deltaTime;
-    transform.position.y += velocity.y * deltaTime;
+    //transform.position.x += velocity.x * deltaTime;
+    //transform.position.y += velocity.y * deltaTime;
 
     // --- Wall bounce ---
     const f32 halfW = WORLD_WIDTH / 2.0f;

@@ -2,7 +2,9 @@
 
 #ifndef PCH_H
 #define PCH_H
-
+//#ifndef _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
+//#define _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
+//#endif
 // ---------------------------------------------------------------------------
 // Windows Macro Guards - MUST come before any Windows or engine headers
 // ---------------------------------------------------------------------------
