@@ -1,4 +1,5 @@
 #pragma once
+// Author: Stanley Lu
 #include "pch.hpp"
 
 namespace Meshes {

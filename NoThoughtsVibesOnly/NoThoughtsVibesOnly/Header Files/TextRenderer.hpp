@@ -1,4 +1,5 @@
 #pragma once
+// Author: John Chiow
 #include "AEEngine.h"
 #include "GameObject.hpp"
 #include <string>

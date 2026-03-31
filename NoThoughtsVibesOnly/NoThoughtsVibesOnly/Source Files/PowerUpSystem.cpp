@@ -1,3 +1,6 @@
+// Author: John Chiow
+// Co-Author: Liu Yan Bin, Stanley Lu
+
 // ============================================================================
 // PowerUpSystem.cpp - Player Progression and Power-Up Implementation
 // ============================================================================

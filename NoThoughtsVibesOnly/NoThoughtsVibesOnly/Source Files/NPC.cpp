@@ -1,4 +1,7 @@
-﻿// ============================================================================
+﻿// Author: Chia Wenjie
+// Co-Author: John Chiow, Liu Yan Bin
+
+// ============================================================================
 // NPC.cpp - Enemy AI Implementation
 // ============================================================================
 // Four enemy types, each with distinct movement and attack behaviour:

@@ -1,4 +1,7 @@
-﻿// ============================================================================
+﻿// Author: Chia Wenjie
+// Co-Author: John Chiow
+
+// ============================================================================
 // Main.cpp - Application Entry Point
 // ============================================================================
 // Initialises Alpha Engine, runs the state machine game loop, and exits cleanly.
@@ -57,7 +60,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
         false,        // Use default window proc
         NULL);
 
-    AESysSetWindowTitle("Alpha Engine - Window");
+    AESysSetWindowTitle("Pew!Pew!Galaxy - Window");
     AESysReset();
 
     //printf("[Main] Engine initialised.\n");

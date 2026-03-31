@@ -1,4 +1,6 @@
 ﻿#pragma once
+// Author: Chia Wenjie
+// Co-Author: John Chiow
 #include "GameObject.hpp"
 #include "NPC.hpp"
 #include "GameObjectType.hpp"

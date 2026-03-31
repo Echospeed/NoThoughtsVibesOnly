@@ -53,7 +53,6 @@
     <ClCompile Include="Source Files\Bullet.cpp" />
     <ClCompile Include="Source Files\Button.cpp" />
     <ClCompile Include="Source Files\Collider.cpp" />
-    <ClCompile Include="Source Files\Colour.cpp" />
     <ClCompile Include="Source Files\FinishPage.cpp" />
     <ClCompile Include="Source Files\GameObject.cpp" />
     <ClCompile Include="Source Files\GamePage.cpp" />
@@ -129,6 +128,7 @@
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Extern\AlphaEngine\include;$(ProjectDir)Header Files</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(SolutionDir)Extern\AlphaEngine\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>$(VC_SourcePath);</SourcePath>
+    <TargetName>Pew!Pew!Galaxy!</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\</OutDir>
@@ -136,6 +136,7 @@
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Extern\AlphaEngine\include;$(ProjectDir)Header Files</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(SolutionDir)Extern\AlphaEngine\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>$(VC_SourcePath);</SourcePath>
+    <TargetName>Pew!Pew!Galaxy!</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

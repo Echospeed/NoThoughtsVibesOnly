@@ -1,4 +1,6 @@
 #pragma once
+// Author: Chia Wenjie
+
 #include "AEEngine.h"
 #include "Transform.hpp"
 #include "Colour.hpp"

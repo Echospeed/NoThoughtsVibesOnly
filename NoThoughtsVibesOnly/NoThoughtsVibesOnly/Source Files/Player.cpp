@@ -1,3 +1,6 @@
+// Author: Liu Yan Bin
+// Co-Author: John Chiow, Chia Wenjie
+
 // ============================================================================
 // Player.cpp - Player Controller Implementation
 // ============================================================================

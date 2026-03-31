@@ -1,4 +1,7 @@
 #pragma once
+// Author: John Chiow
+// Co-Author: Chia Wenjie
+
 enum ObjectType
 {
 	NONE,

@@ -1,3 +1,5 @@
+// Author: Chia Wenjie
+// Co-Author: John Chiow
 #include "StateManager.hpp"
 
 void Main_Load();

@@ -1,3 +1,6 @@
+// Author: Chia Wenjie
+// Co-Author: Stanley Lu
+
 #include "pch.hpp"
 #include "AudioManager.hpp"
 #include <iostream>

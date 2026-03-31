@@ -1,3 +1,6 @@
+// Author: John Chiow
+// Co-Author: Liu Yan Bin, Stanley Lu
+
 // ============================================================================
 // PowerUpSystem.hpp - Player Power-Up and Progression System
 // ============================================================================

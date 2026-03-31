@@ -1,3 +1,5 @@
+// Author: Chia Wenjie
+
 #include "pch.hpp"
 #include "SpriteAnimator.hpp"
 #include <vector>

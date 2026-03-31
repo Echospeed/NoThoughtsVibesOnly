@@ -1,4 +1,6 @@
 #pragma once
+// Author: John Chiow
+// Co-Author: Stanley Lu
 #include "pch.hpp"
 
 // Forward declarations

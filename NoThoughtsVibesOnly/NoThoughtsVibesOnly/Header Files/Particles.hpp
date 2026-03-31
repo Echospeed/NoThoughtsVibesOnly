@@ -1,4 +1,7 @@
 #pragma once
+// Author: Chia Wenjie
+// Co-Author: John Chiow
+
 #include "AEEngine.h"
 #include <vector>
 

@@ -1,4 +1,5 @@
 #pragma once
+// Author: Stanley Lu
 
 void SplashPage_Load();
 void SplashPage_Init();

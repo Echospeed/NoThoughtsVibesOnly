@@ -1,4 +1,7 @@
-﻿// ============================================================================
+﻿// Author: Liu Yan Bin
+// Co-Author: John Chiow
+
+// ============================================================================
 // MiniMap.cpp - Minimap Overlay Renderer
 // ============================================================================
 // Draws a small overhead map in the top-right corner of the screen showing:

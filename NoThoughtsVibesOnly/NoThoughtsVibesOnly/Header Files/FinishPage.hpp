@@ -1,4 +1,5 @@
 #pragma once
+// Author: Stanley Lu
 
 void FinishPage_Load();
 void FinishPage_Init();

@@ -1,4 +1,5 @@
 #pragma once
+// Author: Stanley Lu
 void WinPage_Load();
 void WinPage_Init();
 void WinPage_Update();

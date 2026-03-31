@@ -1,4 +1,6 @@
 #pragma once
+// Author: Liu Yan Bin
+// Co-Author: John Chiow, Chia Wenjie
 #include "GameObject.hpp"
 #include "Particles.hpp"
 #include "Abilities.hpp"

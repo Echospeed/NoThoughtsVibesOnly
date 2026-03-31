@@ -1,4 +1,7 @@
 #pragma once
+// Author: Chia Wenjie
+// Co-Author: John Chiow, Liu Yan Bin, Stanley Lu
+
 #include <vector>
 #include "GameObject.hpp"
 #include "Particles.hpp"

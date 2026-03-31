@@ -131,9 +131,6 @@
     <ClCompile Include="Source Files\Collider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source Files\Colour.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source Files\FinishPage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -1,4 +1,7 @@
 #pragma once
+// Author: Liu Yan Bin
+// Co-Author: John Chiow
+
 // ============================================================================
 // Leaderboard.hpp - Top-10 Score Tracking (RapidJSON-backed)
 // ============================================================================

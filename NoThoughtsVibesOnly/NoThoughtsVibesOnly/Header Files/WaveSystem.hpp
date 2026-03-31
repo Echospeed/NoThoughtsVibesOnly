@@ -10,6 +10,8 @@
 // - Per-wave skill scoring: speed multiplier + no-damage bonus
 // ============================================================================
 #pragma once
+
+// Author: John Chiow
 #include "pch.hpp"
 #include "LevelConfig.hpp"
 #include <vector>

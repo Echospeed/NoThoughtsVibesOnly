@@ -1,4 +1,6 @@
 #pragma once
+// Author: John Chiow
+
 // ============================================================================
 // GameConfig.hpp - Centralised Game Configuration (RapidJSON-backed)
 // ============================================================================
