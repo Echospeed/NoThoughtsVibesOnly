@@ -23,7 +23,6 @@
 //   StarBackground must therefore draw in Update() BEFORE button updates,
 //   not in Draw() which runs after Update() and would overdraw buttons.
 // ============================================================================
-
 #include "pch.hpp"
 #include "StarBackground.hpp"
 #include "MenuPage.hpp"
@@ -55,8 +54,8 @@ std::vector<GameObject*> mainPageObj;
 // ============================================================================
 // Resources
 // ============================================================================
-s8    fontPath{};   // Font handle
-Mouse worldMouse;   // Mouse position in world space
+s8    fontPath{}; // Shared font path for all text renderers in this page
+Mouse worldMouse; // Shared mouse struct for all button updates (hover detection)
 
 // ============================================================================
 // Buttons (heap-allocated, deleted in Main_Free via mainPageObj loop)
@@ -67,20 +66,25 @@ Button* creditsButton{ nullptr };
 Button* quitButton{ nullptr };
 Button* backButton{ nullptr };
 
+// Quit confirmation - managed manually, NOT in mainPageObj
+static bool    s_ShowQuitConfirm = false;
+static Button* s_QuitYesBtn{ nullptr };
+static Button* s_QuitNoBtn{ nullptr };
+
 // ============================================================================
 // Text renderers
 // ============================================================================
-TextRenderer mainText;     // Title text on main menu
-TextRenderer controlsText; // "CONTROLS" header
-TextRenderer creditsText;  // "CREDITS" header
-TextRenderer infoText;     // Body text for info pages
+TextRenderer mainText;
+TextRenderer controlsText;
+TextRenderer creditsText;
+TextRenderer infoText;
 
 // ============================================================================
 // Art assets
 // ============================================================================
 SpriteRenderer creditsImg;
 Transform      creditTransform;
-static f32 s_TitleTime = 0.0f; // Drives title text animation (scale pulse + colour cycle)
+static f32 s_TitleTime = 0.0f;
 
 // ============================================================================
 // Sub-view navigation callbacks
@@ -97,7 +101,7 @@ void Main_Load()
 {
     fontPath = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
     Meshes::CreateSquareCenterOriginMesh();
-    Meshes::CreateCircleMesh(); // Required by StarBackground
+    Meshes::CreateCircleMesh();
     StarBackground::Init();
 }
 
@@ -108,6 +112,7 @@ void Main_Init()
 {
     AEGfxSetCamPosition(0.0f, 0.0f);
     currentMenuState = MENU_MAIN;
+    s_ShowQuitConfirm = false;
     AEGfxSetBackgroundColor(0.0f, 0.0f, 0.02f);
 
     s_TitleTime = 0.0f;
@@ -117,8 +122,23 @@ void Main_Init()
     startButton = new Button(fontPath, { 0.0f,  100.0f }, { 300.0f, 75.0f }, GoToLevelSelect, { 0.0f, 0.6f, 0.0f, 1.0f }, "START");
     controlsButton = new Button(fontPath, { 0.0f,    0.0f }, { 300.0f, 75.0f }, GoToControls, { 0.0f, 0.3f, 0.7f, 1.0f }, "CONTROLS");
     creditsButton = new Button(fontPath, { 0.0f, -100.0f }, { 300.0f, 75.0f }, GoToCredits, { 0.5f, 0.0f, 0.5f, 1.0f }, "CREDITS");
-    quitButton = new Button(fontPath, { 0.0f, -200.0f }, { 300.0f, 75.0f }, StateManagerQuit, { 0.7f, 0.0f, 0.0f, 1.0f }, "QUIT");
+    quitButton = new Button(fontPath, { 0.0f, -200.0f }, { 300.0f, 75.0f },
+        []() { s_ShowQuitConfirm = true; },
+        { 0.7f, 0.0f, 0.0f, 1.0f }, "QUIT");
     backButton = new Button(fontPath, { 0.0f, -350.0f }, { 200.0f, 75.0f }, GoToMain, { 0.7f, 0.0f, 0.0f, 1.0f }, "BACK");
+
+	//destructive actions like quit show confirmation first
+    s_QuitYesBtn = new Button(fontPath, { -100.0f, -50.0f }, { 150.0f, 60.0f },
+        []() { StateManagerQuit(); },
+        { 0.0f, 0.6f, 0.0f, 1.0f }, "YES");
+    s_QuitNoBtn = new Button(fontPath, { 100.0f, -50.0f }, { 150.0f, 60.0f },
+        []() { s_ShowQuitConfirm = false; },
+        { 0.6f, 0.0f, 0.0f, 1.0f }, "NO");
+
+    mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(),
+        static_cast<GameObject*>(s_QuitYesBtn)), mainPageObj.end());
+    mainPageObj.erase(std::remove(mainPageObj.begin(), mainPageObj.end(),
+        static_cast<GameObject*>(s_QuitNoBtn)), mainPageObj.end());
 
     controlsText = TextRenderer(fontPath, 1.0f, { 0.0f, 400.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
     controlsText << "CONTROLS";
@@ -135,21 +155,33 @@ void Main_Init()
 // ============================================================================
 // Main_Update
 // ============================================================================
-// Stars and background draw here (before buttons) so they appear behind them.
-// Button visibility is toggled based on the active sub-view.
-// ============================================================================
 void Main_Update()
 {
     const f32 dt = static_cast<float>(AEFrameRateControllerGetFrameTime());
-    s_TitleTime += dt; // Advance title animation
+
+    s_TitleTime += dt;
+
+    // STOP everything behind when quit confirm is active
+    if (s_ShowQuitConfirm)
+    {
+        // Optional: keep background moving, or remove this line to fully freeze
+        StarBackground::DrawBackground();
+        StarBackground::Draw();
+
+        // Only allow confirm buttons to update
+        s_QuitYesBtn->Update(dt);
+        s_QuitNoBtn->Update(dt);
+        return;
+    }
+
+    // Normal update flow
     StarBackground::Update(dt);
     StarBackground::DrawBackground();
     StarBackground::Draw();
 
-    // Credits image draws here so it sits behind the back button
     if (currentMenuState == MENU_CREDITS)
     {
-        creditsImg.colour.a = {1.0f}; // Semi-transparent so stars bleed through
+        creditsImg.colour.a = { 1.0f };
         DrawSpriteRenderer(creditsImg, creditTransform);
     }
 
@@ -158,37 +190,58 @@ void Main_Update()
     controlsButton->isActive = isMain;
     creditsButton->isActive = isMain;
     quitButton->isActive = isMain;
-    backButton->isActive = !isMain; // Back only shown in sub-views
+    backButton->isActive = !isMain;
 
     for (auto& obj : mainPageObj)
         if (obj) obj->Update(dt);
 }
-
 // ============================================================================
 // Main_Draw
 // ============================================================================
-// Stars and buttons already drew in Update. Only text is drawn here.
-// ============================================================================
 void Main_Draw()
 {
+    if (s_ShowQuitConfirm)
+    {
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.0f);
+        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.85f);
+        Transform t;
+        t.SetPosition(0.0f, 0.0f);
+        t.SetUniformScale(3000.0f);
+        t.Apply();
+        AEGfxMeshDraw(Meshes::pSquareCOriMesh, AE_GFX_MDM_TRIANGLES);
+
+        TextRenderer confirmTitle(fontPath, 1.0f, { 0.0f, 80.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
+        confirmTitle << "QUIT THE GAME?";
+        confirmTitle.Draw();
+
+        TextRenderer confirmHint(fontPath, 0.6f, { 0.0f, 20.0f }, { 0.7f, 0.7f, 0.7f, 1.0f });
+        confirmHint << "Your progress will not be saved.";
+        confirmHint.Draw();
+
+        s_QuitYesBtn->Draw();
+        s_QuitYesBtn->textRenderer.Draw();
+
+        s_QuitNoBtn->Draw();
+        s_QuitNoBtn->textRenderer.Draw();
+        return;
+    }
+
     if (currentMenuState == MENU_MAIN)
     {
-        // Animate title: pulse scale + cycle through vivid colours
-        // Scale breathes between 1.0 and 1.12 at ~1.2 Hz
         const f32 pulse = 1.0f + 0.12f * sinf(s_TitleTime * 7.5f);
-        // RGB channels offset by 120 degrees each for a smooth rainbow cycle
         const f32 r = 0.55f + 0.45f * sinf(s_TitleTime * 1.8f);
         const f32 g = 0.55f + 0.45f * sinf(s_TitleTime * 1.8f + 2.094f);
         const f32 b = 0.55f + 0.45f * sinf(s_TitleTime * 1.8f + 4.189f);
-		mainText.SetScale(pulse); // Uniform scale so text grows/shrinks but doesn't stretch
-		mainText.SetColour({ r, g, b, 1.0f }); // Full opacity
+        mainText.SetScale(pulse);
+        mainText.SetColour({ r, g, b, 1.0f });
         mainText.Draw();
     }
     else if (currentMenuState == MENU_CONTROLS)
     {
         controlsText.Draw();
 
-        // ---- LEFT SIDE: Player Controls ----
         infoText = TextRenderer(fontPath, 0.8f, { -400.0f, 300.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
         infoText << "-- PLAYER --";
         infoText.Draw();
@@ -221,7 +274,6 @@ void Main_Draw()
         infoText << "Q  -  Menu";
         infoText.Draw();
 
-        // ---- RIGHT SIDE: Enemy Guide ----
         infoText = TextRenderer(fontPath, 0.8f, { 400.0f, 300.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
         infoText << "-- ENEMIES --";
         infoText.Draw();
@@ -254,14 +306,12 @@ void Main_Draw()
         infoText << "Orbits, fires 8-way";
         infoText.Draw();
 
-        // Back button centered at bottom
         backButton->transform.SetPosition(0.0f, -380.0f);
         backButton->collider.position = { 0.0f, -380.0f };
         backButton->textRenderer.SetPosition({ 0.0f, -380.0f });
     }
     else if (currentMenuState == MENU_CREDITS)
     {
-        // Reposition back button to bottom-left for the credits layout
         backButton->transform.SetPosition(-600.0f, -400.0f);
         backButton->collider.position = { -600.0f, -400.0f };
         backButton->textRenderer.SetPosition({ -600.0f, -400.0f });
@@ -275,17 +325,20 @@ void Main_Draw()
 // ============================================================================
 // Main_Free
 // ============================================================================
-// Deletes all buttons via the mainPageObj list and frees the credits texture.
-// ============================================================================
 void Main_Free()
 {
-
+    // Delete all buttons registered in mainPageObj
     for (auto* obj : mainPageObj)
         delete obj;
     mainPageObj.clear();
     mainPageObj.shrink_to_fit();
 
     startButton = controlsButton = creditsButton = quitButton = backButton = nullptr;
+
+    // Delete confirm buttons separately — they were removed from mainPageObj
+    if (s_QuitYesBtn) { delete s_QuitYesBtn; s_QuitYesBtn = nullptr; }
+    if (s_QuitNoBtn) { delete s_QuitNoBtn;  s_QuitNoBtn = nullptr; }
+    s_ShowQuitConfirm = false;
 
     FreeSpriteRenderer(creditsImg);
 }
