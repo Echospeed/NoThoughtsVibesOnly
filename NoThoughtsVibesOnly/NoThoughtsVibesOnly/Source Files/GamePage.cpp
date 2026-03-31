@@ -637,6 +637,32 @@ void Game_Draw()
     // -----------------------------------------------------------------------
     AEGfxSetCamPosition(0.0f, 0.0f);
 
+
+	// 10. Debug info overlay
+    if (s_DebugEnabled)
+    {
+        const f32 startY = 250.0f;
+        const f32 lineGap = 30.0f;
+        int line = 0;
+
+        auto DebugLine = [&](const std::string& msg, Colour col)
+            {
+                TextRenderer t(gameFont, 0.55f, { -500.0f, startY - lineGap * line }, col);
+                t << msg;
+                t.Draw();
+                ++line;
+            };
+
+        DebugLine("[DEBUG MODE ON]", { 1.0f, 0.2f, 1.0f, 1.0f });
+        DebugLine("LEFT CTRL  -  Toggle", { 1.0f, 0.2f, 1.0f, 1.0f });
+        DebugLine("C  -  Clear Wave", { 1.0f, 0.8f, 0.2f, 1.0f });
+        DebugLine("U  -  Add Upgrade Points", { 1.0f, 0.8f, 0.2f, 1.0f });
+        DebugLine("TAB  -  Restart Game", { 1.0f, 0.8f, 0.2f, 1.0f });
+        DebugLine("SPACE  -  Lose Page", { 1.0f, 0.8f, 0.2f, 1.0f });
+        DebugLine("ENTER  -  Win Page", { 1.0f, 0.8f, 0.2f, 1.0f });
+        DebugLine("Q  -  Main Menu", { 1.0f, 0.8f, 0.2f, 1.0f });
+    }
+
     ammoText.Draw();
     gameUI.DrawHealthText();
     gameUI.DrawXPBar();

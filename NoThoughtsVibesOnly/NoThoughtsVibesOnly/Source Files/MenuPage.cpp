@@ -201,19 +201,23 @@ void Main_Draw()
         infoText << "Left Click  -  Shoot";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, 60.0f }, { 1.0f, 1.0f, 0.008f });
+        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, 60.0f }, { 1.0f, 0.498f, 1.0f });
+        infoText << "Right Click  -  Shotgun";
+        infoText.Draw();
+
+        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, -20.0f }, { 1.0f, 1.0f, 0.008f });
         infoText << "E  -  Activate Invincibility";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, -20.0f }, { 0.0f, 1.0f, 0.008f });
+        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, -100.0f }, { 0.0f, 1.0f, 0.008f });
         infoText << "ESC  -  Pause";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, -100.0f }, { 0.0f, 1.0f, 1.0f });
+        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, -180.0f }, { 0.0f, 1.0f, 1.0f });
         infoText << "R  -  Reload";
         infoText.Draw();
 
-        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, -180.0f }, { 0.694f, 0.612f, 0.851f });
+        infoText = TextRenderer(fontPath, 0.7f, { -400.0f, -260.0f }, { 0.694f, 0.612f, 0.851f });
         infoText << "Q  -  Menu";
         infoText.Draw();
 

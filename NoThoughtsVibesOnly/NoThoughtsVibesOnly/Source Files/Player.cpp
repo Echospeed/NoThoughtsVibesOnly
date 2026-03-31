@@ -72,15 +72,15 @@ void Player::Start()
     //runAnim.AddFrames(1500, 1000, 500, 500);
 
     //playerAnimator.Play(&idleAnim);
-    std::cout << "[START] ammoInMagazine = " << ammoInMagazine << std::endl;
+    //std::cout << "[START] ammoInMagazine = " << ammoInMagazine << std::endl;
 
-    if (powerUpSystem)
-    {
-        std::cout << "[START] bulletCount = "
-            << powerUpSystem->GetStats().bulletCount << std::endl;
-    }
-    std::cout << "[START] startingAmmo = "
-        << GameConfig::Player().startingAmmo << std::endl;
+    //if (powerUpSystem)
+    //{
+    //    std::cout << "[START] bulletCount = "
+    //        << powerUpSystem->GetStats().bulletCount << std::endl;
+    //}
+    //std::cout << "[START] startingAmmo = "
+    //    << GameConfig::Player().startingAmmo << std::endl;
 }
 
 // ============================================================================
