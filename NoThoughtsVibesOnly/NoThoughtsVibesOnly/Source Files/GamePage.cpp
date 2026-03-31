@@ -739,6 +739,7 @@ void Game_Free()
 // ============================================================================
 void Game_Unload()
 {
+    s_DebugEnabled = false;
     Meshes::FreeMeshes();
     NPC_UnloadTextures();
     AEGfxDestroyFont(gameFont);

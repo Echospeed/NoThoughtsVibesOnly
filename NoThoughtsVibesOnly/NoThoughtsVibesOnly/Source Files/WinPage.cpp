@@ -213,6 +213,11 @@ void WinPage_Draw()
         TextRenderer confirmHint(fontPath, 0.6f, { 0.0f, 20.0f }, { 0.7f, 0.7f, 0.7f, 1.0f });
         confirmHint << "This action cannot be undone.";
         confirmHint.Draw();
+
+        s_ConfirmYesBtn->Draw();
+        s_ConfirmNoBtn->Draw();
+        s_ConfirmYesBtn->textRenderer.Draw();
+        s_ConfirmNoBtn->textRenderer.Draw();
         return;
     }
 
