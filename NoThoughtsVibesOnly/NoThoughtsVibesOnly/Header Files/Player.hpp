@@ -17,6 +17,7 @@ public:
     void Update(f32 deltaTime);
     void Shoot(AEVec2 dir);
     void Free();
+    ~Player() override;
 
     f32 health = 100.0f;    // starting health
     f32 maxHealth = 100.0f;

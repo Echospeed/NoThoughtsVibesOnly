@@ -215,7 +215,7 @@
     <ClCompile Include="Source Files\AudioManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameConfig.cpp">
+    <ClCompile Include="Source Files\GameConfig.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

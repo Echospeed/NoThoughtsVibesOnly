@@ -228,6 +228,7 @@ namespace GameConfig
 {
     // Call once in Game_Load() before anything else
     void Load();
+	void Unload();
 
     // Accessors - safe to call before Load() (auto-loads on first access)
     const PlayerConfig& Player();

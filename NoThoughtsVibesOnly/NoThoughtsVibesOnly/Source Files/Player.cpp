@@ -449,6 +449,11 @@ f32 Player::GetAoeRadius() const
         : GameConfig::PowerUp().baseAoeRadius;
 }
 
+Player::~Player()
+{
+    Free();
+}
+
 void Player::Free()
 {
     if (playerSpritesheet != nullptr)
@@ -462,4 +467,6 @@ void Player::Free()
         AEGfxTextureUnload(playerInvulSpritesheet);
         playerInvulSpritesheet = nullptr;
     }
+
+    spriteRenderer.texture = nullptr;
 }

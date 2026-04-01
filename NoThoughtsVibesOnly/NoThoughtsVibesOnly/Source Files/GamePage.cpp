@@ -756,4 +756,5 @@ void Game_Unload()
     NPC_UnloadTextures();
     AEGfxDestroyFont(gameFont);
     PausePage_Unload();
+	GameConfig::Unload();
 }
