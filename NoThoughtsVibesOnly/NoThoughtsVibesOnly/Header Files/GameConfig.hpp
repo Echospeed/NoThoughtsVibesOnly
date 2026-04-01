@@ -52,6 +52,7 @@ struct PlayerConfig
     f32 bulletSpeed{ 1500.0f };
     f32 spawnClearRadius{ 100.0f };
     std::string texture{ "Assets/shipYellow_manned.png" };
+    std::string textureInvul{ "Assets/shipYellowInvul_manned.png" };
 };
 
 // ============================================================================

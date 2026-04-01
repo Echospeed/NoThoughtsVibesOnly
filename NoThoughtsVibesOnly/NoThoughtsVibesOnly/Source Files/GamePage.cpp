@@ -544,7 +544,16 @@ void Game_Draw()
         {
             AEGfxSetRenderMode(AE_GFX_RM_COLOR);
             AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.0f);
-            AEGfxSetColorToAdd(1.0f, 0.87f, 0.00f, 0.25f);
+
+            if (player->invulnAbility.IsActive())
+            {
+                AEGfxSetColorToAdd(0.0f, 1.0f, 0.0f, 0.25f); // Green
+            }
+            else
+            {
+                AEGfxSetColorToAdd(1.0f, 0.87f, 0.00f, 0.25f); // Default Yellow
+            }
+
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             tf.SetPosition(player->transform.position.x, player->transform.position.y);
             tf.SetUniformScale(player->GetAoeRadius());

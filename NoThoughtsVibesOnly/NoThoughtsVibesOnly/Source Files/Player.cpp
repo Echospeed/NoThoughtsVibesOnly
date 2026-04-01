@@ -47,7 +47,7 @@ void Player::Start()
     transform.scale = { pc.scaleX, pc.scaleY };
     transform.rotation = 0.0f;
 
-    spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f };
+    spriteRenderer.colour = { 1.0f, 0.8f, 0.0f, 1.0f };
 
     shootCooldown = pc.shootSuppressCooldown;
     reloadDuration = pc.reloadDuration;
@@ -58,6 +58,8 @@ void Player::Start()
     smokePS = ParticleSystem::MakeSmoke();
 
     playerSpritesheet = AEGfxTextureLoad(pc.texture.c_str());
+    playerInvulSpritesheet = AEGfxTextureLoad(pc.textureInvul.c_str());
+
     spriteRenderer.texture = playerSpritesheet;
 
     idleAnim = Animation(0.2f, true);
@@ -332,12 +334,12 @@ void Player::Update(f32 deltaTime)
         invulnAbility.TryActivate();
     }
 
-    // Optional: Turn the player gold while invulnerable
+    // Swap texture based on ability state
     if (invulnAbility.IsActive()) {
-        spriteRenderer.colour = { 1.0f, 0.8f, 0.0f, 1.0f };
+        spriteRenderer.texture = playerInvulSpritesheet;
     }
     else {
-        spriteRenderer.colour = { 1.0f, 0.0f, 0.0f, 1.0f };
+        spriteRenderer.texture = playerSpritesheet;
     }
 
     // ------------------------------------------------------------------
@@ -453,5 +455,11 @@ void Player::Free()
     {
         AEGfxTextureUnload(playerSpritesheet);
         playerSpritesheet = nullptr;
+    }
+
+    if (playerInvulSpritesheet != nullptr)
+    {
+        AEGfxTextureUnload(playerInvulSpritesheet);
+        playerInvulSpritesheet = nullptr;
     }
 }

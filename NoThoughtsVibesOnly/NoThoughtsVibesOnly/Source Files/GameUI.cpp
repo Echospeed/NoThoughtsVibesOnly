@@ -465,13 +465,14 @@ void GameUI::DrawAbilities()
 
     const Ability& ability = player->invulnAbility;
 
-    f32 r = 0.2f, g = 0.5f, b = 0.9f, a = 0.9f;  // Base: Deep Blue (Ready)
-    f32 ar = 0.5f, ag = 0.8f, ab = 1.0f, aa = 0.95f; // Accent: Bright Cyan
+    f32 r = 0.8f, g = 0.6f, b = 0.0f, a = 1.0f;  // Base: Deep Gold
+    f32 ar = 1.0f, ag = 0.9f, ab = 0.4f, aa = 1.0f;  // Accent: Bright Yellow
 
     if (ability.IsActive())
     {
-        r = 0.8f, g = 0.6f, b = 0.0f, a = 1.0f;  // Base: Deep Gold
-        ar = 1.0f, ag = 0.9f, ab = 0.4f, aa = 1.0f;  // Accent: Bright Yellow
+        r = 0.0f, g = 0.6f, b = 0.0f, a = 0.8f;  // Base: Dark Green
+        ar = 0.0f, ag = 0.8f, ab = 0.0f, aa = 0.8f;  // Accent: Bright Green
+        
     }
     else if (ability.IsOnCooldown())
     {
