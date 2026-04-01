@@ -15,7 +15,9 @@ namespace Meshes {
 	void CreateCircleMesh();
 	// Standard Triangle Mesh
 	void CreateTriangleMesh();
-
+	// Create SpriteSheetMesh
+	AEGfxVertexList* CreateSpriteSheetMesh(f32 frameWidth, f32 frameHeight, f32 texWidth, f32 texHeight);
+	// Free all meshes. Safe to call multiple times.
 	void FreeMeshes();
 }
 

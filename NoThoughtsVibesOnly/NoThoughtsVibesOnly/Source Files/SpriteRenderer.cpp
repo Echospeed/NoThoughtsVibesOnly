@@ -107,25 +107,7 @@ void DrawSpriteRenderer(const SpriteRenderer& sr, Transform& transform)
 // ============================================================================
 AEGfxVertexList* CreateSpriteSheetMesh(f32 frameWidth, f32 frameHeight, f32 texWidth, f32 texHeight)
 {
-    // Calculate the fractional size of one frame (e.g., 50px / 200px = 0.25)
-    f32 uSize = frameWidth / texWidth;
-    f32 vSize = frameHeight / texHeight;
-
-    AEGfxMeshStart();
-
-    // Top-Left corner is U: 0.0, V: 0.0
-    // Triangle 1
-    AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, vSize,  // Bottom-Left
-        0.5f, -0.5f, 0xFFFFFFFF, uSize, vSize,  // Bottom-Right
-        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);  // Top-Left
-
-    // Triangle 2
-    AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, uSize, vSize,  // Bottom-Right
-        0.5f, 0.5f, 0xFFFFFFFF, uSize, 0.0f,   // Top-Right
-        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);  // Top-Left
-
-    return AEGfxMeshEnd();
-
+    return Meshes::CreateSpriteSheetMesh(frameWidth, frameHeight, texWidth, texHeight);
 }
 
 // ============================================================================
