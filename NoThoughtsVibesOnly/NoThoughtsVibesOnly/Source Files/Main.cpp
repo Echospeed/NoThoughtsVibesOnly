@@ -61,6 +61,12 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
         NULL);
 
     AESysSetWindowTitle("Pew!Pew!Galaxy - Window");
+	// Set the window icon (both big and small) using LoadImageW to load from file
+    HWND hwnd = AESysGetWindowHandle();
+    HICON hIcon = (HICON)LoadImageW(NULL, L"Assets/spaceship_icon_optimized.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+    SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+    SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+
     AESysReset();
 
     //printf("[Main] Engine initialised.\n");
