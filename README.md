@@ -1,11 +1,8 @@
-# NoThoughtsVibesOnly
-CSD1451 Software Engineering 2
-
 # Pew Pew Galaxy
 
 A top-down, bullet-hell space shooter written in C++ for Windows. Fly a ship around a bounded arena, survive escalating waves of enemies, level up mid-run by picking one of four power-ups, and fight a boss at the end of each level. Built by a team of four for CSD1451 Software Engineering 2 at DigiPen Singapore (Jan - Apr 2026).
 
-<!-- TODO: add a screenshot or a short GIF of gameplay here. Example: ![Gameplay](docs/gameplay.png) -->
+Repository name: `NoThoughtsVibesOnly`.
 
 ## Features
 
@@ -24,9 +21,13 @@ A top-down, bullet-hell space shooter written in C++ for Windows. Fly a ship aro
 | Left Arrow / Right Arrow | Rotate |
 | Hold left mouse button | Shoot toward the cursor (10 shots per second) |
 | Right mouse click | Shotgun blast in a cone toward the cursor (0.3 second cooldown) |
-| Esc | Pause (please confirm) |
+| 1 / 2 / 3 / 4 | Pick a power-up when you level up |
+| E | Activate invincibility |
+| Left Shift | Show or hide the stats panel |
+| Esc | Pause and resume |
+| Tab (on the pause screen) | Restart |
 
-<!-- TODO: confirm the remaining keys used in GamePage.cpp (1-4, C, Q, E, U, Tab, Shift, Ctrl, Space, Enter) and add the ones players need. -->
+The game also has a debug mode toggled with Left Ctrl. It is only for development, so it is not listed above.
 
 ## Build and run
 
@@ -62,6 +63,4 @@ Chia Wenjie, John Chiow, Liu Yan Bin and Stanley Lu.
 
 ## Credits
 
-Built on the DigiPen Alpha Engine. Uses [RapidJSON](https://rapidjson.org/).
-
-<!-- TODO: add credits for the ship sprites, fonts and music if they came from a third-party source. -->
+Built on the DigiPen Alpha Engine. Uses [RapidJSON](https://rapidjson.org/). The sprites, fonts and audio come from free, open-source sources.
